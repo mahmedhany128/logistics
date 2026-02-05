@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Logistics Pro - Master Sync</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --primary: #111827; --subtle: #9ca3af; --border: #f3f4f6;
+        --deliv: #10b981; --pend: #f59e0b; --canc: #ef4444; --bg: #f9fafb;
+        --blue-btn: #3b82f6;
+    }
+    * { box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background: var(--bg); margin: 0; padding: 15px; color: var(--primary); }
+
+    header h1 { font-size: 1.4rem; font-weight: 900; text-align: center; margin-bottom: 20px; letter-spacing: -1px; }
+    
+    .storage-header { font-size: 0.65rem; font-weight: 900; color: var(--subtle); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 1px; display: block; text-align: center; }
+    .storage-tools { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 25px; padding: 12px; background: #fff; border-radius: 20px; border: 1px solid var(--border); }
+    .tool-btn { 
+        padding: 10px; border-radius: 12px; border: 1px solid #e5e7eb; 
+        background: #f9fafb; font-size: 0.7rem; font-weight: 700; 
+        cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .btn-backup { color: var(--blue-btn); border-color: #dbeafe; }
+
+    .btn-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 25px; }
+    .btn { padding: 14px; border: 1px solid #e5e7eb; background: #fff; border-radius: 16px; font-size: 0.8rem; font-weight: 800; cursor: pointer; }
+    .btn-dark { background: var(--primary); color: #fff; border: none; }
+    .btn-danger { color: var(--canc); background: #fef2f2; border-color: #fee2e2; }
+
+    .date-nav { display: flex; align-items: center; justify-content: space-between; padding: 15px; background: #fff; border-radius: 20px; margin-bottom: 25px; border: 1px solid var(--border); }
+    .month-label { font-weight: 900; font-size: 1.1rem; }
+
+    /* Balanced 4-Card Grid */
+    .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .item-card { padding: 20px; border-radius: 26px; background: #fff; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+    .item-name { font-size: 0.7rem; font-weight: 900; color: var(--subtle); text-transform: uppercase; display: block; margin-bottom: 4px; }
+    .delivered-value { font-size: 2.1rem; font-weight: 900; display: block; letter-spacing: -1px; }
+    .item-desc { font-size: 0.6rem; color: var(--subtle); font-weight: 600; display: block; margin-top: 4px; }
+
+    .chart-section { margin-top: 30px; background: #fff; padding: 22px; border-radius: 28px; border: 1px solid var(--border); }
+    .chart-viewport { width: 100%; overflow-x: auto; }
+    .chart-wrapper { min-width: 900px; height: 320px; }
+
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+    .modal-content { background: white; width: 92%; max-width: 400px; padding: 30px; border-radius: 32px; }
+    input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 12px; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<header><h1>Operations Hub</h1></header>
+
+<span class="storage-header">Database Management</span>
+<div class="storage-tools">
+    <button class="tool-btn btn-backup" onclick="saveToFile()">💾 Backup JSON</button>
+    <button class="tool-btn" onclick="document.getElementById('importFile').click()">📂 Restore JSON</button>
+    <input type="file" id="importFile" style="display:none" onchange="importFromFile(event)">
+</div>
+
+<div class="btn-group">
+    <button class="btn btn-danger" onclick="verifiedClearAll()">Reset</button>
+    <button class="btn" onclick="exportExcel()">Export</button>
+    <button class="btn btn-dark" onclick="openAddDataModal()">+ Record</button>
+</div>
+
+<div class="date-nav">
+    <button class="btn" style="border:none; font-size:1.5rem" onclick="changeMonth(-1)">‹</button>
+    <div class="month-label" id="currentMonthDisplay">...</div>
+    <button class="btn" style="border:none; font-size:1.5rem" onclick="changeMonth(1)">›</button>
+</div>
+
+<div class="card-grid" id="dashboard"></div>
+
+<div class="chart-section">
+    <div style="display:flex; justify-content:space-between; margin-bottom:20px; align-items:center;">
+        <b style="font-size:1rem;">Performance Trend</b>
+        <select id="chartFilter" onchange="renderMainChart()" style="border:none; font-weight:900; background:#f3f4f6; padding:8px 15px; border-radius:12px;">
+            <option value="all">All Channels</option>
+            <option value="Delivery">Delivery Only</option>
+            <option value="PickUp">PickUp Only</option>
+            <option value="SameDay">SameDay Only</option>
+            <option value="Khazenly">Khazenly Only</option>
+        </select>
+    </div>
+    <div class="chart-viewport"><div class="chart-wrapper"><canvas id="main_chart"></canvas></div></div>
+</div>
+
+<div id="addDataModal" class="modal">
+    <div class="modal-content">
+        <h3 style="margin:0 0 20px 0; font-weight:900;">Daily Log</h3>
+        <input type="date" id="modalDate">
+        <div id="modalInputs"></div>
+        <button class="btn btn-dark" style="width:100%; margin-top:20px;" id="saveBtn">Save Records</button>
+        <button class="btn" style="width:100%; margin-top:10px; border:none; color:var(--subtle)" onclick="closeAddDataModal()">Cancel</button>
+    </div>
+</div>
+
+<script>
+const types = ["Delivery", "PickUp", "SameDay", "Khazenly"];
+const typeColors = { Delivery: '#111827', PickUp: '#10b981', SameDay: '#f59e0b', Khazenly: '#ef4444' };
+let data = JSON.parse(localStorage.getItem("shippingData")) || {};
+types.forEach(t => { if(!data[t]) data[t] = []; });
+let viewDate = new Date();
+
+function saveToFile() {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Logistics_DB_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+}
+
+function importFromFile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const importedData = JSON.parse(e.target.result);
+            data = importedData;
+            localStorage.setItem("shippingData", JSON.stringify(data));
+            renderDashboard();
+            alert("Database Updated!");
+        } catch (err) { alert("Invalid File"); }
+    };
+    reader.readAsText(file);
+}
+
+function changeMonth(step) { viewDate.setMonth(viewDate.getMonth() + step); renderDashboard(); }
+
+function getSum(type, year, month) {
+    return data[type]
+        .filter(d => { let dt = new Date(d.date); return dt.getFullYear() === year && dt.getMonth() === month; })
+        .reduce((sum, d) => sum + (d.delivered || 0), 0);
+}
+
+function renderDashboard() {
+    const year = viewDate.getFullYear();
+    const month = viewDate.getMonth();
+    document.getElementById("currentMonthDisplay").innerText = viewDate.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+    
+    const container = document.getElementById("dashboard");
+    container.innerHTML = types.map(t => `
+        <div class="item-card" style="border-left: 6px solid ${typeColors[t]}">
+            <span class="item-name">${t}</span>
+            <span class="delivered-value" style="color:${typeColors[t]}">${getSum(t, year, month)}</span>
+            <span class="item-desc">Success Orders</span>
+        </div>
+    `).join('');
+    renderMainChart();
+}
+
+function renderMainChart() {
+    const filter = document.getElementById('chartFilter').value;
+    const year = viewDate.getFullYear();
+    const month = viewDate.getMonth();
+    let days = new Date(year, month + 1, 0).getDate();
+    let labels = Array.from({length: days}, (_, i) => i + 1);
+    let chartTypes = filter === 'all' ? types : [filter];
+    
+    const ctx = document.getElementById('main_chart').getContext('2d');
+    let datasets = chartTypes.map(t => ({
+        label: t,
+        data: labels.map(day => {
+            let dStr = `${year}-${String(month+1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            let e = data[t].find(d => d.date === dStr);
+            return e ? e.delivered : 0;
+        }),
+        backgroundColor: typeColors[t],
+        borderRadius: 8
+    }));
+
+    if(window.mainChartObj) window.mainChartObj.destroy();
+    window.mainChartObj = new Chart(ctx, { type: 'bar', data: { labels, datasets }, options: { responsive: true, maintainAspectRatio: false } });
+}
+
+function openAddDataModal() {
+    document.getElementById("addDataModal").style.display = "flex";
+    const container = document.getElementById("modalInputs");
+    container.innerHTML = types.map(t => `
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:8px; margin-top:10px; align-items:center;">
+            <b style="font-size:0.65rem;">${t}</b>
+            <input type="number" id="d_${t}" placeholder="S">
+            <input type="number" id="p_${t}" placeholder="P">
+            <input type="number" id="c_${t}" placeholder="C">
+        </div>
+    `).join('');
+
+    document.getElementById("saveBtn").onclick = () => {
+        const date = document.getElementById("modalDate").value;
+        if(!date) return alert("Select Date");
+        types.forEach(t => {
+            let row = { 
+                date, 
+                delivered: parseInt(document.getElementById(`d_${t}`).value)||0, 
+                pending: parseInt(document.getElementById(`p_${t}`).value)||0, 
+                cancelled: parseInt(document.getElementById(`c_${t}`).value)||0 
+            };
+            let idx = data[t].findIndex(d => d.date === date);
+            if(idx >= 0) data[t][idx] = row; else data[t].push(row);
+        });
+        localStorage.setItem("shippingData", JSON.stringify(data));
+        closeAddDataModal(); renderDashboard();
+    };
+}
+
+function closeAddDataModal() { document.getElementById("addDataModal").style.display = "none"; }
+
+function verifiedClearAll() {
+    if (prompt("Type 'DELETE' to confirm:") === "DELETE") {
+        localStorage.clear(); location.reload();
+    }
+}
+
+function exportExcel() { 
+    const wb = XLSX.utils.book_new();
+    types.forEach(t => XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data[t]), t));
+    XLSX.writeFile(wb, "Logistics_Report.xlsx");
+}
+
+renderDashboard();
+</script>
+</body>
+</html>
