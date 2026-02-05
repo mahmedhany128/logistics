@@ -4,9 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Logistics Pro - Master Sync</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#111827">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1554/1554561.png">
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+
 <style>
     :root {
         --primary: #111827; --subtle: #9ca3af; --border: #f3f4f6;
@@ -35,7 +43,6 @@
     .date-nav { display: flex; align-items: center; justify-content: space-between; padding: 15px; background: #fff; border-radius: 20px; margin-bottom: 25px; border: 1px solid var(--border); }
     .month-label { font-weight: 900; font-size: 1.1rem; }
 
-    /* Balanced 4-Card Grid */
     .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .item-card { padding: 20px; border-radius: 26px; background: #fff; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
     .item-name { font-size: 0.7rem; font-weight: 900; color: var(--subtle); text-transform: uppercase; display: block; margin-bottom: 4px; }
@@ -49,9 +56,28 @@
     .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
     .modal-content { background: white; width: 92%; max-width: 400px; padding: 30px; border-radius: 32px; }
     input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 12px; font-weight: 600; }
+
+    /* Install App Banner */
+    #installBanner {
+        display: none; position: fixed; bottom: 20px; left: 15px; right: 15px;
+        background: var(--primary); color: white; padding: 15px; border-radius: 20px;
+        z-index: 2000; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        justify-content: space-between; align-items: center;
+    }
 </style>
 </head>
 <body>
+
+<div id="installBanner">
+    <div style="display:flex; align-items:center; gap:10px;">
+        <span>📱</span>
+        <div>
+            <div style="font-weight:900; font-size:0.8rem;">Install App</div>
+            <div style="font-size:0.6rem; opacity:0.8;">Save to home screen</div>
+        </div>
+    </div>
+    <button id="installBtn" style="background:#fff; border:none; padding:8px 15px; border-radius:10px; font-weight:800; color:var(--primary);">Install</button>
+</div>
 
 <header><h1>Operations Hub</h1></header>
 
@@ -107,6 +133,28 @@ let data = JSON.parse(localStorage.getItem("shippingData")) || {};
 types.forEach(t => { if(!data[t]) data[t] = []; });
 let viewDate = new Date();
 
+// --- PWA Service Worker Registration ---
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+}
+
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    document.getElementById('installBanner').style.display = 'flex';
+});
+
+document.getElementById('installBtn').addEventListener('click', () => {
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(() => {
+            document.getElementById('installBanner').style.display = 'none';
+        });
+    }
+});
+
+// --- Logic ---
 function saveToFile() {
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -122,8 +170,7 @@ function importFromFile(event) {
     const reader = new FileReader();
     reader.onload = function(e) {
         try {
-            const importedData = JSON.parse(e.target.result);
-            data = importedData;
+            data = JSON.parse(e.target.result);
             localStorage.setItem("shippingData", JSON.stringify(data));
             renderDashboard();
             alert("Database Updated!");
@@ -177,11 +224,16 @@ function renderMainChart() {
     }));
 
     if(window.mainChartObj) window.mainChartObj.destroy();
-    window.mainChartObj = new Chart(ctx, { type: 'bar', data: { labels, datasets }, options: { responsive: true, maintainAspectRatio: false } });
+    window.mainChartObj = new Chart(ctx, { 
+        type: 'bar', 
+        data: { labels, datasets }, 
+        options: { responsive: true, maintainAspectRatio: false } 
+    });
 }
 
 function openAddDataModal() {
     document.getElementById("addDataModal").style.display = "flex";
+    document.getElementById("modalDate").value = new Date().toISOString().split('T')[0];
     const container = document.getElementById("modalInputs");
     container.innerHTML = types.map(t => `
         <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:8px; margin-top:10px; align-items:center;">
@@ -228,4 +280,3 @@ renderDashboard();
 </script>
 </body>
 </html>
-
