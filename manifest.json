@@ -1,0 +1,15 @@
+{
+  "name": "Logistics Pro Management",
+  "short_name": "Logistics",
+  "start_url": "/logistics/",
+  "display": "standalone",
+  "background_color": "#f9fafb",
+  "theme_color": "#111827",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/1554/1554561.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
