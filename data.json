@@ -2,19 +2,23 @@
   "Delivery": [
     {
       "date": "2026-02-06",
-      "s": 56,
+      "s": 0,
       "p": 0,
-      "c": 4,
-      "codes_s": ""
+      "c": 0,
+      "codes_s": "",
+      "codes_p": "",
+      "codes_c": "6224009746774,6901004416580"
     }
   ],
   "PickUp": [
     {
       "date": "2026-02-06",
-      "s": 4,
+      "s": 0,
       "p": 0,
-      "c": 1,
-      "codes_s": ""
+      "c": 0,
+      "codes_s": "",
+      "codes_p": "",
+      "codes_c": ""
     }
   ],
   "SameDay": [
@@ -23,7 +27,9 @@
       "s": 0,
       "p": 0,
       "c": 0,
-      "codes_s": ""
+      "codes_s": "",
+      "codes_p": "",
+      "codes_c": ""
     }
   ],
   "Khazenly": [
@@ -32,7 +38,9 @@
       "s": 0,
       "p": 0,
       "c": 0,
-      "codes_s": ""
+      "codes_s": "",
+      "codes_p": "",
+      "codes_c": ""
     }
   ]
 }
