@@ -1,264 +1,267 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Logistics Analytics Pro</title>
-    
+    <title>Elite Logistics Pro</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-    
     <style>
         :root {
-            --brand: #4f46e5; --bg: #f8fafc; --surface: #ffffff;
-            --text: #0f172a; --text-dim: #64748b; --border: #e2e8f0;
-            --s-clr: #10b981; --p-clr: #f59e0b; --c-clr: #f43f5e;
+            --bg: #fcfcfd; --card: #ffffff; --brand: #6366f1;
+            --text: #111827; --dim: #64748b; --border: #f1f5f9;
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
         }
         * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: var(--text); margin: 0; padding: 15px; padding-bottom: 60px; }
+        body { background: var(--bg); color: var(--text); margin: 0; padding: 15px; padding-bottom: 100px; }
 
-        /* Performance Analytics Header */
-        .analytics-summary { background: var(--text); color: white; padding: 20px; border-radius: 28px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .summary-item { text-align: center; }
-        .summary-label { font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; }
-        .summary-val { font-size: 1.2rem; font-weight: 800; display: block; }
+        header { margin: 10px 0 25px 0; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { font-size: 1.3rem; font-weight: 800; margin: 0; letter-spacing: -0.5px; }
+        .sync-indicator { font-size: 0.65rem; font-weight: 700; color: var(--brand); background: #6366f110; padding: 5px 12px; border-radius: 20px; }
 
-        /* Metrics Grid */
-        .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-        .card { background: var(--surface); padding: 18px; border-radius: 24px; border: 1px solid var(--border); position: relative; cursor: pointer; transition: 0.3s; }
-        .card.active { border: 2px solid var(--brand); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); }
-        .card-perc { position: absolute; top: 15px; right: 15px; font-size: 0.7rem; font-weight: 800; color: var(--s-clr); background: #10b98115; padding: 2px 8px; border-radius: 8px; }
-        .card-label { font-size: 0.7rem; color: var(--text-dim); font-weight: 700; text-transform: uppercase; }
-        .card-val { font-size: 1.5rem; font-weight: 800; display: block; margin-top: 5px; }
+        /* الشهور - وحدة التحكم الأساسية */
+        .month-controller { 
+            background: #fff; border: 1px solid var(--border); padding: 12px 20px; 
+            border-radius: 20px; display: flex; justify-content: space-between; 
+            align-items: center; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+        }
+        .nav-btn { 
+            background: var(--bg); border: none; width: 38px; height: 38px; 
+            border-radius: 12px; cursor: pointer; font-size: 1.2rem; 
+            font-weight: bold; color: var(--brand); transition: 0.2s;
+        }
+        .nav-btn:active { transform: scale(0.9); background: #eee; }
+        .month-label { font-weight: 800; font-size: 1rem; color: var(--text); }
 
-        /* Table & Trend Analytics */
-        .table-section { display: none; background: #fff; border-radius: 28px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 20px; animation: slideIn 0.4s ease; }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .table-top { padding: 18px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .table-scroll { overflow-x: auto; max-height: 350px; }
-        table { width: 100%; border-collapse: collapse; min-width: 500px; }
-        th { padding: 12px 15px; font-size: 0.6rem; color: var(--text-dim); text-transform: uppercase; text-align: center; border-bottom: 1px solid var(--border); }
-        td { padding: 14px 12px; text-align: center; border-bottom: 1px solid #f8fafc; font-size: 0.8rem; font-weight: 600; }
-        .trend-up { color: var(--s-clr); font-size: 0.6rem; }
-        .trend-down { color: var(--c-clr); font-size: 0.6rem; }
+        /* الكروت */
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 25px; }
+        .stat-card { background: var(--card); padding: 20px; border-radius: 24px; border: 1px solid var(--border); position: relative; cursor: pointer; }
+        .stat-card.active { border-color: var(--brand); border-width: 2px; }
+        .stat-label { font-size: 0.75rem; font-weight: 700; color: var(--dim); text-transform: uppercase; }
+        .stat-val { font-size: 1.6rem; font-weight: 800; display: block; margin-top: 8px; }
+        .stat-badge { font-size: 0.7rem; font-weight: 800; color: var(--success); position: absolute; top: 20px; right: 20px; }
 
-        /* Chart Card */
-        .chart-card { background: #fff; padding: 22px; border-radius: 28px; border: 1px solid var(--border); }
-        .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        /* الجدول */
+        #detailsTable { display: none; margin-bottom: 25px; animation: slideUp 0.3s ease; }
+        .table-container { background: #fff; border-radius: 24px; border: 1px solid var(--border); overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); }
+        .table-header { padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        table { width: 100%; border-collapse: collapse; }
+        th { font-size: 0.65rem; color: var(--dim); text-transform: uppercase; padding: 15px; border-bottom: 1px solid var(--border); }
+        td { padding: 15px; text-align: center; border-bottom: 1px solid #f9fafb; font-size: 0.85rem; font-weight: 600; }
+        .date-text { font-weight: 800; color: var(--text); }
+
+        /* الشارت */
+        .chart-section { background: #fff; padding: 20px; border-radius: 24px; border: 1px solid var(--border); }
         .chart-wrap { height: 250px; }
 
-        /* Action Buttons */
-        .action-bar { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 20px; }
-        .btn { padding: 14px; border-radius: 16px; border: 1px solid var(--border); background: #fff; font-weight: 700; font-size: 0.8rem; cursor: pointer; }
-        .btn-main { background: var(--text); color: white; border: none; }
-        
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-        .modal-box { background: #fff; width: 90%; max-width: 400px; padding: 25px; border-radius: 28px; }
-        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid var(--border); border-radius: 12px; font-weight: 700; outline: none; }
+        /* التحكم السفلي */
+        .footer-actions { position: fixed; bottom: 20px; left: 15px; right: 15px; display: grid; grid-template-columns: 3fr 1fr; gap: 10px; }
+        .btn-main { background: var(--text); color: #fff; border: none; padding: 18px; border-radius: 20px; font-weight: 800; font-size: 0.9rem; box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
+        .btn-wipe { background: #fff; color: var(--danger); border: 1px solid #fee2e2; border-radius: 20px; font-weight: 700; }
+
+        /* المودال */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+        .modal-content { background: #fff; width: 90%; max-width: 400px; padding: 25px; border-radius: 30px; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid var(--border); border-radius: 12px; font-weight: 700; outline: none; background: var(--bg); }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-<div class="analytics-summary">
-    <div class="summary-item">
-        <span class="summary-label">Success Rate</span>
-        <span id="totalEff" class="summary-val">0%</span>
-    </div>
-    <div style="height: 30px; width: 1px; background: #334155;"></div>
-    <div class="summary-item">
-        <span class="summary-label">Total Vol.</span>
-        <span id="totalVol" class="summary-val">0</span>
-    </div>
-    <div style="height: 30px; width: 1px; background: #334155;"></div>
-    <div class="summary-item">
-        <span class="summary-label">Status</span>
-        <span class="summary-val" style="color: #10b981; font-size: 0.8rem;">● Stable</span>
+<header>
+    <h1>Insight Pro</h1>
+    <div id="status" class="sync-indicator">Cloud Sync Active</div>
+</header>
+
+<div class="month-controller">
+    <button class="nav-btn" onclick="moveMonth(-1)">‹</button>
+    <span class="month-label" id="monthDisplay">February 2026</span>
+    <button class="nav-btn" onclick="moveMonth(1)">›</button>
+</div>
+
+<div class="grid" id="metricsGrid"></div>
+
+<div id="detailsTable">
+    <div class="table-container">
+        <div class="table-header">
+            <span id="activeTitle" style="font-weight: 800; color: var(--brand)">Details</span>
+            <button onclick="closeTable()" style="border:none; background:var(--bg); border-radius:8px; padding:5px 10px; font-weight:700;">Close</button>
+        </div>
+        <div style="overflow-x:auto">
+            <table>
+                <thead>
+                    <tr><th>Date</th><th>S</th><th>P</th><th>C</th><th>Rate</th></tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
     </div>
 </div>
 
-<div class="metrics" id="metricsPanel"></div>
-
-<div class="action-bar">
-    <button class="btn btn-main" onclick="openAddModal()">+ New Data Entry</button>
-    <button class="btn" onclick="wipeData()">Wipe</button>
-</div>
-
-<div id="tableSection" class="table-section">
-    <div class="table-top">
-        <span id="tableTitle" style="font-weight:800; font-size:0.9rem;">Analytical View</span>
-        <button onclick="closeTable()" style="border:none; background:#f1f5f9; width:28px; height:28px; border-radius:50%; font-weight:800;">×</button>
-    </div>
-    <div class="table-scroll">
-        <table>
-            <thead>
-                <tr>
-                    <th style="text-align:left; padding-left:20px">Date</th>
-                    <th>Succ.</th>
-                    <th>Pend.</th>
-                    <th>Canc.</th>
-                    <th>Trend</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody"></tbody>
-        </table>
-    </div>
-</div>
-
-<div class="chart-card">
-    <div class="chart-header">
-        <span style="font-weight:800; font-size:0.8rem; color:var(--text-dim)">EFFICIENCY TRENDS</span>
-        <div id="legend" style="display:flex; gap:8px"></div>
-    </div>
+<div class="chart-section">
     <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
 </div>
 
-<div id="addModal" class="modal">
-    <div class="modal-box">
-        <h3 style="margin-top:0">Daily Log</h3>
-        <input type="date" id="modalDate">
-        <div id="modalInputs"></div>
-        <button class="btn btn-main" style="width:100%; margin-top:15px" id="saveBtn">Sync Analytics</button>
-        <button class="btn" style="width:100%; margin-top:10px; border:none" onclick="closeAddModal()">Cancel</button>
+<div class="footer-actions">
+    <button class="btn-main" onclick="openModal()">+ Add Daily Entry</button>
+    <button class="btn-wipe" onclick="wipe()">Wipe</button>
+</div>
+
+<div id="modal" class="modal">
+    <div class="modal-content">
+        <h3 style="margin-top:0">Log New Data</h3>
+        <input type="date" id="dateInput">
+        <div id="modalFields"></div>
+        <button class="btn-main" style="width:100%; margin-top:15px" onclick="save()">Confirm & Sync</button>
+        <button onclick="closeModal()" style="width:100%; border:none; background:none; margin-top:10px; color:var(--dim); font-weight:600">Cancel</button>
     </div>
 </div>
 
 <script>
-let config = JSON.parse(localStorage.getItem('gh_config')) || null;
-const types = ["Delivery", "PickUp", "SameDay", "Khazenly"];
-const colors = { Delivery: '#4f46e5', PickUp: '#10b981', SameDay: '#f59e0b', Khazenly: '#f43f5e' };
-let storage = JSON.parse(localStorage.getItem("logistics_v15_data")) || {};
-types.forEach(t => { if(!storage[t]) storage[t] = []; });
-let mainChart = null;
+let config = JSON.parse(localStorage.getItem('gh_config'));
+const channels = ["Delivery", "PickUp", "SameDay", "Khazenly"];
+const colors = { Delivery: '#6366f1', PickUp: '#10b981', SameDay: '#f59e0b', Khazenly: '#ef4444' };
+let db = JSON.parse(localStorage.getItem('v16_db')) || {};
+channels.forEach(c => { if(!db[c]) db[c] = []; });
+let chart = null;
+let currentView = new Date(); // التاريخ الحالي لعرض الشهر
 
-async function init() {
-    if (!config) {
+async function setup() {
+    if(!config) {
         const t = prompt("Token:"), u = prompt("User:"), r = prompt("Repo:");
-        if(t && u && r) { config = {token:t, user:u, repo:r}; localStorage.setItem('gh_config', JSON.stringify(config)); location.reload(); }
-    } else { await pull(); }
+        if(t&&u&&r) { config={t,u,r}; localStorage.setItem('gh_config', JSON.stringify(config)); location.reload(); }
+    } else { pull(); }
 }
 
 async function pull() {
-    const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
+    const url = `https://api.github.com/repos/${config.u}/${config.r}/contents/data.json`;
     try {
-        const r = await fetch(url, { headers: { 'Authorization': `token ${config.token}` } });
+        const r = await fetch(url, { headers: { 'Authorization': `token ${config.t}` }});
         if(r.ok) {
             const j = await r.json();
-            storage = JSON.parse(decodeURIComponent(escape(atob(j.content))));
-            localStorage.setItem("logistics_v15_data", JSON.stringify(storage));
+            db = JSON.parse(decodeURIComponent(escape(atob(j.content))));
+            localStorage.setItem('v16_db', JSON.stringify(db));
         }
     } catch(e) {}
-    renderUI();
+    render();
 }
 
 async function push() {
-    const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
+    document.getElementById('status').innerText = "Syncing...";
+    const url = `https://api.github.com/repos/${config.u}/${config.r}/contents/data.json`;
     try {
-        const r = await fetch(url, { headers: { 'Authorization': `token ${config.token}` } });
-        let sha = (r.ok) ? (await r.json()).sha : "";
+        const res = await fetch(url, { headers: { 'Authorization': `token ${config.t}` }});
+        let sha = res.ok ? (await res.json()).sha : "";
         await fetch(url, {
             method: 'PUT',
-            headers: { 'Authorization': `token ${config.token}` },
-            body: JSON.stringify({ message: "Update v15", content: btoa(unescape(encodeURIComponent(JSON.stringify(storage, null, 2)))), sha: sha })
+            headers: { 'Authorization': `token ${config.t}` },
+            body: JSON.stringify({ message: "v16 update", content: btoa(unescape(encodeURIComponent(JSON.stringify(db, null, 2)))), sha })
         });
+        document.getElementById('status').innerText = "Cloud Sync Active";
     } catch(e) {}
 }
 
-function renderUI() {
-    let globalSucc = 0, globalTotal = 0;
+function render() {
+    const m = currentView.getMonth(), y = currentView.getFullYear();
+    document.getElementById('monthDisplay').innerText = currentView.toLocaleString('en-US', {month:'long', year:'numeric'});
     
-    document.getElementById("metricsPanel").innerHTML = types.map(t => {
-        const succ = storage[t].reduce((a, b) => a + (b.s || 0), 0);
-        const total = storage[t].reduce((a, b) => a + (b.s + b.p + b.c || 0), 0);
-        globalSucc += succ; globalTotal += total;
-        const perc = total > 0 ? ((succ / total) * 100).toFixed(1) : "0";
-        return `
-            <div class="card" onclick="showTable('${t}')">
-                <span class="card-perc">${perc}%</span>
-                <span class="card-label" style="color:${colors[t]}">${t}</span>
-                <span class="card-val">${succ.toLocaleString()}</span>
-            </div>`;
+    document.getElementById('metricsGrid').innerHTML = channels.map(c => {
+        const filtered = db[c].filter(d => {
+            const dt = new Date(d.date);
+            return dt.getMonth() === m && dt.getFullYear() === y;
+        });
+        const s = filtered.reduce((a,b) => a+(b.s||0), 0);
+        const tot = filtered.reduce((a,b) => a+(b.s+b.p+b.c||0), 0);
+        const rate = tot > 0 ? ((s/tot)*100).toFixed(1) : "0";
+        return `<div class="stat-card" onclick="showDetails('${c}')">
+            <span class="stat-badge">${rate}%</span>
+            <span class="stat-label" style="color:${colors[c]}">${c}</span>
+            <span class="stat-val">${s.toLocaleString()}</span>
+        </div>`;
     }).join('');
-
-    document.getElementById("totalVol").innerText = globalTotal.toLocaleString();
-    document.getElementById("totalEff").innerText = globalTotal > 0 ? ((globalSucc / globalTotal) * 100).toFixed(1) + "%" : "0%";
-    
-    updateChart();
+    updateChart(y, m);
 }
 
-function showTable(type) {
-    document.getElementById("tableSection").style.display = "block";
-    document.getElementById("tableTitle").innerText = `${type} Trend Analysis`;
-    const data = storage[type].filter(r => (r.s + r.p + r.c) > 0).sort((a,b) => new Date(b.date) - new Date(a.date));
-    
-    document.getElementById("tableBody").innerHTML = data.map((r, i) => {
-        const eff = ((r.s / (r.s + r.p + r.c)) * 100);
-        let trendIcon = "";
-        if(i < data.length - 1) {
-            const prevEff = ((data[i+1].s / (data[i+1].s + data[i+1].p + data[i+1].c)) * 100);
-            trendIcon = eff >= prevEff ? '<span class="trend-up">▲</span>' : '<span class="trend-down">▼</span>';
-        }
+function showDetails(c) {
+    const m = currentView.getMonth(), y = currentView.getFullYear();
+    document.getElementById('detailsTable').style.display = "block";
+    document.getElementById('activeTitle').innerText = c + " Details";
+    // عرض بيانات القناة المحددة لهذا الشهر فقط
+    const filtered = db[c].filter(d => {
+        const dt = new Date(d.date);
+        return dt.getMonth() === m && dt.getFullYear() === y && (d.s+d.p+d.c) > 0;
+    }).sort((a,b) => new Date(b.date) - new Date(a.date));
+
+    document.getElementById('tableBody').innerHTML = filtered.map(r => {
+        const rate = ((r.s/(r.s+r.p+r.c))*100).toFixed(1);
         const dt = new Date(r.date);
         return `<tr>
-            <td style="text-align:left; padding-left:20px">${dt.getDate()} ${dt.toLocaleString('en', {month:'short'})}</td>
-            <td style="color:var(--s-clr)">${r.s}</td>
-            <td>${r.p}</td>
-            <td style="color:var(--c-clr)">${r.c}</td>
-            <td style="font-size:0.85rem">${eff.toFixed(1)}% ${trendIcon}</td>
+            <td class="date-text">${dt.getDate()} ${dt.toLocaleString('en',{month:'short'})}</td>
+            <td style="color:var(--success)">${r.s}</td><td>${r.p}</td><td style="color:var(--danger)">${r.c}</td>
+            <td style="color:var(--brand); font-weight:800">${rate}%</td>
         </tr>`;
     }).join('');
+    document.getElementById('detailsTable').scrollIntoView({behavior:'smooth'});
 }
 
-function updateChart() {
+function updateChart(y, m) {
     const ctx = document.getElementById('mainChart').getContext('2d');
-    const datasets = types.map(t => ({
-        label: t,
-        data: storage[t].slice(-10).map(d => (d.s / (d.s + d.p + d.c) * 100) || 0),
-        borderColor: colors[t],
-        tension: 0.4, borderWeight: 2, pointRadius: 3
+    const days = new Date(y, m+1, 0).getDate();
+    const datasets = channels.map(c => ({
+        label: c,
+        data: Array.from({length:days}, (_,i) => {
+            const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(i+1).padStart(2,'0')}`;
+            const found = db[c].find(x => x.date === dateStr);
+            return found ? found.s : 0;
+        }),
+        borderColor: colors[c], tension: 0.4, borderWidth: 3, pointRadius: 0
     }));
-
-    if(mainChart) mainChart.destroy();
-    mainChart = new Chart(ctx, {
+    if(chart) chart.destroy();
+    chart = new Chart(ctx, {
         type: 'line',
-        data: { labels: storage[types[0]].slice(-10).map(d => d.date.split('-')[2]), datasets },
-        options: { 
-            responsive: true, maintainAspectRatio: false, 
-            scales: { y: { min: 0, max: 100, ticks: { callback: v => v + '%' } } },
-            plugins: { legend: { display: false } }
-        }
+        data: { labels: Array.from({length:days}, (_,i)=>i+1), datasets },
+        options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{grid:{display:false}}, y:{beginAtZero:true, grid:{color:'#f8fafc'}}} }
     });
 }
 
-function openAddModal() {
-    document.getElementById("addModal").style.display = "flex";
-    document.getElementById("modalDate").value = new Date().toISOString().split('T')[0];
-    document.getElementById("modalInputs").innerHTML = types.map(t => `
-        <div style="margin-bottom:12px">
-            <span style="font-size:0.7rem; font-weight:800; color:${colors[t]}">${t}</span>
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px">
-                <input type="number" id="s_${t}" placeholder="S">
-                <input type="number" id="p_${t}" placeholder="P">
-                <input type="number" id="c_${t}" placeholder="C">
-            </div>
-        </div>`).join('');
-
-    document.getElementById("saveBtn").onclick = async () => {
-        const d = document.getElementById("modalDate").value;
-        types.forEach(t => {
-            const entry = { date: d, s: parseInt(document.getElementById(`s_${t}`).value)||0, p: parseInt(document.getElementById(`p_${t}`).value)||0, c: parseInt(document.getElementById(`c_${t}`).value)||0 };
-            const idx = storage[t].findIndex(x => x.date === d);
-            if(idx >= 0) storage[t][idx] = entry; else storage[t].push(entry);
-        });
-        localStorage.setItem("logistics_v15_data", JSON.stringify(storage));
-        closeAddModal(); renderUI(); await push();
-    };
+function moveMonth(dir) {
+    currentView.setMonth(currentView.getMonth() + dir);
+    render();
+    closeTable();
 }
 
-function wipeData() { if(confirm("Wipe all analytics data?")) { types.forEach(t => storage[t] = []); push(); renderUI(); } }
-function closeAddModal() { document.getElementById("addModal").style.display = "none"; }
-function closeTable() { document.getElementById("tableSection").style.display = "none"; }
+function openModal() {
+    document.getElementById('modal').style.display = "flex";
+    document.getElementById('dateInput').value = new Date().toISOString().split('T')[0];
+    document.getElementById('modalFields').innerHTML = channels.map(c => `
+        <div style="margin-bottom:15px">
+            <div style="font-weight:800; font-size:0.75rem; color:${colors[c]}; margin-bottom:5px">${c}</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px">
+                <input type="number" id="ms_${c}" placeholder="S">
+                <input type="number" id="mp_${c}" placeholder="P">
+                <input type="number" id="mc_${c}" placeholder="C">
+            </div>
+        </div>`).join('');
+}
 
-init();
+function save() {
+    const d = document.getElementById('dateInput').value;
+    channels.forEach(c => {
+        const entry = { date: d, s: parseInt(document.getElementById(`ms_${c}`).value)||0, p: parseInt(document.getElementById(`mp_${c}`).value)||0, c: parseInt(document.getElementById(`mc_${c}`).value)||0 };
+        const idx = db[c].findIndex(x => x.date === d);
+        if(idx>=0) db[c][idx]=entry; else db[c].push(entry);
+    });
+    localStorage.setItem('v16_db', JSON.stringify(db));
+    closeModal(); render(); push();
+}
+
+function closeModal() { document.getElementById('modal').style.display = "none"; }
+function closeTable() { document.getElementById('detailsTable').style.display = "none"; }
+function wipe() { if(confirm("Clear all data?")) { channels.forEach(c => db[c]=[]); localStorage.setItem('v16_db', JSON.stringify(db)); push(); render(); } }
+
+setup();
 </script>
 </body>
 </html>
