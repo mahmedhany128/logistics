@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Logistics Intelligence - Deep Analytics</title>
+<title>Logistics Pro - Analytics Edition</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -17,14 +17,16 @@
 
     /* Header & Action Bar */
     header { padding: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .sync-tag { font-size: 0.65rem; font-weight: 800; padding: 6px 14px; border-radius: 30px; background: #fff; border: 1px solid var(--border); box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+    
     .actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 25px; }
     .btn { padding: 12px; border-radius: 14px; border: 1px solid var(--border); background: #fff; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: 0.2s; }
-    .btn-main { background: var(--text); color: #fff; border: none; }
+    .btn-main { background: var(--text); color: #fff; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
 
     /* Metrics Cards */
     .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 25px; }
     .card { background: #fff; padding: 20px; border-radius: 24px; border: 1px solid var(--border); transition: 0.3s; cursor: pointer; }
-    .card.active { border: 2px solid var(--brand); background: #fdfdff; box-shadow: 0 10px 20px rgba(79,70,229,0.05); }
+    .card.active { border: 2px solid var(--brand); background: #fdfdff; }
     .card-label { font-size: 0.65rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; }
     .card-val { font-size: 1.8rem; font-weight: 800; display: block; margin-top: 5px; }
 
@@ -32,49 +34,45 @@
     .table-container { display: none; background: #fff; border-radius: 28px; border: 1px solid var(--border); margin-bottom: 30px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.05); animation: slideUp 0.4s ease; }
     @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     
-    .table-top { padding: 20px 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; background: #fafbfc; }
+    .table-top { padding: 20px 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; background: #fafbfc; align-items: center; }
     .table-top h3 { margin: 0; font-size: 0.95rem; font-weight: 800; color: var(--brand); }
 
     .table-scroll { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; min-width: 700px; }
-    
+    table { width: 100%; border-collapse: collapse; min-width: 750px; }
     th { background: #fff; padding: 15px; font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; border-bottom: 1px solid var(--border); text-align: center; }
-    
-    td { padding: 15px 10px; border-bottom: 1px solid #f8fafc; vertical-align: middle; text-align: center; }
+    td { padding: 15px 10px; border-bottom: 1px solid #f8fafc; text-align: center; }
 
-    /* Cell Analysis Styles */
+    /* Analytics Styles */
     .cell-main { font-size: 1rem; font-weight: 800; display: block; color: var(--text); }
     .cell-sub { font-size: 0.65rem; font-weight: 600; color: var(--text-dim); display: block; margin-top: 2px; }
-    .trend { font-size: 0.6rem; margin-left: 3px; }
+    .trend { font-size: 0.7rem; margin-left: 3px; font-weight: bold; }
     .trend-up { color: var(--s-clr); }
     .trend-down { color: var(--c-clr); }
 
-    .date-cell { text-align: left; padding-left: 25px; width: 150px; }
+    .date-cell { text-align: left !important; padding-left: 25px !important; width: 160px; }
     .date-val { font-weight: 800; font-size: 0.9rem; color: var(--text); display: block; }
     .day-val { font-size: 0.65rem; color: var(--text-dim); font-weight: 600; }
 
-    /* Efficiency Gauge */
-    .gauge-wrap { width: 50px; height: 4px; background: #eee; border-radius: 10px; margin: 5px auto; overflow: hidden; }
-    .gauge-fill { height: 100%; border-radius: 10px; }
+    .gauge-wrap { width: 50px; height: 5px; background: #eee; border-radius: 10px; margin: 6px auto; overflow: hidden; }
+    .gauge-fill { height: 100%; border-radius: 10px; transition: 0.5s; }
 
-    /* Chart Card */
-    .chart-card { background: #fff; padding: 25px; border-radius: 28px; border: 1px solid var(--border); margin-bottom: 40px; }
-    .chart-area { height: 280px; }
-
-    .badge-pro { padding: 5px 10px; border-radius: 10px; font-size: 0.75rem; font-weight: 800; }
+    /* Modal */
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+    .modal-box { background: #fff; width: 92%; max-width: 420px; padding: 30px; border-radius: 30px; }
+    input { width: 100%; padding: 14px; margin: 10px 0; border: 1px solid var(--border); border-radius: 15px; font-weight: 600; background: #f8fafc; }
 </style>
 </head>
 <body>
 
 <header>
-    <h1 style="letter-spacing:-1px">Logistics Hub</h1>
-    <div id="status" style="font-size:0.6rem; font-weight:800; color:var(--brand); background:#eef2ff; padding:5px 12px; border-radius:20px;">ANALYTICS LIVE</div>
+    <h1 style="letter-spacing:-1px">Insights Hub</h1>
+    <div id="syncStatus" class="sync-tag">CONNECTING...</div>
 </header>
 
 <div class="actions">
-    <button class="btn btn-main" onclick="alert('Add data feature is ready')">+ New Entry</button>
-    <button class="btn">Reports</button>
-    <button class="btn" onclick="localStorage.clear(); location.reload();">Reset</button>
+    <button class="btn btn-main" onclick="openAddModal()">+ New Entry</button>
+    <button class="btn" onclick="exportData()">Export</button>
+    <button class="btn" onclick="resetConfig()" style="color:var(--c-clr)">Reset Cloud</button>
 </div>
 
 <div class="metrics" id="metricsPanel"></div>
@@ -82,18 +80,18 @@
 <div id="tableContainer" class="table-container">
     <div class="table-top">
         <h3 id="tableTitle">ANALYTICS</h3>
-        <button onclick="closeTable()" style="border:none; background:#f1f5f9; padding:5px 12px; border-radius:10px; font-weight:800; cursor:pointer;">CLOSE</button>
+        <button onclick="closeTable()" style="border:none; background:#f1f5f9; padding:8px 15px; border-radius:12px; font-weight:800; cursor:pointer;">CLOSE ×</button>
     </div>
     <div class="table-scroll">
         <table>
             <thead>
                 <tr>
-                    <th style="text-align:left; padding-left:25px">Date Period</th>
-                    <th style="color:var(--s-clr)">Success Analytics</th>
-                    <th style="color:var(--p-clr)">Pending Analytics</th>
-                    <th style="color:var(--c-clr)">Cancel Analytics</th>
+                    <th style="text-align:left; padding-left:25px">Date & Day</th>
+                    <th style="color:var(--s-clr)">Success Analysis</th>
+                    <th style="color:var(--p-clr)">Pending Analysis</th>
+                    <th style="color:var(--c-clr)">Cancel Analysis</th>
                     <th>Volume</th>
-                    <th>Performance</th>
+                    <th>Rate %</th>
                 </tr>
             </thead>
             <tbody id="tableBody"></tbody>
@@ -101,42 +99,88 @@
     </div>
 </div>
 
-<div class="chart-card">
-    <div class="chart-area"><canvas id="mainChart"></canvas></div>
+<div id="addModal" class="modal">
+    <div class="modal-box">
+        <h2 style="margin:0 0 20px 0; font-weight:800">Add Daily Logs</h2>
+        <input type="date" id="modalDate">
+        <div id="modalInputs"></div>
+        <button class="btn btn-main" style="width:100%; margin-top:20px" id="saveBtn">Sync to Cloud</button>
+        <button class="btn" style="width:100%; margin-top:10px; border:none" onclick="closeAddModal()">Cancel</button>
+    </div>
 </div>
 
 <script>
+// --- تكوين التخزين والربط ---
+let config = JSON.parse(localStorage.getItem('gh_config')) || null;
 const types = ["Delivery", "PickUp", "SameDay", "Khazenly"];
 const colors = { Delivery: '#4f46e5', PickUp: '#10b981', SameDay: '#f59e0b', Khazenly: '#ef4444' };
-let storage = JSON.parse(localStorage.getItem("deep_data_v6")) || {};
+let storage = JSON.parse(localStorage.getItem("logistics_master_data")) || {};
 types.forEach(t => { if(!storage[t]) storage[t] = []; });
 let activeType = null;
 
-// تجربة بيانات للعرض التحليلي
-if(storage.Delivery.length === 0) {
-    storage.Delivery = [
-        {date: '2026-02-06', s: 120, p: 15, c: 5},
-        {date: '2026-02-05', s: 95, p: 20, c: 10},
-        {date: '2026-02-04', s: 110, p: 10, c: 2}
-    ];
-}
-
+// --- وظائف التاريخ ---
 function formatProDate(str) {
     const d = new Date(str);
+    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     const dayName = d.toLocaleDateString('en-US', { weekday: 'long' });
-    return { 
-        full: `${d.getDate()} ${["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getMonth()]} ${d.getFullYear()}`,
-        day: dayName
-    };
+    return { full: `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`, day: dayName };
 }
 
-function draw() {
+// --- الربط مع GitHub ---
+async function init() {
+    if (!config) {
+        const token = prompt("GitHub Token:");
+        const user = prompt("Username:");
+        const repo = prompt("Repo Name:");
+        if (token) {
+            config = { token, user, repo };
+            localStorage.setItem('gh_config', JSON.stringify(config));
+            location.reload();
+        }
+    } else { await pull(); }
+}
+
+async function pull() {
+    const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
+    try {
+        const r = await fetch(url, { headers: { 'Authorization': `token ${config.token}` } });
+        if(r.ok) {
+            const j = await r.json();
+            storage = JSON.parse(decodeURIComponent(escape(atob(j.content))));
+            localStorage.setItem("logistics_master_data", JSON.stringify(storage));
+            document.getElementById('syncStatus').innerText = "✅ CLOUD SYNCED";
+        }
+    } catch(e) { document.getElementById('syncStatus').innerText = "⚠️ OFFLINE MODE"; }
+    renderUI();
+}
+
+async function push() {
+    document.getElementById('syncStatus').innerText = "⏳ UPLOADING...";
+    const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
+    try {
+        const r = await fetch(url, { headers: { 'Authorization': `token ${config.token}` } });
+        let sha = (r.ok) ? (await r.json()).sha : "";
+        await fetch(url, {
+            method: 'PUT',
+            headers: { 'Authorization': `token ${config.token}` },
+            body: JSON.stringify({ message: "Update", content: btoa(unescape(encodeURIComponent(JSON.stringify(storage, null, 2)))), sha: sha })
+        });
+        document.getElementById('syncStatus').innerText = "✅ CLOUD SECURE";
+    } catch(e) { alert("Upload Failed"); }
+}
+
+// --- التغييرات الأساسية والواجهة ---
+function renderUI() {
+    const m = new Date().getMonth(); const y = new Date().getFullYear();
     document.getElementById("metricsPanel").innerHTML = types.map(t => {
-        const total = storage[t].reduce((a, b) => a + (b.s || 0), 0);
+        const total = storage[t].filter(d => {
+            const dt = new Date(d.date); return dt.getFullYear() === y && dt.getMonth() === m;
+        }).reduce((a, b) => a + (b.s || 0), 0);
         return `
             <div class="card ${activeType === t ? 'active' : ''}" onclick="showDeepAnalysis('${t}')">
                 <span class="card-label" style="color:${colors[t]}">${t}</span>
                 <span class="card-val">${total.toLocaleString()}</span>
+                <div style="height:4px; width:30px; background:${colors[t]}; border-radius:10px; margin-top:10px"></div>
             </div>`;
     }).join('');
 }
@@ -151,78 +195,67 @@ function showDeepAnalysis(type) {
     const sorted = storage[type].sort((a,b) => new Date(b.date) - new Date(a.date));
 
     body.innerHTML = sorted.map((r, index) => {
-        const prev = sorted[index + 1]; // اليوم السابق للمقارنة
+        const prev = sorted[index + 1];
         const total = r.s + r.p + r.c;
-        const s_perc = ((r.s / total) * 100).toFixed(0);
-        const p_perc = ((r.p / total) * 100).toFixed(0);
-        const c_perc = ((r.c / total) * 100).toFixed(0);
+        const s_p = total > 0 ? ((r.s/total)*100).toFixed(0) : 0;
+        const p_p = total > 0 ? ((r.p/total)*100).toFixed(0) : 0;
+        const c_p = total > 0 ? ((r.c/total)*100).toFixed(0) : 0;
         
-        // حساب الاتجاه (Trend)
-        const getTrend = (curr, old) => {
+        const trend = (curr, old) => {
             if(!old) return '';
             return curr > old ? '<span class="trend trend-up">▲</span>' : (curr < old ? '<span class="trend trend-down">▼</span>' : '');
         };
 
         const dt = formatProDate(r.date);
-        const eff = ((r.s / total) * 100).toFixed(1);
-        const effColor = eff > 85 ? 'var(--s-clr)' : (eff > 60 ? 'var(--p-clr)' : 'var(--c-clr)');
+        const eff = total > 0 ? ((r.s/total)*100).toFixed(1) : 0;
+        const clr = eff > 85 ? 'var(--s-clr)' : (eff > 65 ? 'var(--p-clr)' : 'var(--c-clr)');
 
         return `
             <tr>
-                <td class="date-cell">
-                    <span class="date-val">${dt.full}</span>
-                    <span class="day-val">${dt.day}</span>
-                </td>
+                <td class="date-cell"><span class="date-val">${dt.full}</span><span class="day-val">${dt.day}</span></td>
+                <td><span class="cell-main">${r.s}${trend(r.s, prev?.s)}</span><span class="cell-sub">${s_p}% contribution</span></td>
+                <td><span class="cell-main">${r.p}${trend(r.p, prev?.p)}</span><span class="cell-sub">${p_p}% contribution</span></td>
+                <td><span class="cell-main">${r.c}${trend(r.c, prev?.c)}</span><span class="cell-sub">${c_p}% contribution</span></td>
+                <td><span class="cell-main" style="color:var(--text-dim)">${total}</span><span class="cell-sub">Ops</span></td>
                 <td>
-                    <span class="cell-main">${r.s}${getTrend(r.s, prev?.s)}</span>
-                    <span class="cell-sub">${s_perc}% of daily</span>
-                </td>
-                <td>
-                    <span class="cell-main">${r.p}${getTrend(r.p, prev?.p)}</span>
-                    <span class="cell-sub">${p_perc}% of daily</span>
-                </td>
-                <td>
-                    <span class="cell-main">${r.c}${getTrend(r.c, prev?.c)}</span>
-                    <span class="cell-sub">${c_perc}% of daily</span>
-                </td>
-                <td>
-                    <span class="cell-main" style="color:var(--text-dim)">${total}</span>
-                    <span class="cell-sub">Operations</span>
-                </td>
-                <td>
-                    <span class="badge-pro" style="background:${effColor}15; color:${effColor}">${eff}%</span>
-                    <div class="gauge-wrap"><div class="gauge-fill" style="width:${eff}%; background:${effColor}"></div></div>
+                    <span class="cell-main" style="color:${clr}">${eff}%</span>
+                    <div class="gauge-wrap"><div class="gauge-fill" style="width:${eff}%; background:${clr}"></div></div>
                 </td>
             </tr>`;
     }).join('');
-    draw();
-    box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    renderUI();
 }
 
-function closeTable() { activeType = null; document.getElementById("tableContainer").style.display = "none"; draw(); }
+function openAddModal() {
+    document.getElementById("addModal").style.display = "flex";
+    document.getElementById("modalDate").value = new Date().toISOString().split('T')[0];
+    document.getElementById("modalInputs").innerHTML = types.map(t => `
+        <div style="margin-bottom:15px; background:#f8fafc; padding:15px; border-radius:20px">
+            <label style="font-weight:800; font-size:0.7rem; color:${colors[t]}">${t.toUpperCase()}</label>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:8px">
+                <input type="number" id="s_${t}" placeholder="Succ." style="margin:0; padding:10px">
+                <input type="number" id="p_${t}" placeholder="Pend." style="margin:0; padding:10px">
+                <input type="number" id="c_${t}" placeholder="Canc." style="margin:0; padding:10px">
+            </div>
+        </div>`).join('');
 
-// تهيئة الشارت
-function initChart() {
-    const ctx = document.getElementById('mainChart').getContext('2d');
-    window.myChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['Feb 1', 'Feb 2', 'Feb 3', 'Feb 4', 'Feb 5', 'Feb 6'],
-            datasets: [{
-                label: 'Performance',
-                data: [65, 78, 90, 85, 92, 88],
-                backgroundColor: 'rgba(79, 70, 229, 0.1)',
-                borderColor: '#4f46e5',
-                borderWidth: 2,
-                borderRadius: 8
-            }]
-        },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false } } } }
-    });
+    document.getElementById("saveBtn").onclick = async () => {
+        const d = document.getElementById("modalDate").value;
+        types.forEach(t => {
+            const entry = { date: d, s: parseInt(document.getElementById(`s_${t}`).value)||0, p: parseInt(document.getElementById(`p_${t}`).value)||0, c: parseInt(document.getElementById(`c_${t}`).value)||0 };
+            const idx = storage[t].findIndex(x => x.date === d);
+            if(idx >= 0) storage[t][idx] = entry; else storage[t].push(entry);
+        });
+        localStorage.setItem("logistics_master_data", JSON.stringify(storage));
+        closeAddModal(); renderUI(); await push();
+    };
 }
 
-draw();
-initChart();
+function closeAddModal() { document.getElementById("addModal").style.display = "none"; }
+function closeTable() { activeType = null; document.getElementById("tableContainer").style.display = "none"; renderUI(); }
+function resetConfig() { localStorage.removeItem('gh_config'); location.reload(); }
+
+init();
 </script>
 </body>
 </html>
