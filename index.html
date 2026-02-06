@@ -3,136 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Insight Flex Pro</title>
+    <title>Insight Pro - Classic Edition</title>
 
     <script src="https://unpkg.com/@zxing/library@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     
     <style>
         :root { 
-            --bg: #000000; --card: #121212; --brand: #ff9900; --text: #ffffff; 
-            --success: #34d399; --danger: #fb7185; --warning: #fbbf24; --border: #222;
+            --bg: #0f172a; --card: #1e293b; --brand: #818cf8; --text: #f1f5f9; 
+            --dim: #94a3b8; --border: #334155; --success: #34d399; --danger: #fb7185; --warning: #fbbf24;
         }
-        * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background: var(--bg); color: var(--text); margin: 0; padding: 15px; padding-bottom: 100px; }
+        * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: var(--text); margin: 0; padding: 15px; padding-bottom: 120px; }
         
-        /* Dashboard Styling */
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .sync-badge { font-size: 0.7rem; color: var(--brand); font-weight: 800; border: 1px solid var(--brand); padding: 4px 10px; border-radius: 10px; }
-        
+        .sync-badge { font-size: 0.65rem; font-weight: 800; color: var(--brand); background: #818cf820; padding: 6px 12px; border-radius: 20px; }
+
+        .month-ctrl { background: var(--card); border: 1px solid var(--border); padding: 12px 20px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .nav-btn { background: var(--bg); border: none; width: 42px; height: 42px; border-radius: 14px; color: var(--brand); font-weight: 800; cursor: pointer; }
+
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-        .stat-card { background: var(--card); padding: 20px; border-radius: 20px; border: 1px solid var(--border); position: relative; cursor: pointer; }
-        .stat-perc { position: absolute; top: 15px; right: 15px; color: var(--success); font-weight: 900; font-size: 0.75rem; }
-        .stat-label { font-size: 0.7rem; color: #777; font-weight: 700; text-transform: uppercase; }
-        .stat-val { font-size: 1.8rem; font-weight: 900; display: block; margin-top: 5px; }
+        .stat-card { background: var(--card); padding: 18px; border-radius: 24px; border: 1px solid var(--border); position: relative; cursor: pointer; }
+        .stat-perc { font-size: 0.65rem; font-weight: 800; color: var(--success); position: absolute; top: 18px; right: 18px; background: #34d39915; padding: 2px 6px; border-radius: 6px; }
+        .stat-label { font-size: 0.65rem; font-weight: 700; color: var(--dim); text-transform: uppercase; }
+        .stat-val { font-size: 1.5rem; font-weight: 800; display: block; margin-top: 5px; color: #fff; }
 
-        /* Amazon Flex Scanner UI */
-        #scannerOverlay { display: none; position: fixed; inset: 0; background: #000; z-index: 10000; }
+        #detailsTable { display: none; margin-bottom: 25px; }
+        .table-container { background: var(--card); border-radius: 24px; border: 1px solid var(--border); overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; }
+        th { font-size: 0.6rem; color: var(--dim); padding: 15px; background: #1e293b; text-transform: uppercase; }
+        td { padding: 16px 10px; text-align: center; border-bottom: 1px solid #334155; font-size: 0.85rem; font-weight: 600; }
+        .clickable-cell { cursor: pointer; text-decoration: underline; color: var(--brand); }
+
+        #scannerOverlay { display: none; position: fixed; inset: 0; background: #000; z-index: 9999; flex-direction: column; }
         #video { width: 100%; height: 100%; object-fit: cover; }
-        
-        .scan-window { 
-            position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%);
-            width: 85%; height: 250px; border: 2px solid rgba(255,255,255,0.3); border-radius: 30px;
-            box-shadow: 0 0 0 1000px rgba(0,0,0,0.7);
-        }
-        .laser { position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--brand); box-shadow: 0 0 15px var(--brand); animation: scanMove 2s infinite ease-in-out; }
-        @keyframes scanMove { 0%, 100% { top: 0%; } 50% { top: 100%; } }
+        .scanner-ui { position: absolute; bottom: 0; left: 0; right: 0; background: var(--card); padding: 25px; border-radius: 35px 35px 0 0; border-top: 2px solid var(--brand); }
 
-        .scan-ui-top { position: absolute; top: 40px; left: 0; right: 0; text-align: center; font-weight: 900; font-size: 1.2rem; color: var(--brand); text-shadow: 0 2px 10px #000; }
-        .scan-ui-bottom { position: absolute; bottom: 0; left: 0; right: 0; padding: 40px 20px; background: linear-gradient(transparent, #000); text-align: center; }
-        .scan-count { background: var(--brand); color: #000; padding: 10px 30px; border-radius: 50px; font-weight: 900; font-size: 1.5rem; display: inline-block; margin-bottom: 20px; }
-        .flash-feedback { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: 0.1s; background: var(--success); z-index: 10001; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000; align-items: flex-end; justify-content: center; backdrop-filter: blur(8px); }
+        .modal-content { background: var(--card); width: 100%; max-width: 500px; padding: 30px; border-radius: 35px 35px 0 0; border: 1px solid var(--border); max-height: 90vh; overflow-y: auto; }
+        
+        input, select { width: 100%; padding: 14px; margin: 10px 0; border: 1px solid var(--border); border-radius: 15px; background: var(--bg); color: #fff; font-weight: 700; }
+        .btn-add { background: var(--brand); color: #fff; border: none; padding: 18px; border-radius: 20px; font-weight: 800; width: 100%; cursor: pointer; }
 
-        /* Tables & Modals */
-        .table-view { background: var(--card); border-radius: 20px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 20px; display: none; }
-        table { width: 100%; border-collapse: collapse; text-align: center; }
-        th { background: #1a1a1a; padding: 12px; font-size: 0.7rem; color: #777; }
-        td { padding: 15px; border-bottom: 1px solid #222; font-weight: 700; }
-        
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 20000; align-items: flex-end; }
-        .modal-content { background: var(--card); width: 100%; padding: 30px; border-radius: 30px 30px 0 0; max-height: 85vh; overflow-y: auto; }
-        
-        input, select { width: 100%; padding: 15px; margin: 10px 0; border: 1px solid var(--border); border-radius: 12px; background: #000; color: #fff; font-weight: 700; }
-        .btn-flex { background: var(--brand); color: #000; border: none; padding: 18px; border-radius: 15px; font-weight: 900; width: 100%; cursor: pointer; }
-        .chip { background: #ff990020; color: var(--brand); padding: 5px 12px; border-radius: 10px; font-size: 0.75rem; border: 1px solid #ff990040; margin: 2px; display: inline-block; }
+        .scan-frame { position: absolute; inset: 0; border: 2px solid rgba(255,255,255,0.3); margin: auto; width: 300px; height: 180px; border-radius: 20px; box-shadow: 0 0 0 1000px rgba(0,0,0,0.6); pointer-events: none; }
+        .chip { background: #818cf820; color: var(--brand); padding: 5px 12px; border-radius: 10px; font-size: 0.75rem; border: 1px solid #818cf840; margin: 2px; display: inline-block; }
     </style>
 </head>
 <body>
 
 <header>
-    <h1 style="margin:0; font-size:1.4rem; font-weight:900;">FLEX <span style="color:var(--brand)">PRO</span></h1>
-    <div id="syncStatus" class="sync-badge">☁️ CONNECTED</div>
+    <h1 style="margin:0; font-size:1.4rem; font-weight:800;">Insight Pro</h1>
+    <div id="sync" class="sync-badge">☁️ Connected</div>
 </header>
+
+<div class="month-ctrl">
+    <button class="nav-btn" onclick="moveMonth(-1)">‹</button>
+    <span id="monthLab" style="font-weight:800;">---</span>
+    <button class="nav-btn" onclick="moveMonth(1)">›</button>
+</div>
 
 <div class="grid" id="metricsPanel"></div>
 
-<div id="tableSection" class="table-view">
-    <div style="padding:15px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #222">
-        <span id="activeType" style="font-weight:900; color:var(--brand)">DELIVERY</span>
-        <button onclick="document.getElementById('tableSection').style.display='none'" style="background:none; border:none; color:#666; font-weight:700">CLOSE</button>
+<div id="detailsTable">
+    <div class="table-container">
+        <div style="padding:15px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between;">
+            <span id="activeTitle" style="font-weight:800; color:var(--brand)">Details</span>
+            <button onclick="document.getElementById('detailsTable').style.display='none'" style="background:none; border:none; color:var(--dim)">Close</button>
+        </div>
+        <table>
+            <thead><tr><th>Day</th><th>S</th><th>P</th><th>C</th></tr></thead>
+            <tbody id="tableBody"></tbody>
+        </table>
     </div>
-    <table>
-        <thead><tr><th>DATE</th><th>S</th><th>P</th><th>C</th></tr></thead>
-        <tbody id="tableBody"></tbody>
-    </table>
 </div>
 
-<div style="background: var(--card); padding: 15px; border-radius: 20px; border: 1px solid var(--border); height: 250px; margin-bottom: 20px;">
+<div style="background: var(--card); padding: 20px; border-radius: 28px; border: 1px solid var(--border); height: 280px; margin-bottom: 20px;">
     <canvas id="mainChart"></canvas>
 </div>
 
-<div style="position: fixed; bottom: 20px; left: 15px; right: 15px;">
-    <button class="btn-flex" onclick="openLogModal()">UPDATE SHIPMENTS</button>
+<div style="position: fixed; bottom: 20px; left: 15px; right: 15px; z-index: 100;">
+    <button class="btn-add" onclick="openLogModal()">+ Update Activities</button>
 </div>
 
 <div id="scannerOverlay">
-    <div id="flashFeedback" class="flash-feedback"></div>
     <video id="video"></video>
-    <div class="scan-ui-top">
-        <div id="scanMsg">ALIGN BARCODE</div>
-        <div id="lastBarcode" style="font-size:0.8rem; color:#fff; font-weight:400; margin-top:5px">Ready...</div>
-    </div>
-    <div class="scan-window"><div class="laser"></div></div>
-    <div class="scan-ui-bottom">
-        <div id="scanCount" class="scan-count">0</div>
-        <div style="display:grid; grid-template-columns: 1fr 2fr; gap:10px">
-            <button onclick="toggleTorch()" style="background:#222; color:#fff; border:none; border-radius:15px; font-weight:700">FLASH</button>
-            <button class="btn-flex" style="background:#fff" onclick="stopScanner()">FINISH SESSION</button>
+    <div class="scan-frame"></div>
+    <div class="scanner-ui">
+        <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+            <span style="color:#fff; font-weight:800;">Universal Scanner</span>
+            <span id="scanCount" class="sync-badge">0 Items</span>
         </div>
+        <div id="livePreview" style="height:80px; overflow-y:auto; background:var(--bg); border-radius:15px; padding:10px; margin-bottom:15px"></div>
+        <button class="btn-add" style="background:var(--success); color:#000" onclick="stopScanner()">FINISH SESSION</button>
     </div>
 </div>
 
 <div id="logModal" class="modal">
     <div class="modal-content">
-        <h3 style="margin:0 0 20px 0; color:var(--brand)">New Entry</h3>
+        <h3 style="margin:0 0 20px 0;">Update Entry</h3>
         <input type="date" id="logDate">
         <div id="logInputs"></div>
-        <button class="btn-flex" onclick="saveData()">SYNC TO GITHUB</button>
-        <button onclick="document.getElementById('logModal').style.display='none'" style="width:100%; background:none; border:none; color:#666; margin-top:20px">Back</button>
+        <button class="btn-add" style="margin-top:20px" onclick="saveData()">Save Changes</button>
+        <button onclick="document.getElementById('logModal').style.display='none'" style="width:100%; border:none; background:none; margin-top:15px; color:var(--dim);">Cancel</button>
     </div>
 </div>
 
-<div id="codeModal" class="modal">
+<div id="codeViewModal" class="modal">
     <div class="modal-content">
-        <h3 id="codeTitle" style="margin:0 0 20px 0; color:var(--brand)">Codes</h3>
-        <div id="codeContainer"></div>
-        <button onclick="document.getElementById('codeModal').style.display='none'" class="btn-flex" style="margin-top:20px; background:#222; color:#fff">Close</button>
+        <h3 id="codeViewTitle" style="margin:0 0 20px 0;">Mapped Codes</h3>
+        <div id="codesList" style="display:flex; flex-wrap:wrap; gap:5px;"></div>
+        <button onclick="document.getElementById('codeViewModal').style.display='none'" class="btn-add" style="margin-top:20px; background:var(--border)">Close</button>
     </div>
 </div>
 
 <script>
 const beep = new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3');
-const errBeep = new Audio('https://assets.mixkit.co/active_storage/sfx/2570/2570-preview.mp3');
-const codeReader = new ZXing.BrowserMultiFormatReader();
-
 let config = JSON.parse(localStorage.getItem('gh_config'));
 const types = ["Delivery", "PickUp", "SameDay", "Khazenly"];
 const colors = { Delivery: '#818cf8', PickUp: '#34d399', SameDay: '#fbbf24', Khazenly: '#fb7185' };
-let storage = JSON.parse(localStorage.getItem("flex_storage_v14")) || {};
+let storage = JSON.parse(localStorage.getItem("logistics_classic_v1")) || {};
 types.forEach(t => { if(!storage[t]) storage[t] = []; });
 
-let chart, isTorchOn = false;
+let chart, viewDate = new Date();
+const codeReader = new ZXing.BrowserMultiFormatReader();
 
 async function start() {
     if (!config) {
@@ -149,99 +143,81 @@ async function pullData() {
         if(r.ok) {
             const j = await r.json();
             storage = JSON.parse(decodeURIComponent(escape(atob(j.content))));
-            localStorage.setItem("flex_storage_v14", JSON.stringify(storage));
-            document.getElementById('syncStatus').innerText = "☁️ SYNCED";
+            localStorage.setItem("logistics_classic_v1", JSON.stringify(storage));
         }
     } catch(e) {}
     render();
 }
 
 function render() {
+    const m = viewDate.getMonth(), y = viewDate.getFullYear();
+    document.getElementById('monthLab').innerText = viewDate.toLocaleString('en-US',{month:'long', year:'numeric'});
     document.getElementById('metricsPanel').innerHTML = types.map(t => {
-        const s = storage[t].reduce((a,b) => a + (parseInt(b.s)||0), 0);
-        const tot = storage[t].reduce((a,b) => a + (parseInt(b.s)+parseInt(b.p)+parseInt(b.c)||0), 0);
+        const mData = storage[t].filter(d => { const dt = new Date(d.date); return dt.getMonth() === m && dt.getFullYear() === y; });
+        const s = mData.reduce((a,b) => a + (parseInt(b.s)||0), 0);
+        const tot = mData.reduce((a,b) => a + (parseInt(b.s)+parseInt(b.p)+parseInt(b.c)||0), 0);
         return `<div class="stat-card" onclick="showTable('${t}')">
-            <span class="stat-perc">${tot>0 ? ((s/tot)*100).toFixed(0) : 0}%</span>
-            <span class="stat-label">${t}</span>
+            <span class="stat-perc">${tot>0 ? ((s/tot)*100).toFixed(1) : 0}%</span>
+            <span class="stat-label" style="color:${colors[t]}">${t}</span>
             <span class="stat-val">${s}</span>
         </div>`;
     }).join('');
-    updateChart();
+    updateChart(y, m);
 }
 
 function showTable(type) {
-    document.getElementById('tableSection').style.display = 'block';
-    document.getElementById('activeType').innerText = type;
-    document.getElementById('tableBody').innerHTML = storage[type].slice().reverse().map(r => `
+    document.getElementById("detailsTable").style.display = "block";
+    document.getElementById("activeTitle").innerText = type;
+    const m = viewDate.getMonth(), y = viewDate.getFullYear();
+    const filtered = storage[type].filter(d => { const dt = new Date(d.date); return dt.getMonth() === m && dt.getFullYear() === y; });
+    document.getElementById("tableBody").innerHTML = filtered.sort((a,b)=>new Date(b.date)-new Date(a.date)).map(r => `
         <tr>
-            <td>${r.date.split('-').slice(1).join('/')}</td>
-            <td style="color:var(--success)" onclick="viewCodes('${r.codes_s}')">${r.s}</td>
-            <td style="color:var(--warning)">${r.p}</td>
-            <td style="color:var(--danger)">${r.c}</td>
+            <td>${new Date(r.date).getDate()}</td>
+            <td class="clickable-cell" onclick="viewCodes('${r.codes_s}')">${r.s}</td>
+            <td>${r.p}</td>
+            <td>${r.c}</td>
         </tr>`).join('');
 }
 
-function viewCodes(c) {
-    if(!c) return;
-    document.getElementById('codeModal').style.display = 'flex';
-    document.getElementById('codeContainer').innerHTML = c.split(',').map(x => `<span class="chip">${x}</span>`).join('');
+function viewCodes(codes) {
+    if(!codes) return;
+    document.getElementById('codeViewModal').style.display = 'flex';
+    document.getElementById('codesList').innerHTML = codes.split(',').map(c => `<span class="chip">${c}</span>`).join('');
 }
 
 function openLogModal() {
     document.getElementById('logModal').style.display = 'flex';
     document.getElementById('logDate').value = new Date().toISOString().split('T')[0];
     document.getElementById('logInputs').innerHTML = types.map(t => `
-        <div style="background:#000; padding:15px; border-radius:15px; margin-bottom:10px; border:1px solid #222">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
-                <span style="font-weight:900; color:${colors[t]}">${t}</span>
-                <select id="cat_${t}" style="width:80px; margin:0; padding:5px"><option value="s">S</option><option value="p">P</option><option value="c">C</option></select>
+        <div style="margin-bottom:15px; border-bottom:1px solid var(--border); padding-bottom:10px">
+            <div style="display:flex; justify-content:space-between; align-items:center">
+                <span style="font-weight:800; color:${colors[t]}">${t}</span>
+                <select id="cat_${t}" style="width:70px; padding:5px;"><option value="s">S</option><option value="p">P</option><option value="c">C</option></select>
             </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
-                <input type="number" id="s_${t}" placeholder="Success" style="margin:0">
-                <button onclick="launchScanner('${t}')" style="background:#333; color:#fff; border:none; border-radius:10px; font-weight:800">📷 SCAN</button>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px">
+                <input type="number" id="s_${t}" placeholder="S">
+                <button onclick="launchScanner('${t}')" style="background:var(--brand); border:none; color:#fff; border-radius:10px;">SCAN</button>
             </div>
-            <input type="hidden" id="h_s_${t}"><input type="hidden" id="h_p_${t}"><input type="hidden" id="h_c_${t}">
+            <input type="hidden" id="h_s_${t}">
         </div>`).join('');
 }
 
 function launchScanner(type) {
-    const activeCat = document.getElementById(`cat_${type}`).value;
-    document.getElementById('scannerOverlay').style.display = 'block';
-    document.getElementById('scanCount').innerText = "0";
-    
+    const cat = document.getElementById(`cat_${type}`).value;
+    document.getElementById('scannerOverlay').style.display = 'flex';
     codeReader.decodeFromVideoDevice(undefined, 'video', (result, err) => {
         if (result) {
-            const code = result.text;
-            const h = document.getElementById(`h_${activeCat}_${type}`);
+            const h = document.getElementById(`h_s_${type}`);
             let curr = h.value ? h.value.split(',') : [];
-            
-            if(!curr.includes(code)) {
-                curr.push(code); h.value = curr.join(',');
-                document.getElementById(`${activeCat}_${type}`).value = curr.length;
+            if(!curr.includes(result.text)) {
+                curr.push(result.text); h.value = curr.join(',');
+                document.getElementById(`s_${type}`).value = curr.length;
                 document.getElementById('scanCount').innerText = curr.length;
-                document.getElementById('lastBarcode').innerText = code;
-                document.getElementById('scanMsg').innerText = "✓ SCANNED";
-                
-                // Feedback
-                const f = document.getElementById('flashFeedback');
-                f.style.opacity = '0.3'; setTimeout(() => f.style.opacity = '0', 100);
+                document.getElementById('livePreview').prepend(Object.assign(document.createElement('div'), {innerText: result.text, className:'chip'}));
                 beep.play(); navigator.vibrate(100);
-            } else {
-                errBeep.play(); navigator.vibrate([50,50]);
-                document.getElementById('scanMsg').innerText = "ALREADY SCANNED";
             }
         }
     });
-}
-
-async function toggleTorch() {
-    const video = document.getElementById('video');
-    const stream = video.srcObject;
-    if(stream) {
-        const track = stream.getVideoTracks()[0];
-        isTorchOn = !isTorchOn;
-        await track.applyConstraints({ advanced: [{ torch: isTorchOn }] });
-    }
 }
 
 function stopScanner() { codeReader.reset(); document.getElementById('scannerOverlay').style.display = 'none'; }
@@ -252,39 +228,40 @@ async function saveData() {
         const idx = storage[t].findIndex(x => x.date === d);
         const sVal = document.getElementById(`s_${t}`).value;
         const codes = document.getElementById(`h_s_${t}`).value;
-        if(idx >= 0) {
-            if(sVal !== "") storage[t][idx].s = parseInt(sVal);
+        if (idx >= 0) {
+            if(sVal!=="") storage[t][idx].s = parseInt(sVal);
             if(codes) storage[t][idx].codes_s = [...new Set(((storage[t][idx].codes_s||"").split(',').concat(codes.split(','))).filter(x=>x))].join(',');
         } else {
             storage[t].push({date:d, s:parseInt(sVal)||0, p:0, c:0, codes_s:codes});
         }
     });
-    localStorage.setItem("flex_storage_v14", JSON.stringify(storage));
-    document.getElementById('logModal').style.display = 'none'; render(); await pushToGitHub();
+    localStorage.setItem("logistics_classic_v1", JSON.stringify(storage));
+    document.getElementById('logModal').style.display = 'none'; render(); await pushData();
 }
 
-async function pushToGitHub() {
+async function pushData() {
     const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
     try {
         const r = await fetch(url, { headers: {'Authorization': `token ${config.token}`} });
         const sha = r.ok ? (await r.json()).sha : "";
-        await fetch(url, { method: 'PUT', headers: {'Authorization': `token ${config.token}`}, body: JSON.stringify({ message:"Flex Sync", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage, null, 2)))), sha }) });
-        document.getElementById('syncStatus').innerText = "☁️ SYNCED";
+        await fetch(url, { method: 'PUT', headers: {'Authorization': `token ${config.token}`}, body: JSON.stringify({ message:"Classic Sync", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage, null, 2)))), sha }) });
+        document.getElementById('sync').innerText = "☁️ Synced";
     } catch(e) {}
 }
 
-function updateChart() {
+function updateChart(y, m) {
     const ctx = document.getElementById('mainChart').getContext('2d');
+    const days = new Date(y, m+1, 0).getDate();
+    const datasets = types.map(t => ({
+        label: t, data: Array.from({length:days}, (_,i) => {
+            const dStr = `${y}-${String(m+1).padStart(2,'0')}-${String(i+1).padStart(2,'0')}`;
+            const f = storage[t].find(x => x.date === dStr); return f ? f.s : 0;
+        }), backgroundColor: colors[t], borderRadius: 4
+    }));
     if(chart) chart.destroy();
-    chart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: types,
-            datasets: [{ label: 'Success', data: types.map(t => storage[t].reduce((a,b)=>a+(parseInt(b.s)||0), 0)), backgroundColor: '#ff9900' }]
-        },
-        options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{grid:{color:'#222'}}} }
-    });
+    chart = new Chart(ctx, { type: 'bar', data: { labels: Array.from({length:days}, (_,i)=>i+1), datasets }, options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{stacked:true}, y:{stacked:true}} } });
 }
+function moveMonth(dir) { viewDate.setMonth(viewDate.getMonth()+dir); render(); }
 start();
 </script>
 </body>
