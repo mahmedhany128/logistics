@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Insight Enterprise - Flex Pro</title>
+    <title>Insight Flex Pro</title>
 
     <script src="https://unpkg.com/@zxing/library@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -11,146 +11,232 @@
     
     <style>
         :root { 
-            --bg: #050505; --card: #111111; --brand: #ff9900; --accent: #2196f3;
-            --success: #00ff88; --danger: #ff3d00; --border: #222222;
+            --bg: #000000; --card: #121212; --brand: #ff9900; --text: #ffffff; 
+            --success: #34d399; --danger: #fb7185; --warning: #fbbf24; --border: #222;
         }
-        * { box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
-        body { background: var(--bg); color: #fff; margin: 0; padding: 20px; overflow-x: hidden; }
-
-        /* Header UI */
-        .app-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-        .status-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; display: inline-block; margin-right: 5px; box-shadow: 0 0 10px var(--success); }
-
-        /* Metrics Grid */
-        .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .m-card { background: var(--card); padding: 20px; border-radius: 20px; border: 1px solid var(--border); position: relative; transition: 0.3s; }
-        .m-card:active { transform: scale(0.97); background: #1a1a1a; }
-        .m-label { font-size: 0.7rem; color: #666; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
-        .m-value { font-size: 1.8rem; font-weight: 900; display: block; margin-top: 5px; }
-        .m-perc { position: absolute; bottom: 20px; right: 20px; font-size: 0.75rem; font-weight: 900; color: var(--brand); }
-
-        /* Advanced Scanner Overlay */
-        #scannerOverlay { display: none; position: fixed; inset: 0; background: #000; z-index: 10000; transition: 0.3s; }
-        #video { width: 100%; height: 100%; object-fit: cover; opacity: 0.8; }
+        * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg); color: var(--text); margin: 0; padding: 15px; padding-bottom: 100px; }
         
-        .scan-region { 
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 280px; height: 280px; border: 2px solid rgba(255,255,255,0.1); border-radius: 40px;
+        /* Dashboard Styling */
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .sync-badge { font-size: 0.7rem; color: var(--brand); font-weight: 800; border: 1px solid var(--brand); padding: 4px 10px; border-radius: 10px; }
+        
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .stat-card { background: var(--card); padding: 20px; border-radius: 20px; border: 1px solid var(--border); position: relative; cursor: pointer; }
+        .stat-perc { position: absolute; top: 15px; right: 15px; color: var(--success); font-weight: 900; font-size: 0.75rem; }
+        .stat-label { font-size: 0.7rem; color: #777; font-weight: 700; text-transform: uppercase; }
+        .stat-val { font-size: 1.8rem; font-weight: 900; display: block; margin-top: 5px; }
+
+        /* Amazon Flex Scanner UI */
+        #scannerOverlay { display: none; position: fixed; inset: 0; background: #000; z-index: 10000; }
+        #video { width: 100%; height: 100%; object-fit: cover; }
+        
+        .scan-window { 
+            position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%);
+            width: 85%; height: 250px; border: 2px solid rgba(255,255,255,0.3); border-radius: 30px;
+            box-shadow: 0 0 0 1000px rgba(0,0,0,0.7);
         }
-        .scan-corner { position: absolute; width: 40px; height: 40px; border: 4px solid var(--brand); border-radius: 10px; }
-        .tl { top: -2px; left: -2px; border-right: 0; border-bottom: 0; }
-        .tr { top: -2px; right: -2px; border-left: 0; border-bottom: 0; }
-        .bl { bottom: -2px; left: -2px; border-right: 0; border-top: 0; }
-        .br { bottom: -2px; right: -2px; border-left: 0; border-top: 0; }
+        .laser { position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--brand); box-shadow: 0 0 15px var(--brand); animation: scanMove 2s infinite ease-in-out; }
+        @keyframes scanMove { 0%, 100% { top: 0%; } 50% { top: 100%; } }
 
-        .flash-effect { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: 0.1s; z-index: 10001; }
+        .scan-ui-top { position: absolute; top: 40px; left: 0; right: 0; text-align: center; font-weight: 900; font-size: 1.2rem; color: var(--brand); text-shadow: 0 2px 10px #000; }
+        .scan-ui-bottom { position: absolute; bottom: 0; left: 0; right: 0; padding: 40px 20px; background: linear-gradient(transparent, #000); text-align: center; }
+        .scan-count { background: var(--brand); color: #000; padding: 10px 30px; border-radius: 50px; font-weight: 900; font-size: 1.5rem; display: inline-block; margin-bottom: 20px; }
+        .flash-feedback { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: 0.1s; background: var(--success); z-index: 10001; }
 
-        /* Controls */
-        .btn-main { background: var(--brand); color: #000; border: none; padding: 20px; border-radius: 18px; font-weight: 900; font-size: 1rem; width: 100%; cursor: pointer; box-shadow: 0 10px 20px rgba(255,153,0,0.2); }
-        .floating-controls { position: absolute; bottom: 40px; left: 20px; right: 20px; display: flex; flex-direction: column; gap: 15px; }
+        /* Tables & Modals */
+        .table-view { background: var(--card); border-radius: 20px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 20px; display: none; }
+        table { width: 100%; border-collapse: collapse; text-align: center; }
+        th { background: #1a1a1a; padding: 12px; font-size: 0.7rem; color: #777; }
+        td { padding: 15px; border-bottom: 1px solid #222; font-weight: 700; }
         
-        #lastCodeTag { background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 12px; border-radius: 12px; text-align: center; font-weight: 700; font-size: 0.9rem; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 20000; align-items: flex-end; }
+        .modal-content { background: var(--card); width: 100%; padding: 30px; border-radius: 30px 30px 0 0; max-height: 85vh; overflow-y: auto; }
+        
+        input, select { width: 100%; padding: 15px; margin: 10px 0; border: 1px solid var(--border); border-radius: 12px; background: #000; color: #fff; font-weight: 700; }
+        .btn-flex { background: var(--brand); color: #000; border: none; padding: 18px; border-radius: 15px; font-weight: 900; width: 100%; cursor: pointer; }
+        .chip { background: #ff990020; color: var(--brand); padding: 5px 12px; border-radius: 10px; font-size: 0.75rem; border: 1px solid #ff990040; margin: 2px; display: inline-block; }
     </style>
 </head>
 <body>
 
-<div class="app-bar">
-    <div>
-        <h1 style="margin:0; font-size:1.6rem; font-weight:900;">FLEX<span style="color:var(--brand)">PRO</span></h1>
-        <div style="font-size:0.7rem; color:#666; margin-top:4px"><span class="status-dot"></span> SYSTEM OPERATIONAL</div>
+<header>
+    <h1 style="margin:0; font-size:1.4rem; font-weight:900;">FLEX <span style="color:var(--brand)">PRO</span></h1>
+    <div id="syncStatus" class="sync-badge">☁️ CONNECTED</div>
+</header>
+
+<div class="grid" id="metricsPanel"></div>
+
+<div id="tableSection" class="table-view">
+    <div style="padding:15px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #222">
+        <span id="activeType" style="font-weight:900; color:var(--brand)">DELIVERY</span>
+        <button onclick="document.getElementById('tableSection').style.display='none'" style="background:none; border:none; color:#666; font-weight:700">CLOSE</button>
     </div>
-    <div id="syncStatus" style="font-weight:900; color:var(--brand); font-size:0.8rem">SYNCED</div>
+    <table>
+        <thead><tr><th>DATE</th><th>S</th><th>P</th><th>C</th></tr></thead>
+        <tbody id="tableBody"></tbody>
+    </table>
 </div>
 
-<div class="metrics-grid" id="metricsPanel"></div>
-
-<div style="margin-top:30px; background:var(--card); padding:20px; border-radius:24px; border:1px solid var(--border)">
-    <canvas id="mainChart" style="height:250px"></canvas>
+<div style="background: var(--card); padding: 15px; border-radius: 20px; border: 1px solid var(--border); height: 250px; margin-bottom: 20px;">
+    <canvas id="mainChart"></canvas>
 </div>
 
-<div style="position: fixed; bottom: 30px; left: 20px; right: 20px;">
-    <button class="btn-main" onclick="openControlPanel()">OPEN WORKSTATION</button>
+<div style="position: fixed; bottom: 20px; left: 15px; right: 15px;">
+    <button class="btn-flex" onclick="openLogModal()">UPDATE SHIPMENTS</button>
 </div>
 
 <div id="scannerOverlay">
-    <div id="flashLayer" class="flash-effect"></div>
+    <div id="flashFeedback" class="flash-feedback"></div>
     <video id="video"></video>
-    
-    <div class="scan-region">
-        <div class="scan-corner tl"></div><div class="scan-corner tr"></div>
-        <div class="scan-corner bl"></div><div class="scan-corner br"></div>
-        <div style="position:absolute; top:50%; width:100%; height:2px; background:var(--brand); box-shadow: 0 0 15px var(--brand); animation: pulse 1s infinite;"></div>
+    <div class="scan-ui-top">
+        <div id="scanMsg">ALIGN BARCODE</div>
+        <div id="lastBarcode" style="font-size:0.8rem; color:#fff; font-weight:400; margin-top:5px">Ready...</div>
     </div>
-
-    <div class="floating-controls">
-        <div id="lastCodeTag">SCAN BARCODE</div>
-        <div style="display:flex; gap:10px">
-            <button onclick="toggleTorch()" style="flex:1; background:#222; color:#fff; border:none; padding:15px; border-radius:15px; font-weight:700">FLASHLIGHT</button>
-            <button onclick="stopScanner()" style="flex:2; background:#fff; color:#000; border:none; padding:15px; border-radius:15px; font-weight:900">COMPLETE SESSION</button>
+    <div class="scan-window"><div class="laser"></div></div>
+    <div class="scan-ui-bottom">
+        <div id="scanCount" class="scan-count">0</div>
+        <div style="display:grid; grid-template-columns: 1fr 2fr; gap:10px">
+            <button onclick="toggleTorch()" style="background:#222; color:#fff; border:none; border-radius:15px; font-weight:700">FLASH</button>
+            <button class="btn-flex" style="background:#fff" onclick="stopScanner()">FINISH SESSION</button>
         </div>
     </div>
 </div>
 
+<div id="logModal" class="modal">
+    <div class="modal-content">
+        <h3 style="margin:0 0 20px 0; color:var(--brand)">New Entry</h3>
+        <input type="date" id="logDate">
+        <div id="logInputs"></div>
+        <button class="btn-flex" onclick="saveData()">SYNC TO GITHUB</button>
+        <button onclick="document.getElementById('logModal').style.display='none'" style="width:100%; background:none; border:none; color:#666; margin-top:20px">Back</button>
+    </div>
+</div>
+
+<div id="codeModal" class="modal">
+    <div class="modal-content">
+        <h3 id="codeTitle" style="margin:0 0 20px 0; color:var(--brand)">Codes</h3>
+        <div id="codeContainer"></div>
+        <button onclick="document.getElementById('codeModal').style.display='none'" class="btn-flex" style="margin-top:20px; background:#222; color:#fff">Close</button>
+    </div>
+</div>
+
 <script>
-// Logic & Storage
 const beep = new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3');
 const errBeep = new Audio('https://assets.mixkit.co/active_storage/sfx/2570/2570-preview.mp3');
 const codeReader = new ZXing.BrowserMultiFormatReader();
-let isTorchOn = false;
-let stream = null;
 
-let storage = JSON.parse(localStorage.getItem("flex_pro_data")) || { Delivery:[], PickUp:[], SameDay:[], Khazenly:[] };
+let config = JSON.parse(localStorage.getItem('gh_config'));
+const types = ["Delivery", "PickUp", "SameDay", "Khazenly"];
+const colors = { Delivery: '#818cf8', PickUp: '#34d399', SameDay: '#fbbf24', Khazenly: '#fb7185' };
+let storage = JSON.parse(localStorage.getItem("flex_storage_v14")) || {};
+types.forEach(t => { if(!storage[t]) storage[t] = []; });
+
+let chart, isTorchOn = false;
+
+async function start() {
+    if (!config) {
+        config = {token: prompt("Token:"), user: prompt("User:"), repo: prompt("Repo:")};
+        localStorage.setItem('gh_config', JSON.stringify(config));
+        location.reload();
+    } else { await pullData(); }
+}
+
+async function pullData() {
+    const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
+    try {
+        const r = await fetch(url, { headers: {'Authorization': `token ${config.token}`} });
+        if(r.ok) {
+            const j = await r.json();
+            storage = JSON.parse(decodeURIComponent(escape(atob(j.content))));
+            localStorage.setItem("flex_storage_v14", JSON.stringify(storage));
+            document.getElementById('syncStatus').innerText = "☁️ SYNCED";
+        }
+    } catch(e) {}
+    render();
+}
 
 function render() {
-    const types = ["Delivery", "PickUp", "SameDay", "Khazenly"];
     document.getElementById('metricsPanel').innerHTML = types.map(t => {
-        const count = storage[t].reduce((a,b) => a + (parseInt(b.s)||0), 0);
-        return `
-            <div class="m-card">
-                <span class="m-label">${t}</span>
-                <span class="m-value">${count}</span>
-                <span class="m-perc">${count > 0 ? 'ACTIVE' : 'IDLE'}</span>
-            </div>
-        `;
+        const s = storage[t].reduce((a,b) => a + (parseInt(b.s)||0), 0);
+        const tot = storage[t].reduce((a,b) => a + (parseInt(b.s)+parseInt(b.p)+parseInt(b.c)||0), 0);
+        return `<div class="stat-card" onclick="showTable('${t}')">
+            <span class="stat-perc">${tot>0 ? ((s/tot)*100).toFixed(0) : 0}%</span>
+            <span class="stat-label">${t}</span>
+            <span class="stat-val">${s}</span>
+        </div>`;
     }).join('');
     updateChart();
 }
 
-async function launchScanner(type, cat) {
-    document.getElementById('scannerOverlay').style.display = 'block';
-    const lastTag = document.getElementById('lastCodeTag');
-    const flash = document.getElementById('flashLayer');
+function showTable(type) {
+    document.getElementById('tableSection').style.display = 'block';
+    document.getElementById('activeType').innerText = type;
+    document.getElementById('tableBody').innerHTML = storage[type].slice().reverse().map(r => `
+        <tr>
+            <td>${r.date.split('-').slice(1).join('/')}</td>
+            <td style="color:var(--success)" onclick="viewCodes('${r.codes_s}')">${r.s}</td>
+            <td style="color:var(--warning)">${r.p}</td>
+            <td style="color:var(--danger)">${r.c}</td>
+        </tr>`).join('');
+}
 
+function viewCodes(c) {
+    if(!c) return;
+    document.getElementById('codeModal').style.display = 'flex';
+    document.getElementById('codeContainer').innerHTML = c.split(',').map(x => `<span class="chip">${x}</span>`).join('');
+}
+
+function openLogModal() {
+    document.getElementById('logModal').style.display = 'flex';
+    document.getElementById('logDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('logInputs').innerHTML = types.map(t => `
+        <div style="background:#000; padding:15px; border-radius:15px; margin-bottom:10px; border:1px solid #222">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
+                <span style="font-weight:900; color:${colors[t]}">${t}</span>
+                <select id="cat_${t}" style="width:80px; margin:0; padding:5px"><option value="s">S</option><option value="p">P</option><option value="c">C</option></select>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
+                <input type="number" id="s_${t}" placeholder="Success" style="margin:0">
+                <button onclick="launchScanner('${t}')" style="background:#333; color:#fff; border:none; border-radius:10px; font-weight:800">📷 SCAN</button>
+            </div>
+            <input type="hidden" id="h_s_${t}"><input type="hidden" id="h_p_${t}"><input type="hidden" id="h_c_${t}">
+        </div>`).join('');
+}
+
+function launchScanner(type) {
+    const activeCat = document.getElementById(`cat_${type}`).value;
+    document.getElementById('scannerOverlay').style.display = 'block';
+    document.getElementById('scanCount').innerText = "0";
+    
     codeReader.decodeFromVideoDevice(undefined, 'video', (result, err) => {
         if (result) {
             const code = result.text;
-            // التحقق من التكرار اللحظي
-            if (lastTag.innerText === code) return;
-
-            flash.style.opacity = '1';
-            flash.style.background = 'rgba(0, 255, 136, 0.3)';
-            setTimeout(() => flash.style.opacity = '0', 100);
-
-            lastTag.innerText = code;
-            lastTag.style.color = "var(--success)";
-            beep.play();
-            navigator.vibrate(100);
+            const h = document.getElementById(`h_${activeCat}_${type}`);
+            let curr = h.value ? h.value.split(',') : [];
             
-            // هنا يتم الربط مع منطق الحفظ الخاص بك
-            console.log(`Captured: ${code} for ${type}`);
+            if(!curr.includes(code)) {
+                curr.push(code); h.value = curr.join(',');
+                document.getElementById(`${activeCat}_${type}`).value = curr.length;
+                document.getElementById('scanCount').innerText = curr.length;
+                document.getElementById('lastBarcode').innerText = code;
+                document.getElementById('scanMsg').innerText = "✓ SCANNED";
+                
+                // Feedback
+                const f = document.getElementById('flashFeedback');
+                f.style.opacity = '0.3'; setTimeout(() => f.style.opacity = '0', 100);
+                beep.play(); navigator.vibrate(100);
+            } else {
+                errBeep.play(); navigator.vibrate([50,50]);
+                document.getElementById('scanMsg').innerText = "ALREADY SCANNED";
+            }
         }
     });
 }
 
-function stopScanner() {
-    codeReader.reset();
-    document.getElementById('scannerOverlay').style.display = 'none';
-    if(stream) stream.getTracks().forEach(track => track.stop());
-}
-
 async function toggleTorch() {
     const video = document.getElementById('video');
-    stream = video.srcObject;
+    const stream = video.srcObject;
     if(stream) {
         const track = stream.getVideoTracks()[0];
         isTorchOn = !isTorchOn;
@@ -158,39 +244,48 @@ async function toggleTorch() {
     }
 }
 
-function openControlPanel() {
-    // هذه الوظيفة تفتح نافذة الإدخال السريع
-    const type = prompt("Enter Type (Delivery/PickUp/SameDay/Khazenly):", "Delivery");
-    if(type) launchScanner(type, 's');
+function stopScanner() { codeReader.reset(); document.getElementById('scannerOverlay').style.display = 'none'; }
+
+async function saveData() {
+    const d = document.getElementById('logDate').value;
+    types.forEach(t => {
+        const idx = storage[t].findIndex(x => x.date === d);
+        const sVal = document.getElementById(`s_${t}`).value;
+        const codes = document.getElementById(`h_s_${t}`).value;
+        if(idx >= 0) {
+            if(sVal !== "") storage[t][idx].s = parseInt(sVal);
+            if(codes) storage[t][idx].codes_s = [...new Set(((storage[t][idx].codes_s||"").split(',').concat(codes.split(','))).filter(x=>x))].join(',');
+        } else {
+            storage[t].push({date:d, s:parseInt(sVal)||0, p:0, c:0, codes_s:codes});
+        }
+    });
+    localStorage.setItem("flex_storage_v14", JSON.stringify(storage));
+    document.getElementById('logModal').style.display = 'none'; render(); await pushToGitHub();
+}
+
+async function pushToGitHub() {
+    const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
+    try {
+        const r = await fetch(url, { headers: {'Authorization': `token ${config.token}`} });
+        const sha = r.ok ? (await r.json()).sha : "";
+        await fetch(url, { method: 'PUT', headers: {'Authorization': `token ${config.token}`}, body: JSON.stringify({ message:"Flex Sync", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage, null, 2)))), sha }) });
+        document.getElementById('syncStatus').innerText = "☁️ SYNCED";
+    } catch(e) {}
 }
 
 function updateChart() {
-    // منطق Chart.js المطور هنا
     const ctx = document.getElementById('mainChart').getContext('2d');
-    if(window.myChart) window.myChart.destroy();
-    window.myChart = new Chart(ctx, {
-        type: 'line',
+    if(chart) chart.destroy();
+    chart = new Chart(ctx, {
+        type: 'bar',
         data: {
-            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-            datasets: [{
-                label: 'Performance',
-                data: [12, 19, 15, 25, 22, 30, 45],
-                borderColor: '#ff9900',
-                tension: 0.4,
-                fill: true,
-                backgroundColor: 'rgba(255,153,0,0.1)'
-            }]
+            labels: types,
+            datasets: [{ label: 'Success', data: types.map(t => storage[t].reduce((a,b)=>a+(parseInt(b.s)||0), 0)), backgroundColor: '#ff9900' }]
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: { y: { grid: { color: '#222' } }, x: { grid: { display: false } } }
-        }
+        options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{grid:{color:'#222'}}} }
     });
 }
-
-render();
+start();
 </script>
 </body>
 </html>
