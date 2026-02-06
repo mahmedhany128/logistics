@@ -2,33 +2,33 @@
   "Delivery": [
     {
       "date": "2026-02-06",
-      "delivered": 1,
-      "pending": 0,
-      "cancelled": 0
+      "s": 55,
+      "p": 1,
+      "c": 6
     }
   ],
   "PickUp": [
     {
       "date": "2026-02-06",
-      "delivered": 2,
-      "pending": 0,
-      "cancelled": 0
+      "s": 9,
+      "p": 0,
+      "c": 0
     }
   ],
   "SameDay": [
     {
       "date": "2026-02-06",
-      "delivered": 3,
-      "pending": 1,
-      "cancelled": 0
+      "s": 99,
+      "p": 0,
+      "c": 0
     }
   ],
   "Khazenly": [
     {
       "date": "2026-02-06",
-      "delivered": 0,
-      "pending": 0,
-      "cancelled": 0
+      "s": 0,
+      "p": 0,
+      "c": 0
     }
   ]
 }
