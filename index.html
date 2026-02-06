@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Insight Logistics Pro - Barcode Ready</title>
+    <title>Insight Logistics Pro - Full Tracking</title>
 
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e293b">
@@ -17,7 +17,7 @@
     <style>
         :root { 
             --bg: #0f172a; --card: #1e293b; --brand: #818cf8; --text: #f1f5f9; 
-            --dim: #94a3b8; --border: #334155; --success: #34d399; --danger: #fb7185; 
+            --dim: #94a3b8; --border: #334155; --success: #34d399; --danger: #fb7185; --warning: #fbbf24;
         }
         * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--text); margin: 0; padding: 15px; padding-bottom: 130px; }
@@ -32,7 +32,6 @@
         .stat-card { background: var(--card); padding: 18px; border-radius: 24px; border: 1px solid var(--border); position: relative; cursor: pointer; }
         .stat-label { font-size: 0.65rem; font-weight: 700; color: var(--dim); text-transform: uppercase; }
         .stat-val { font-size: 1.5rem; font-weight: 800; display: block; margin-top: 5px; color: #fff; }
-        .stat-perc { font-size: 0.65rem; font-weight: 800; color: var(--success); position: absolute; top: 18px; right: 18px; background: #34d39915; padding: 2px 6px; border-radius: 6px; }
 
         #detailsTable { display: none; margin-bottom: 25px; animation: slideUp 0.3s ease; }
         .table-container { background: var(--card); border-radius: 24px; border: 1px solid var(--border); overflow: hidden; }
@@ -40,8 +39,7 @@
         th { font-size: 0.6rem; color: var(--dim); text-transform: uppercase; padding: 15px; background: #1e293b; border-bottom: 1px solid var(--border); }
         td { padding: 16px 10px; text-align: center; border-bottom: 1px solid #334155; font-size: 0.85rem; font-weight: 600; color: #cbd5e1; }
         
-        /* شكل الخلية القابلة للضغط لرؤية الأكواد */
-        .clickable-cell { text-decoration: underline; cursor: pointer; color: var(--brand); font-weight: 800; }
+        .clickable-cell { text-decoration: underline; cursor: pointer; font-weight: 800; }
 
         .chart-card { background: var(--card); padding: 20px 15px; border-radius: 28px; border: 1px solid var(--border); height: 380px; margin-bottom: 20px; }
         
@@ -51,10 +49,9 @@
 
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
         .modal-content { background: var(--card); width: 92%; max-width: 400px; padding: 25px; border-radius: 35px; border: 1px solid var(--border); max-height: 85vh; overflow-y: auto; }
-        input { width: 100%; padding: 14px; margin: 10px 0; border: 1px solid var(--border); border-radius: 15px; font-weight: 700; background: var(--bg); color: #fff; outline: none; }
+        input, select { width: 100%; padding: 14px; margin: 10px 0; border: 1px solid var(--border); border-radius: 15px; font-weight: 700; background: var(--bg); color: #fff; outline: none; }
 
-        /* ستايل قائمة الأكواد المسحوبة */
-        .scanned-list { font-size: 0.65rem; color: var(--dim); background: var(--bg); padding: 8px; border-radius: 10px; margin-top: 5px; min-height: 25px; border: 1px dashed var(--border); word-break: break-all; }
+        .scanned-list { font-size: 0.6rem; color: var(--dim); background: var(--bg); padding: 8px; border-radius: 10px; margin-top: 5px; min-height: 25px; border: 1px dashed var(--border); word-break: break-all; }
         #reader { width: 100%; border-radius: 20px; overflow: hidden; display: none; margin-bottom: 15px; border: 2px solid var(--brand); }
 
         @keyframes slideUp { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
@@ -93,7 +90,6 @@
 <div class="chart-card">
     <div style="display:flex; justify-content:space-between; margin-bottom:15px; padding:0 5px">
         <span style="font-size:0.85rem; font-weight:800; color:#fff">Performance Chart</span>
-        <span style="font-size:0.6rem; color:var(--dim); font-weight:700">Night Mode Active</span>
     </div>
     <div style="height: 310px;"><canvas id="mainChart"></canvas></div>
 </div>
@@ -116,7 +112,7 @@
 
 <div id="codeViewModal" class="modal">
     <div class="modal-content">
-        <h3 id="codeViewTitle" style="margin-top:0; color:var(--brand)">Stored Shipment Codes</h3>
+        <h3 id="codeViewTitle" style="margin-top:0; color:var(--brand)">Stored Codes</h3>
         <div id="codesList" style="background:var(--bg); padding:15px; border-radius:20px; font-size:0.85rem; line-height:1.7; color:#fff; max-height:300px; overflow-y:auto;"></div>
         <button onclick="document.getElementById('codeViewModal').style.display='none'" class="btn-add" style="width:100%; margin-top:20px">Close</button>
     </div>
@@ -174,10 +170,7 @@ function render() {
     document.getElementById('metricsPanel').innerHTML = types.map(t => {
         const mData = storage[t].filter(d => { const dt = new Date(d.date); return dt.getMonth() === m && dt.getFullYear() === y; });
         const s = mData.reduce((a,b) => a + (parseInt(b.s)||0), 0);
-        const tot = mData.reduce((a,b) => a + (parseInt(b.s)+parseInt(b.p)+parseInt(b.c)||0), 0);
-        const rate = tot > 0 ? ((s/tot)*100).toFixed(1) : "0";
         return `<div class="stat-card" onclick="showTable('${t}')">
-            <span class="stat-perc">${rate}%</span>
             <span class="stat-label" style="color:${colors[t]}">${t}</span>
             <span class="stat-val">${s.toLocaleString()}</span>
         </div>`;
@@ -192,26 +185,27 @@ function showTable(type) {
     
     const filtered = storage[type].filter(d => {
         const dt = new Date(d.date);
-        return dt.getMonth() === m && dt.getFullYear() === y && (parseInt(d.s)+parseInt(d.p)+parseInt(d.c)) > 0;
+        return dt.getMonth() === m && dt.getFullYear() === y;
     }).sort((a,b) => new Date(a.date) - new Date(b.date));
 
     document.getElementById("tableBody").innerHTML = filtered.map(r => {
-        const tot = parseInt(r.s) + parseInt(r.p) + parseInt(r.c);
-        const rate = ((r.s/tot)*100).toFixed(1);
+        const tot = (parseInt(r.s)||0) + (parseInt(r.p)||0) + (parseInt(r.c)||0);
+        const rate = tot > 0 ? ((r.s/tot)*100).toFixed(1) : "0.0";
         const dt = new Date(r.date);
         return `<tr>
             <td style="font-weight:800; text-align:left; border-left:4px solid ${colors[type]}; color:#fff">${dt.getDate()} ${dt.toLocaleString('en',{month:'short'})}</td>
-            <td class="clickable-cell" onclick="viewCodes('${r.codes_s || ''}')" style="color:var(--success)">${r.s}</td>
-            <td style="color:#94a3b8">${r.p}</td>
-            <td style="color:var(--danger)">${r.c}</td>
+            <td class="clickable-cell" onclick="viewCodes('${r.codes_s || ''}', 'S')" style="color:var(--success)">${r.s}</td>
+            <td class="clickable-cell" onclick="viewCodes('${r.codes_p || ''}', 'P')" style="color:var(--warning)">${r.p}</td>
+            <td class="clickable-cell" onclick="viewCodes('${r.codes_c || ''}', 'C')" style="color:var(--danger)">${r.c}</td>
             <td style="color:var(--brand); font-weight:800">${rate}%</td>
         </tr>`;
     }).join('');
 }
 
-function viewCodes(codes) {
-    if(!codes) { alert("No codes stored for this entry"); return; }
+function viewCodes(codes, label) {
+    if(!codes) { alert("No codes stored for this category"); return; }
     document.getElementById('codeViewModal').style.display = 'flex';
+    document.getElementById('codeViewTitle').innerText = `${label} Shipment Codes`;
     document.getElementById('codesList').innerHTML = codes.split(',').map((c, i) => `<div>${i+1}. ${c}</div>`).join('');
 }
 
@@ -222,29 +216,39 @@ function openLogModal() {
         <div style="margin-bottom:15px; border-bottom:1px solid #334155; padding-bottom:10px">
             <div style="display:flex; justify-content:space-between; align-items:center">
                 <span style="font-size:0.75rem; font-weight:800; color:${colors[t]}">${t}</span>
-                <button onclick="startBarcodeScan('${t}')" style="background:none; border:1px solid var(--brand); color:var(--brand); border-radius:8px; font-size:0.6rem; padding:4px 8px">📷 Scan</button>
+                <div style="display:flex; gap:5px">
+                    <select id="scan_type_${t}" style="width:60px; padding:2px; font-size:0.6rem; margin:0; border-radius:5px">
+                        <option value="s">S</option>
+                        <option value="p">P</option>
+                        <option value="c">C</option>
+                    </select>
+                    <button onclick="startBarcodeScan('${t}')" style="background:none; border:1px solid var(--brand); color:var(--brand); border-radius:8px; font-size:0.6rem; padding:4px 8px">📷 Scan</button>
+                </div>
             </div>
             <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:8px">
                 <input type="number" id="s_${t}" placeholder="S">
                 <input type="number" id="p_${t}" placeholder="P">
                 <input type="number" id="c_${t}" placeholder="C">
             </div>
-            <div id="disp_codes_${t}" class="scanned-list">No codes scanned</div>
-            <input type="hidden" id="hidden_codes_${t}">
+            <div id="disp_s_${t}" class="scanned-list">S: None</div>
+            <div id="disp_p_${t}" class="scanned-list">P: None</div>
+            <div id="disp_c_${t}" class="scanned-list">C: None</div>
+            <input type="hidden" id="h_s_${t}"><input type="hidden" id="h_p_${t}"><input type="hidden" id="h_c_${t}">
         </div>`).join('');
 }
 
 function startBarcodeScan(type) {
     const r = document.getElementById('reader');
     r.style.display = 'block';
+    const category = document.getElementById(`scan_type_${type}`).value;
     if(scanner) scanner.clear();
     scanner = new Html5Qrcode("reader");
     scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (txt) => {
-        const hidden = document.getElementById(`hidden_codes_${type}`);
-        const display = document.getElementById(`disp_codes_${type}`);
+        const hidden = document.getElementById(`h_${category}_${type}`);
+        const display = document.getElementById(`disp_${category}_${type}`);
         if(!hidden.value.includes(txt)) {
             hidden.value += (hidden.value ? "," : "") + txt;
-            display.innerText = hidden.value;
+            display.innerText = `${category.toUpperCase()}: ${hidden.value}`;
             navigator.vibrate(100);
         }
     });
@@ -259,7 +263,9 @@ async function saveData() {
             s: parseInt(document.getElementById(`s_${t}`).value)||0, 
             p: parseInt(document.getElementById(`p_${t}`).value)||0, 
             c: parseInt(document.getElementById(`c_${t}`).value)||0,
-            codes_s: document.getElementById(`hidden_codes_${t}`).value // تخزين الأكواد المسحوبة
+            codes_s: document.getElementById(`h_s_${t}`).value,
+            codes_p: document.getElementById(`h_p_${t}`).value,
+            codes_c: document.getElementById(`h_c_${t}`).value
         };
         const idx = storage[t].findIndex(x => x.date === d);
         if(idx>=0) storage[t][idx]=entry; else storage[t].push(entry);
@@ -288,7 +294,18 @@ function updateChart(y, m) {
         data: { labels: Array.from({length:days}, (_,i)=>i+1), datasets },
         options: { 
             responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } },
-            scales:{ x:{ stacked:true, grid:{display:false}, ticks:{color:'#94a3b8', font:{size:8}} }, y:{ stacked:true, beginAtZero:true, grid:{color:'#334155'}, ticks:{color:'#94a3b8'} } }
+            scales:{ 
+                x:{ 
+                    stacked:true, 
+                    grid:{display:false}, 
+                    ticks:{
+                        color:'#94a3b8', 
+                        font:{size:7},
+                        autoSkip: false // إظهار كل الأيام إجبارياً
+                    } 
+                }, 
+                y:{ stacked:true, beginAtZero:true, grid:{color:'#334155'}, ticks:{color:'#94a3b8'} } 
+            }
         }
     });
 }
