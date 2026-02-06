@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Insight Logistics Pro - Elite Edition</title>
+    <title>Insight Logistics Pro - Smart Update</title>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
@@ -36,7 +36,6 @@
         td { padding: 16px 10px; text-align: center; border-bottom: 1px solid #334155; font-size: 0.85rem; font-weight: 600; color: #cbd5e1; }
         .clickable-cell { cursor: pointer; text-decoration: underline; text-underline-offset: 4px; }
 
-        /* Scanner Overlay */
         #scannerOverlay { 
             display: none; position: fixed; inset: 0; background: #000; z-index: 2000; 
             flex-direction: column; align-items: center; justify-content: flex-start;
@@ -44,7 +43,6 @@
         #reader { width: 100% !important; height: 65vh !important; }
         .scanner-ui { width: 100%; background: var(--card); padding: 25px; border-radius: 35px 35px 0 0; position: absolute; bottom: 0; border-top: 1px solid var(--border); }
 
-        /* Modals */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000; align-items: flex-end; justify-content: center; backdrop-filter: blur(8px); }
         .modal-content { background: var(--card); width: 100%; max-width: 500px; padding: 30px; border-radius: 35px 35px 0 0; max-height: 90vh; overflow-y: auto; border: 1px solid var(--border); }
         
@@ -91,7 +89,7 @@
 </div>
 
 <div style="position: fixed; bottom: 20px; left: 15px; right: 15px; z-index: 100;">
-    <button class="btn-add" onclick="openLogModal()">+ New Activity Log</button>
+    <button class="btn-add" onclick="openLogModal()">+ Update Data</button>
 </div>
 
 <div id="scannerOverlay">
@@ -102,7 +100,7 @@
             <span id="scanCount" class="sync-badge">0 Scanned</span>
         </div>
         <div id="livePreview" style="height:80px; overflow-y:auto; background:var(--bg); border-radius:15px; padding:10px; font-size:0.75rem; color:var(--success); border:1px solid var(--border); margin-bottom:15px">
-            No codes scanned yet...
+            Waiting for scan...
         </div>
         <button class="btn-done" onclick="stopScanner()">FINISH & CLOSE</button>
     </div>
@@ -110,11 +108,12 @@
 
 <div id="logModal" class="modal">
     <div class="modal-content">
-        <h3 style="margin:0 0 20px 0; color:#fff">Add Daily Log</h3>
+        <h3 style="margin:0 0 20px 0; color:#fff">Edit Log</h3>
+        <p style="font-size:0.7rem; color:var(--dim); margin-top:-15px">Enter values to update. Empty fields will keep old values.</p>
         <input type="date" id="logDate">
         <div id="logInputs"></div>
-        <button class="btn-add" style="margin-top:20px" onclick="saveData()">Save & Sync</button>
-        <button onclick="closeLogModal()" style="width:100%; border:none; background:none; margin-top:15px; color:var(--dim);">Dismiss</button>
+        <button class="btn-add" style="margin-top:20px" onclick="saveData()">Update & Sync</button>
+        <button onclick="closeLogModal()" style="width:100%; border:none; background:none; margin-top:15px; color:var(--dim);">Cancel</button>
     </div>
 </div>
 
@@ -133,7 +132,7 @@
 let config = JSON.parse(localStorage.getItem('gh_config'));
 const types = ["Delivery", "PickUp", "SameDay", "Khazenly"];
 const colors = { Delivery: '#818cf8', PickUp: '#34d399', SameDay: '#fbbf24', Khazenly: '#fb7185' };
-let storage = JSON.parse(localStorage.getItem("logistics_v22_data")) || {};
+let storage = JSON.parse(localStorage.getItem("logistics_v30_data")) || {};
 types.forEach(t => { if(!storage[t]) storage[t] = []; });
 
 let chart, viewDate = new Date(), html5QrCode, activeT, activeC;
@@ -152,7 +151,7 @@ async function pullData() {
         if(r.ok) {
             const j = await r.json();
             storage = JSON.parse(decodeURIComponent(escape(atob(j.content))));
-            localStorage.setItem("logistics_v22_data", JSON.stringify(storage));
+            localStorage.setItem("logistics_v30_data", JSON.stringify(storage));
             document.getElementById('sync').innerText = "☁️ Synced";
         }
     } catch(e) {}
@@ -162,7 +161,6 @@ async function pullData() {
 function render() {
     const m = viewDate.getMonth(), y = viewDate.getFullYear();
     document.getElementById('monthLab').innerText = viewDate.toLocaleString('en-US',{month:'long', year:'numeric'});
-    
     document.getElementById('metricsPanel').innerHTML = types.map(t => {
         const mData = storage[t].filter(d => { const dt = new Date(d.date); return dt.getMonth() === m && dt.getFullYear() === y; });
         const s = mData.reduce((a,b) => a + (parseInt(b.s)||0), 0);
@@ -195,7 +193,7 @@ function showTable(type) {
 }
 
 function viewCodes(codes, title) {
-    const list = codes && codes !== "undefined" ? codes.split(',').filter(x => x) : [];
+    const list = codes && codes !== "undefined" && codes !== "null" ? codes.split(',').filter(x => x && x.trim() !== "") : [];
     if(list.length === 0) return;
     document.getElementById('codeViewModal').style.display = 'flex';
     document.getElementById('codeViewTitle').innerText = title;
@@ -218,9 +216,9 @@ function openLogModal() {
                 </div>
             </div>
             <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px">
-                <input type="number" id="s_${t}" placeholder="S">
-                <input type="number" id="p_${t}" placeholder="P">
-                <input type="number" id="c_${t}" placeholder="C">
+                <input type="number" id="s_${t}" placeholder="Success">
+                <input type="number" id="p_${t}" placeholder="Pending">
+                <input type="number" id="c_${t}" placeholder="Cancel">
             </div>
             <input type="hidden" id="h_s_${t}"><input type="hidden" id="h_p_${t}"><input type="hidden" id="h_c_${t}">
         </div>`).join('');
@@ -231,7 +229,6 @@ function startScanner(type) {
     activeC = document.getElementById(`cat_${type}`).value;
     document.getElementById('scannerOverlay').style.display = 'flex';
     document.getElementById('scanInfo').innerText = `Scanning: ${type} (${activeC.toUpperCase()})`;
-    
     html5QrCode = new Html5Qrcode("reader");
     html5QrCode.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 }, (txt) => {
         const h = document.getElementById(`h_${activeC}_${activeT}`);
@@ -239,7 +236,7 @@ function startScanner(type) {
             h.value += (h.value ? "," : "") + txt;
             navigator.vibrate(100);
             const list = h.value.split(',');
-            document.getElementById('scanCount').innerText = list.length + " Scanned";
+            document.getElementById('scanCount').innerText = list.length + " New Scanned";
             document.getElementById('livePreview').innerHTML = list.map(c => `• ${c}`).join('<br>');
         }
     });
@@ -249,7 +246,7 @@ async function stopScanner() {
     if(html5QrCode) {
         await html5QrCode.stop();
         document.getElementById('scannerOverlay').style.display = 'none';
-        document.getElementById('livePreview').innerText = "No codes scanned yet...";
+        document.getElementById('livePreview').innerText = "Waiting...";
         document.getElementById('scanCount').innerText = "0 Scanned";
     }
 }
@@ -257,19 +254,34 @@ async function stopScanner() {
 async function saveData() {
     const d = document.getElementById('logDate').value;
     types.forEach(t => {
-        const entry = { 
-            date: d, 
-            s: parseInt(document.getElementById(`s_${t}`).value)||0, 
-            p: parseInt(document.getElementById(`p_${t}`).value)||0, 
-            c: parseInt(document.getElementById(`c_${t}`).value)||0,
-            codes_s: document.getElementById(`h_s_${t}`).value,
-            codes_p: document.getElementById(`h_p_${t}`).value,
-            codes_c: document.getElementById(`h_c_${t}`).value
-        };
+        const inputS = document.getElementById(`s_${t}`).value;
+        const inputP = document.getElementById(`p_${t}`).value;
+        const inputC = document.getElementById(`c_${t}`).value;
+        const newCodesS = document.getElementById(`h_s_${t}`).value;
+        const newCodesP = document.getElementById(`h_p_${t}`).value;
+        const newCodesC = document.getElementById(`h_c_${t}`).value;
+
         const idx = storage[t].findIndex(x => x.date === d);
-        if(idx>=0) storage[t][idx]=entry; else storage[t].push(entry);
+
+        if(idx >= 0) {
+            // تحديث ذكي: استبدال القيمة فقط إذا تم إدخال رقم جديد
+            if(inputS !== "") storage[t][idx].s = parseInt(inputS);
+            if(inputP !== "") storage[t][idx].p = parseInt(inputP);
+            if(inputC !== "") storage[t][idx].c = parseInt(inputC);
+            
+            // دمج الأكواد الجديدة مع القديمة
+            if(newCodesS) storage[t][idx].codes_s = (storage[t][idx].codes_s ? storage[t][idx].codes_s + "," : "") + newCodesS;
+            if(newCodesP) storage[t][idx].codes_p = (storage[t][idx].codes_p ? storage[t][idx].codes_p + "," : "") + newCodesP;
+            if(newCodesC) storage[t][idx].codes_c = (storage[t][idx].codes_c ? storage[t][idx].codes_c + "," : "") + newCodesC;
+        } else {
+            storage[t].push({ 
+                date: d, 
+                s: parseInt(inputS)||0, p: parseInt(inputP)||0, c: parseInt(inputC)||0, 
+                codes_s: newCodesS, codes_p: newCodesP, codes_c: newCodesC 
+            });
+        }
     });
-    localStorage.setItem("logistics_v22_data", JSON.stringify(storage));
+    localStorage.setItem("logistics_v30_data", JSON.stringify(storage));
     closeLogModal(); render(); await pushData();
 }
 
@@ -281,7 +293,7 @@ async function pushData() {
         await fetch(url, {
             method: 'PUT',
             headers: {'Authorization': `token ${config.token}`},
-            body: JSON.stringify({ message:"Update", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage, null, 2)))), sha })
+            body: JSON.stringify({ message:"Smart Update", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage, null, 2)))), sha })
         });
         document.getElementById('sync').innerText = "☁️ Synced";
     } catch(e) {}
@@ -297,8 +309,7 @@ function updateChart(y, m) {
             const f = storage[t].find(x => x.date === dStr);
             return f ? f.s : 0;
         }),
-        backgroundColor: colors[t],
-        borderRadius: 4
+        backgroundColor: colors[t], borderRadius: 4
     }));
     if(chart) chart.destroy();
     chart = new Chart(ctx, {
@@ -310,10 +321,8 @@ function updateChart(y, m) {
         }
     });
 }
-
 function moveMonth(dir) { viewDate.setMonth(viewDate.getMonth()+dir); render(); }
 function closeLogModal() { document.getElementById('logModal').style.display='none'; }
-
 start();
 </script>
 </body>
