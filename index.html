@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Logistics Pro - Final Sync</title>
+<title>Logistics Pro - Master Edition</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
@@ -18,20 +18,23 @@
     header h1 { font-size: 1.4rem; font-weight: 900; text-align: center; margin-bottom: 20px; letter-spacing: -1px; }
     #syncStatus { text-align: center; font-size: 0.6rem; font-weight: 900; color: var(--subtle); margin-bottom: 10px; text-transform: uppercase; }
 
+    /* مجموعة الأزرار العلوية */
     .btn-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-    .btn { padding: 14px; border: 1px solid #e5e7eb; background: #fff; border-radius: 16px; font-size: 0.8rem; font-weight: 800; cursor: pointer; }
+    .btn { padding: 14px; border: 1px solid #e5e7eb; background: #fff; border-radius: 16px; font-size: 0.75rem; font-weight: 800; cursor: pointer; }
     .btn-dark { background: var(--primary); color: #fff; border: none; }
+    .btn-danger { color: var(--canc); background: #fef2f2; border-color: #fee2e2; }
 
     .date-nav { display: flex; align-items: center; justify-content: space-between; padding: 15px; background: #fff; border-radius: 20px; margin-bottom: 20px; border: 1px solid var(--border); }
     .month-label { font-weight: 900; font-size: 1.1rem; }
 
+    /* الكروت التفاعلية */
     .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-    .item-card { padding: 20px; border-radius: 26px; background: #fff; border: 1px solid var(--border); cursor: pointer; transition: 0.2s; position: relative; }
+    .item-card { padding: 20px; border-radius: 26px; background: #fff; border: 1px solid var(--border); cursor: pointer; transition: 0.2s; }
     .item-card:active { transform: scale(0.96); }
     .active-card { border: 2.5px solid var(--primary); box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
     .delivered-value { font-size: 2.1rem; font-weight: 900; display: block; letter-spacing: -1px; }
 
-    /* الجدول التفصيلي */
+    /* الجدول التفصيلي (فوق الشارت) */
     .detail-section { display: none; margin-bottom: 25px; background: #fff; border-radius: 24px; border: 1px solid var(--border); overflow: hidden; animation: slideIn 0.3s ease-out; }
     @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
     
@@ -41,10 +44,12 @@
     th { padding: 12px 15px; background: #f9fafb; font-size: 0.6rem; color: var(--subtle); text-transform: uppercase; text-align: center; }
     td { padding: 12px 15px; text-align: center; font-size: 0.75rem; font-weight: 700; border-bottom: 1px solid #f9fafb; }
 
+    /* الشارت السفلي */
     .chart-section { background: #fff; padding: 22px; border-radius: 28px; border: 1px solid var(--border); margin-bottom: 50px; }
     .chart-viewport { width: 100%; overflow-x: auto; }
     .chart-wrapper { min-width: 800px; height: 300px; }
 
+    /* المودال */
     .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
     .modal-content { background: white; width: 92%; max-width: 400px; padding: 30px; border-radius: 32px; }
     input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 12px; }
@@ -53,11 +58,11 @@
 <body>
 
 <header><h1>Operations Hub</h1></header>
-<div id="syncStatus">🔄 Connecting...</div>
+<div id="syncStatus">🔄 Loading...</div>
 
 <div class="btn-group">
-    <button class="btn" onclick="resetConfig()">Setup</button>
-    <button class="btn" onclick="exportExcel()">Export</button>
+    <button class="btn btn-danger" onclick="fullReset()">Clear Data</button>
+    <button class="btn" onclick="resetConfig()">Setup Cloud</button>
     <button class="btn btn-dark" onclick="openAddDataModal()">+ Record</button>
 </div>
 
@@ -138,6 +143,7 @@ async function fetchFromGitHub() {
 }
 
 async function pushToGitHub() {
+    if(!config) return;
     document.getElementById('syncStatus').innerText = "⏳ Syncing...";
     const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
     try {
@@ -173,15 +179,12 @@ function renderAll() {
 
 function showDetails(type) {
     activeType = type;
-    document.querySelectorAll('.item-card').forEach((c,i) => {
-        c.classList.toggle('active-card', types[i] === type);
-    });
     const section = document.getElementById("detailSection");
     const tbody = document.getElementById("detailTableBody");
     const title = document.getElementById("selectedTypeName");
 
     section.style.display = "block";
-    title.innerText = `${type} Report`;
+    title.innerText = `${type} - Daily Breakdown`;
     title.style.color = typeColors[type];
 
     const year = viewDate.getFullYear();
@@ -202,6 +205,10 @@ function showDetails(type) {
             <td><span style="padding:2px 6px; background:#ecfdf5; color:var(--deliv); border-radius:6px;">${rate}%</span></td>
         </tr>`;
     }).join('');
+    
+    document.querySelectorAll('.item-card').forEach((c,i) => {
+        c.classList.toggle('active-card', types[i] === type);
+    });
 }
 
 function closeDetails() {
@@ -251,14 +258,19 @@ function openAddDataModal() {
     };
 }
 
+async function fullReset() {
+    if (prompt("Type 'DELETE' to clear all data:") === "DELETE") {
+        types.forEach(t => data[t] = []);
+        localStorage.setItem("shippingData", JSON.stringify(data));
+        closeDetails();
+        renderAll();
+        await pushToGitHub();
+    }
+}
+
 function closeAddDataModal() { document.getElementById("addDataModal").style.display = "none"; }
 function resetConfig() { localStorage.removeItem('gh_config'); location.reload(); }
 function changeMonth(step) { viewDate.setMonth(viewDate.getMonth() + step); renderAll(); }
-function exportExcel() { 
-    const wb = XLSX.utils.book_new();
-    types.forEach(t => XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data[t]), t));
-    XLSX.writeFile(wb, "Report.xlsx");
-}
 
 init();
 </script>
