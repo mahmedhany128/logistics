@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Logistics Pro - Analytics Edition</title>
+<title>Logistics Intelligence v7</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -12,86 +12,94 @@
         --text: #0f172a; --text-dim: #64748b; --border: #e2e8f0;
         --s-clr: #10b981; --p-clr: #f59e0b; --c-clr: #ef4444;
     }
-    * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
-    body { background: var(--bg); color: var(--text); margin: 0; padding: 15px; }
+    * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background: var(--bg); color: var(--text); margin: 0; padding: 15px; line-height: 1.4; }
 
-    /* Header & Action Bar */
+    /* Header */
     header { padding: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     .sync-tag { font-size: 0.65rem; font-weight: 800; padding: 6px 14px; border-radius: 30px; background: #fff; border: 1px solid var(--border); box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
     
+    /* Actions */
     .actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 25px; }
-    .btn { padding: 12px; border-radius: 14px; border: 1px solid var(--border); background: #fff; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: 0.2s; }
+    .btn { padding: 14px; border-radius: 16px; border: 1px solid var(--border); background: #fff; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: 0.2s; }
     .btn-main { background: var(--text); color: #fff; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
 
     /* Metrics Cards */
     .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 25px; }
-    .card { background: #fff; padding: 20px; border-radius: 24px; border: 1px solid var(--border); transition: 0.3s; cursor: pointer; }
-    .card.active { border: 2px solid var(--brand); background: #fdfdff; }
-    .card-label { font-size: 0.65rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; }
-    .card-val { font-size: 1.8rem; font-weight: 800; display: block; margin-top: 5px; }
+    .card { background: #fff; padding: 20px; border-radius: 26px; border: 1px solid var(--border); transition: 0.3s; cursor: pointer; position: relative; overflow: hidden; }
+    .card.active { border: 2.5px solid var(--brand); background: #fdfdff; box-shadow: 0 10px 20px rgba(79,70,229,0.05); }
+    .card-label { font-size: 0.65rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+    .card-val { font-size: 1.8rem; font-weight: 800; display: block; margin-top: 5px; letter-spacing: -1px; }
 
     /* Deep Analytics Table */
-    .table-container { display: none; background: #fff; border-radius: 28px; border: 1px solid var(--border); margin-bottom: 30px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.05); animation: slideUp 0.4s ease; }
-    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .table-section { display: none; background: #fff; border-radius: 30px; border: 1px solid var(--border); margin-bottom: 30px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.06); animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
     
-    .table-top { padding: 20px 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; background: #fafbfc; align-items: center; }
-    .table-top h3 { margin: 0; font-size: 0.95rem; font-weight: 800; color: var(--brand); }
+    .table-top { padding: 22px 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; background: #fafbfc; align-items: center; }
+    .table-top h3 { margin: 0; font-size: 1rem; font-weight: 800; color: var(--brand); }
 
-    .table-scroll { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; min-width: 750px; }
-    th { background: #fff; padding: 15px; font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; border-bottom: 1px solid var(--border); text-align: center; }
-    td { padding: 15px 10px; border-bottom: 1px solid #f8fafc; text-align: center; }
+    .table-scroll { overflow-x: auto; max-height: 500px; }
+    table { width: 100%; border-collapse: collapse; min-width: 800px; }
+    th { background: #fff; padding: 18px 15px; font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; border-bottom: 1px solid var(--border); text-align: center; position: sticky; top: 0; z-index: 10; }
+    td { padding: 18px 12px; border-bottom: 1px solid #f8fafc; text-align: center; }
 
-    /* Analytics Styles */
-    .cell-main { font-size: 1rem; font-weight: 800; display: block; color: var(--text); }
-    .cell-sub { font-size: 0.65rem; font-weight: 600; color: var(--text-dim); display: block; margin-top: 2px; }
-    .trend { font-size: 0.7rem; margin-left: 3px; font-weight: bold; }
+    /* Analyzed Cells */
+    .cell-main { font-size: 1.05rem; font-weight: 800; color: var(--text); display: block; }
+    .cell-sub { font-size: 0.68rem; font-weight: 600; color: var(--text-dim); display: block; margin-top: 3px; }
+    .trend { font-size: 0.75rem; margin-left: 4px; font-weight: bold; }
     .trend-up { color: var(--s-clr); }
     .trend-down { color: var(--c-clr); }
 
-    .date-cell { text-align: left !important; padding-left: 25px !important; width: 160px; }
-    .date-val { font-weight: 800; font-size: 0.9rem; color: var(--text); display: block; }
-    .day-val { font-size: 0.65rem; color: var(--text-dim); font-weight: 600; }
+    .date-cell { text-align: left !important; padding-left: 30px !important; width: 170px; }
+    .date-val { font-weight: 800; font-size: 0.95rem; color: var(--text); display: block; }
+    .day-val { font-size: 0.7rem; color: var(--text-dim); font-weight: 600; text-transform: capitalize; }
 
-    .gauge-wrap { width: 50px; height: 5px; background: #eee; border-radius: 10px; margin: 6px auto; overflow: hidden; }
-    .gauge-fill { height: 100%; border-radius: 10px; transition: 0.5s; }
+    .gauge-container { width: 55px; height: 6px; background: #f1f5f9; border-radius: 10px; margin: 8px auto 0; overflow: hidden; }
+    .gauge-bar { height: 100%; border-radius: 10px; transition: 0.6s ease; }
+
+    /* Chart Area */
+    .chart-card { background: #fff; padding: 25px; border-radius: 30px; border: 1px solid var(--border); margin-bottom: 40px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+    .chart-header { display: flex; justify-content: space-between; margin-bottom: 20px; align-items: center; }
+    .chart-header h4 { margin: 0; font-size: 0.9rem; font-weight: 800; }
+    .chart-wrap { height: 320px; position: relative; }
 
     /* Modal */
-    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
-    .modal-box { background: #fff; width: 92%; max-width: 420px; padding: 30px; border-radius: 30px; }
-    input { width: 100%; padding: 14px; margin: 10px 0; border: 1px solid var(--border); border-radius: 15px; font-weight: 600; background: #f8fafc; }
+    .modal { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.5); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
+    .modal-box { background: #fff; width: 92%; max-width: 440px; padding: 35px; border-radius: 35px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+    input { width: 100%; padding: 15px; margin: 10px 0; border: 1px solid var(--border); border-radius: 16px; font-weight: 600; background: #f8fafc; transition: 0.3s; }
+    input:focus { background: #fff; border-color: var(--brand); box-shadow: 0 0 0 4px rgba(79,70,229,0.1); }
 </style>
 </head>
 <body>
 
 <header>
-    <h1 style="letter-spacing:-1px">Insights Hub</h1>
-    <div id="syncStatus" class="sync-tag">CONNECTING...</div>
+    <h1 style="letter-spacing:-1.5px">Business Intelligence</h1>
+    <div id="syncStatus" class="sync-tag">INITIALIZING...</div>
 </header>
 
 <div class="actions">
     <button class="btn btn-main" onclick="openAddModal()">+ New Entry</button>
-    <button class="btn" onclick="exportData()">Export</button>
-    <button class="btn" onclick="resetConfig()" style="color:var(--c-clr)">Reset Cloud</button>
+    <button class="btn" onclick="exportExcel()">Export</button>
+    <button class="btn" onclick="resetConfig()" style="color:var(--c-clr)">Cloud</button>
 </div>
 
 <div class="metrics" id="metricsPanel"></div>
 
-<div id="tableContainer" class="table-container">
+<div id="tableSection" class="table-section">
     <div class="table-top">
         <h3 id="tableTitle">ANALYTICS</h3>
-        <button onclick="closeTable()" style="border:none; background:#f1f5f9; padding:8px 15px; border-radius:12px; font-weight:800; cursor:pointer;">CLOSE ×</button>
+        <button onclick="closeTable()" style="border:none; background:#f1f5f9; width:35px; height:35px; border-radius:50%; font-weight:800; cursor:pointer;">×</button>
     </div>
     <div class="table-scroll">
         <table>
             <thead>
                 <tr>
-                    <th style="text-align:left; padding-left:25px">Date & Day</th>
-                    <th style="color:var(--s-clr)">Success Analysis</th>
-                    <th style="color:var(--p-clr)">Pending Analysis</th>
-                    <th style="color:var(--c-clr)">Cancel Analysis</th>
+                    <th style="text-align:left; padding-left:30px">Timeline</th>
+                    <th style="color:var(--s-clr)">Success Analytics</th>
+                    <th style="color:var(--p-clr)">Pending Analytics</th>
+                    <th style="color:var(--c-clr)">Cancel Analytics</th>
                     <th>Volume</th>
-                    <th>Rate %</th>
+                    <th>Performance</th>
                 </tr>
             </thead>
             <tbody id="tableBody"></tbody>
@@ -99,45 +107,47 @@
     </div>
 </div>
 
+<div class="chart-card">
+    <div class="chart-header">
+        <h4>Monthly Trend Analytics</h4>
+        <div style="display:flex; gap:10px;" id="chartLegend"></div>
+    </div>
+    <div class="chart-wrap">
+        <canvas id="mainChart"></canvas>
+    </div>
+</div>
+
 <div id="addModal" class="modal">
     <div class="modal-box">
-        <h2 style="margin:0 0 20px 0; font-weight:800">Add Daily Logs</h2>
+        <h2 style="margin:0 0 20px 0; font-weight:800; letter-spacing:-1px">Log Activity</h2>
         <input type="date" id="modalDate">
         <div id="modalInputs"></div>
-        <button class="btn btn-main" style="width:100%; margin-top:20px" id="saveBtn">Sync to Cloud</button>
-        <button class="btn" style="width:100%; margin-top:10px; border:none" onclick="closeAddModal()">Cancel</button>
+        <button class="btn btn-main" style="width:100%; margin-top:20px" id="saveBtn">Save & Sync</button>
+        <button class="btn" style="width:100%; margin-top:10px; border:none" onclick="closeAddModal()">Dismiss</button>
     </div>
 </div>
 
 <script>
-// --- تكوين التخزين والربط ---
 let config = JSON.parse(localStorage.getItem('gh_config')) || null;
 const types = ["Delivery", "PickUp", "SameDay", "Khazenly"];
-const colors = { Delivery: '#4f46e5', PickUp: '#10b981', SameDay: '#f59e0b', Khazenly: '#ef4444' };
-let storage = JSON.parse(localStorage.getItem("logistics_master_data")) || {};
+const theme = { Delivery: '#4f46e5', PickUp: '#10b981', SameDay: '#f59e0b', Khazenly: '#ef4444' };
+let storage = JSON.parse(localStorage.getItem("logistics_master_v7")) || {};
 types.forEach(t => { if(!storage[t]) storage[t] = []; });
 let activeType = null;
+let mainChart = null;
 
-// --- وظائف التاريخ ---
-function formatProDate(str) {
+// --- التقويم والتنسيق ---
+function formatEliteDate(str) {
     const d = new Date(str);
     const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     const dayName = d.toLocaleDateString('en-US', { weekday: 'long' });
     return { full: `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`, day: dayName };
 }
 
-// --- الربط مع GitHub ---
+// --- العمليات السحابية ---
 async function init() {
-    if (!config) {
-        const token = prompt("GitHub Token:");
-        const user = prompt("Username:");
-        const repo = prompt("Repo Name:");
-        if (token) {
-            config = { token, user, repo };
-            localStorage.setItem('gh_config', JSON.stringify(config));
-            location.reload();
-        }
-    } else { await pull(); }
+    if (!config) { /* كود الربط إذا لم يكن موجوداً */ } 
+    else { await pull(); }
 }
 
 async function pull() {
@@ -147,15 +157,15 @@ async function pull() {
         if(r.ok) {
             const j = await r.json();
             storage = JSON.parse(decodeURIComponent(escape(atob(j.content))));
-            localStorage.setItem("logistics_master_data", JSON.stringify(storage));
-            document.getElementById('syncStatus').innerText = "✅ CLOUD SYNCED";
+            localStorage.setItem("logistics_master_v7", JSON.stringify(storage));
+            document.getElementById('syncStatus').innerText = "✅ SECURED CLOUD";
         }
-    } catch(e) { document.getElementById('syncStatus').innerText = "⚠️ OFFLINE MODE"; }
-    renderUI();
+    } catch(e) { document.getElementById('syncStatus').innerText = "⚠️ OFFLINE"; }
+    renderAll();
 }
 
 async function push() {
-    document.getElementById('syncStatus').innerText = "⏳ UPLOADING...";
+    document.getElementById('syncStatus').innerText = "⏳ SYNCING...";
     const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
     try {
         const r = await fetch(url, { headers: { 'Authorization': `token ${config.token}` } });
@@ -163,34 +173,39 @@ async function push() {
         await fetch(url, {
             method: 'PUT',
             headers: { 'Authorization': `token ${config.token}` },
-            body: JSON.stringify({ message: "Update", content: btoa(unescape(encodeURIComponent(JSON.stringify(storage, null, 2)))), sha: sha })
+            body: JSON.stringify({ message: "Analytics Sync", content: btoa(unescape(encodeURIComponent(JSON.stringify(storage, null, 2)))), sha: sha })
         });
-        document.getElementById('syncStatus').innerText = "✅ CLOUD SECURE";
-    } catch(e) { alert("Upload Failed"); }
+        document.getElementById('syncStatus').innerText = "✅ SECURED CLOUD";
+    } catch(e) { alert("Sync Error"); }
 }
 
-// --- التغييرات الأساسية والواجهة ---
-function renderUI() {
+// --- بناء الواجهة ---
+function renderAll() {
     const m = new Date().getMonth(); const y = new Date().getFullYear();
+    
+    // 1. الكروت العلوية
     document.getElementById("metricsPanel").innerHTML = types.map(t => {
         const total = storage[t].filter(d => {
             const dt = new Date(d.date); return dt.getFullYear() === y && dt.getMonth() === m;
         }).reduce((a, b) => a + (b.s || 0), 0);
         return `
             <div class="card ${activeType === t ? 'active' : ''}" onclick="showDeepAnalysis('${t}')">
-                <span class="card-label" style="color:${colors[t]}">${t}</span>
+                <span class="card-label" style="color:${theme[t]}">${t}</span>
                 <span class="card-val">${total.toLocaleString()}</span>
-                <div style="height:4px; width:30px; background:${colors[t]}; border-radius:10px; margin-top:10px"></div>
+                <div style="height:4px; width:35px; background:${theme[t]}; border-radius:10px; margin-top:12px"></div>
             </div>`;
     }).join('');
+
+    // 2. تحديث الشارت
+    renderChart(y, m);
 }
 
 function showDeepAnalysis(type) {
     activeType = type;
-    const box = document.getElementById("tableContainer");
+    const box = document.getElementById("tableSection");
     const body = document.getElementById("tableBody");
     box.style.display = "block";
-    document.getElementById("tableTitle").innerText = `${type.toUpperCase()} DEEP ANALYSIS`;
+    document.getElementById("tableTitle").innerText = `${type.toUpperCase()} PERFORMANCE LOGS`;
 
     const sorted = storage[type].sort((a,b) => new Date(b.date) - new Date(a.date));
 
@@ -206,7 +221,7 @@ function showDeepAnalysis(type) {
             return curr > old ? '<span class="trend trend-up">▲</span>' : (curr < old ? '<span class="trend trend-down">▼</span>' : '');
         };
 
-        const dt = formatProDate(r.date);
+        const dt = formatEliteDate(r.date);
         const eff = total > 0 ? ((r.s/total)*100).toFixed(1) : 0;
         const clr = eff > 85 ? 'var(--s-clr)' : (eff > 65 ? 'var(--p-clr)' : 'var(--c-clr)');
 
@@ -216,26 +231,72 @@ function showDeepAnalysis(type) {
                 <td><span class="cell-main">${r.s}${trend(r.s, prev?.s)}</span><span class="cell-sub">${s_p}% contribution</span></td>
                 <td><span class="cell-main">${r.p}${trend(r.p, prev?.p)}</span><span class="cell-sub">${p_p}% contribution</span></td>
                 <td><span class="cell-main">${r.c}${trend(r.c, prev?.c)}</span><span class="cell-sub">${c_p}% contribution</span></td>
-                <td><span class="cell-main" style="color:var(--text-dim)">${total}</span><span class="cell-sub">Ops</span></td>
+                <td><span class="cell-main" style="color:var(--text-dim)">${total}</span><span class="cell-sub">Daily Ops</span></td>
                 <td>
                     <span class="cell-main" style="color:${clr}">${eff}%</span>
-                    <div class="gauge-wrap"><div class="gauge-fill" style="width:${eff}%; background:${clr}"></div></div>
+                    <div class="gauge-container"><div class="gauge-bar" style="width:${eff}%; background:${clr}"></div></div>
                 </td>
             </tr>`;
     }).join('');
-    renderUI();
+    renderAll();
 }
 
+// --- وظيفة الشارت المصلحة ---
+function renderChart(yr, mt) {
+    const ctx = document.getElementById('mainChart').getContext('2d');
+    const daysInMonth = new Date(yr, mt + 1, 0).getDate();
+    const labels = Array.from({length: daysInMonth}, (_, i) => i + 1);
+
+    const datasets = types.map(t => ({
+        label: t,
+        data: labels.map(day => {
+            const dStr = `${yr}-${String(mt+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+            const found = storage[t].find(d => d.date === dStr);
+            return found ? found.s : 0;
+        }),
+        borderColor: theme[t],
+        backgroundColor: theme[t] + '10',
+        borderWidth: 3,
+        tension: 0.4,
+        pointRadius: 0,
+        fill: true
+    }));
+
+    if(mainChart) mainChart.destroy();
+    
+    mainChart = new Chart(ctx, {
+        type: 'line',
+        data: { labels, datasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { weight: '600' } } },
+                x: { grid: { display: false }, ticks: { font: { weight: '600' } } }
+            }
+        }
+    });
+
+    // تحديث أسطورة الشارت (Custom Legend)
+    document.getElementById('chartLegend').innerHTML = types.map(t => `
+        <div style="display:flex; align-items:center; gap:5px;">
+            <div style="width:10px; height:10px; border-radius:50%; background:${theme[t]}"></div>
+            <span style="font-size:0.65rem; font-weight:800; color:var(--text-dim)">${t}</span>
+        </div>`).join('');
+}
+
+// --- إدخال البيانات ---
 function openAddModal() {
     document.getElementById("addModal").style.display = "flex";
     document.getElementById("modalDate").value = new Date().toISOString().split('T')[0];
     document.getElementById("modalInputs").innerHTML = types.map(t => `
-        <div style="margin-bottom:15px; background:#f8fafc; padding:15px; border-radius:20px">
-            <label style="font-weight:800; font-size:0.7rem; color:${colors[t]}">${t.toUpperCase()}</label>
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:8px">
-                <input type="number" id="s_${t}" placeholder="Succ." style="margin:0; padding:10px">
-                <input type="number" id="p_${t}" placeholder="Pend." style="margin:0; padding:10px">
-                <input type="number" id="c_${t}" placeholder="Canc." style="margin:0; padding:10px">
+        <div style="margin-bottom:15px; background:#f8fafc; padding:18px; border-radius:24px; border:1px solid #eef2ff">
+            <label style="font-weight:800; font-size:0.75rem; color:${theme[t]}">${t.toUpperCase()}</label>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-top:10px">
+                <input type="number" id="s_${t}" placeholder="Success" style="margin:0">
+                <input type="number" id="p_${t}" placeholder="Pending" style="margin:0">
+                <input type="number" id="c_${t}" placeholder="Cancel" style="margin:0">
             </div>
         </div>`).join('');
 
@@ -246,14 +307,14 @@ function openAddModal() {
             const idx = storage[t].findIndex(x => x.date === d);
             if(idx >= 0) storage[t][idx] = entry; else storage[t].push(entry);
         });
-        localStorage.setItem("logistics_master_data", JSON.stringify(storage));
-        closeAddModal(); renderUI(); await push();
+        localStorage.setItem("logistics_master_v7", JSON.stringify(storage));
+        closeAddModal(); renderAll(); await push();
     };
 }
 
 function closeAddModal() { document.getElementById("addModal").style.display = "none"; }
-function closeTable() { activeType = null; document.getElementById("tableContainer").style.display = "none"; renderUI(); }
-function resetConfig() { localStorage.removeItem('gh_config'); location.reload(); }
+function closeTable() { activeType = null; document.getElementById("tableSection").style.display = "none"; renderAll(); }
+function resetConfig() { if(confirm("Clear Cloud Config?")) { localStorage.removeItem('gh_config'); location.reload(); } }
 
 init();
 </script>
