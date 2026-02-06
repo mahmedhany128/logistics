@@ -3,11 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Logistics Pro - Cloud & Tables</title>
+<title>Logistics Pro - Master Sync</title>
 
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#111827">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1554/1554561.png">
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -18,233 +19,257 @@
     :root {
         --primary: #111827; --subtle: #9ca3af; --border: #f3f4f6;
         --deliv: #10b981; --pend: #f59e0b; --canc: #ef4444; --bg: #f9fafb;
+        --blue-btn: #3b82f6;
     }
     * { box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
     body { background: var(--bg); margin: 0; padding: 15px; color: var(--primary); }
 
-    header h1 { font-size: 1.4rem; font-weight: 900; text-align: center; margin-bottom: 20px; }
+    header h1 { font-size: 1.4rem; font-weight: 900; text-align: center; margin-bottom: 20px; letter-spacing: -1px; }
     
-    .sync-indicator { text-align: center; font-size: 0.65rem; font-weight: 800; margin-bottom: 15px; padding: 5px; border-radius: 10px; }
+    .storage-header { font-size: 0.65rem; font-weight: 900; color: var(--subtle); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 1px; display: block; text-align: center; }
+    .storage-tools { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 25px; padding: 12px; background: #fff; border-radius: 20px; border: 1px solid var(--border); }
+    .tool-btn { 
+        padding: 10px; border-radius: 12px; border: 1px solid #e5e7eb; 
+        background: #f9fafb; font-size: 0.7rem; font-weight: 700; 
+        cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .btn-backup { color: var(--blue-btn); border-color: #dbeafe; }
 
-    /* Tables Style */
-    .table-section { margin-top: 30px; background: #fff; border-radius: 28px; border: 1px solid var(--border); overflow: hidden; }
-    .table-header { padding: 20px; border-bottom: 1px solid var(--border); font-weight: 900; display: flex; justify-content: space-between; align-items: center; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
-    th { background: #f9fafb; padding: 12px; text-align: left; color: var(--subtle); text-transform: uppercase; font-size: 0.6rem; }
-    td { padding: 12px; border-bottom: 1px solid #fefefe; font-weight: 600; }
-    .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
-
-    /* Original Styles */
     .btn-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 25px; }
     .btn { padding: 14px; border: 1px solid #e5e7eb; background: #fff; border-radius: 16px; font-size: 0.8rem; font-weight: 800; cursor: pointer; }
     .btn-dark { background: var(--primary); color: #fff; border: none; }
-    
+    .btn-danger { color: var(--canc); background: #fef2f2; border-color: #fee2e2; }
+
+    .date-nav { display: flex; align-items: center; justify-content: space-between; padding: 15px; background: #fff; border-radius: 20px; margin-bottom: 25px; border: 1px solid var(--border); }
+    .month-label { font-weight: 900; font-size: 1.1rem; }
+
     .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .item-card { padding: 20px; border-radius: 26px; background: #fff; border: 1px solid var(--border); border-left: 6px solid #ccc; }
-    .delivered-value { font-size: 2.1rem; font-weight: 900; display: block; }
+    .item-card { padding: 20px; border-radius: 26px; background: #fff; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+    .item-name { font-size: 0.7rem; font-weight: 900; color: var(--subtle); text-transform: uppercase; display: block; margin-bottom: 4px; }
+    .delivered-value { font-size: 2.1rem; font-weight: 900; display: block; letter-spacing: -1px; }
+    .item-desc { font-size: 0.6rem; color: var(--subtle); font-weight: 600; display: block; margin-top: 4px; }
 
     .chart-section { margin-top: 30px; background: #fff; padding: 22px; border-radius: 28px; border: 1px solid var(--border); }
     .chart-viewport { width: 100%; overflow-x: auto; }
-    .chart-wrapper { min-width: 800px; height: 300px; }
+    .chart-wrapper { min-width: 900px; height: 320px; }
 
     .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
     .modal-content { background: white; width: 92%; max-width: 400px; padding: 30px; border-radius: 32px; }
-    input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 12px; }
+    input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 12px; font-weight: 600; }
 </style>
 </head>
 <body>
 
 <header><h1>Operations Hub</h1></header>
-<div id="syncIndicator" class="sync-indicator">⚪ Initializing...</div>
+
+<div id="syncStatus" style="text-align: center; font-size: 0.6rem; font-weight: 900; margin-bottom: 10px; color: var(--subtle);">⚪ CONNECTING TO CLOUD...</div>
+
+<span class="storage-header">Database Management</span>
+<div class="storage-tools">
+    <button class="tool-btn btn-backup" onclick="saveToFile()">💾 Local Backup</button>
+    <button class="tool-btn" onclick="resetConfig()">⚙️ GitHub Settings</button>
+</div>
 
 <div class="btn-group">
-    <button class="btn" onclick="verifiedClearAll()">Reset</button>
+    <button class="btn btn-danger" onclick="verifiedClearAll()">Reset</button>
     <button class="btn" onclick="exportExcel()">Export</button>
     <button class="btn btn-dark" onclick="openAddDataModal()">+ Record</button>
+</div>
+
+<div class="date-nav">
+    <button class="btn" style="border:none; font-size:1.5rem" onclick="changeMonth(-1)">‹</button>
+    <div class="month-label" id="currentMonthDisplay">...</div>
+    <button class="btn" style="border:none; font-size:1.5rem" onclick="changeMonth(1)">›</button>
 </div>
 
 <div class="card-grid" id="dashboard"></div>
 
 <div class="chart-section">
+    <div style="display:flex; justify-content:space-between; margin-bottom:20px; align-items:center;">
+        <b style="font-size:1rem;">Performance Trend</b>
+        <select id="chartFilter" onchange="renderMainChart()" style="border:none; font-weight:900; background:#f3f4f6; padding:8px 15px; border-radius:12px;">
+            <option value="all">All Channels</option>
+            <option value="Delivery">Delivery Only</option>
+            <option value="PickUp">PickUp Only</option>
+            <option value="SameDay">SameDay Only</option>
+            <option value="Khazenly">Khazenly Only</option>
+        </select>
+    </div>
     <div class="chart-viewport"><div class="chart-wrapper"><canvas id="main_chart"></canvas></div></div>
-</div>
-
-<div class="table-section">
-    <div class="table-header">
-        <span>Recent Activity</span>
-        <button class="btn" style="padding:5px 10px; font-size:0.6rem;" onclick="fetchFromGitHub()">🔄 Refresh</button>
-    </div>
-    <div style="overflow-x: auto;">
-        <table>
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Channel</th>
-                    <th>Succ.</th>
-                    <th>Pend.</th>
-                    <th>Canc.</th>
-                </tr>
-            </thead>
-            <tbody id="historyTableBody"></tbody>
-        </table>
-    </div>
 </div>
 
 <div id="addDataModal" class="modal">
     <div class="modal-content">
-        <h3>Daily Log</h3>
+        <h3 style="margin:0 0 20px 0; font-weight:900;">Daily Log</h3>
         <input type="date" id="modalDate">
         <div id="modalInputs"></div>
-        <button class="btn btn-dark" style="width:100%; margin-top:20px;" id="saveBtn">Sync to Cloud</button>
-        <button class="btn" style="width:100%; margin-top:10px;" onclick="closeAddDataModal()">Cancel</button>
+        <button class="btn btn-dark" style="width:100%; margin-top:20px;" id="saveBtn">Save & Sync</button>
+        <button class="btn" style="width:100%; margin-top:10px; border:none; color:var(--subtle)" onclick="closeAddDataModal()">Cancel</button>
     </div>
 </div>
 
 <script>
+// --- إعدادات السحابة والمزامنة ---
 let config = JSON.parse(localStorage.getItem('gh_config')) || null;
 const types = ["Delivery", "PickUp", "SameDay", "Khazenly"];
 const typeColors = { Delivery: '#111827', PickUp: '#10b981', SameDay: '#f59e0b', Khazenly: '#ef4444' };
 let data = JSON.parse(localStorage.getItem("shippingData")) || {};
 types.forEach(t => { if(!data[t]) data[t] = []; });
+let viewDate = new Date();
 
-async function init() {
+// دالة جلب البيانات من GitHub عند الفتح
+async function initSync() {
     if (!config) {
-        const token = prompt("GitHub Token:");
-        const user = prompt("Username:");
+        const token = prompt("Enter GitHub Token:");
+        const user = prompt("GitHub Username:");
         const repo = prompt("Repo Name:");
-        if (token) {
+        if (token && user && repo) {
             config = { token, user, repo };
             localStorage.setItem('gh_config', JSON.stringify(config));
             location.reload();
         }
     } else {
-        await fetchFromGitHub();
+        document.getElementById('syncStatus').innerText = "⏳ FETCHING DATA...";
+        const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
+        try {
+            const res = await fetch(url, { headers: { 'Authorization': `token ${config.token}` } });
+            if (res.ok) {
+                const j = await res.json();
+                data = JSON.parse(decodeURIComponent(escape(atob(j.content))));
+                localStorage.setItem("shippingData", JSON.stringify(data));
+                document.getElementById('syncStatus').innerText = "✅ CLOUD SYNCED";
+            }
+        } catch (e) { document.getElementById('syncStatus').innerText = "⚠️ OFFLINE MODE"; }
+        renderDashboard();
     }
 }
 
-async function fetchFromGitHub() {
-    const status = document.getElementById('syncIndicator');
-    status.innerText = "⏳ Fetching cloud data...";
-    try {
-        const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
-        const res = await fetch(url, { headers: { 'Authorization': `token ${config.token}` } });
-        if (res.ok) {
-            const j = await res.json();
-            data = JSON.parse(decodeURIComponent(escape(atob(j.content))));
-            localStorage.setItem("shippingData", JSON.stringify(data));
-            status.innerText = "✅ Cloud Synced";
-            status.style.color = "green";
-        }
-    } catch (e) { status.innerText = "⚠️ Offline Mode"; }
-    renderAll();
-}
-
-async function pushToGitHub() {
+// دالة إرسال البيانات إلى GitHub
+async function pushToCloud() {
+    document.getElementById('syncStatus').innerText = "⏳ SYNCING...";
     const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
     try {
         const res = await fetch(url, { headers: { 'Authorization': `token ${config.token}` } });
-        let sha = (res.ok) ? (await res.json()).sha : "";
+        let sha = "";
+        if (res.ok) { const json = await res.json(); sha = json.sha; }
+        
         await fetch(url, {
             method: 'PUT',
-            headers: { 'Authorization': `token ${config.token}` },
+            headers: { 'Authorization': `token ${config.token}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                message: "update",
+                message: "Update logistics",
                 content: btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2)))),
                 sha: sha
             })
         });
-    } catch (e) { alert("Cloud save failed"); }
+        document.getElementById('syncStatus').innerText = "✅ DATA SAVED TO CLOUD";
+    } catch (e) { document.getElementById('syncStatus').innerText = "❌ CLOUD ERROR"; }
 }
 
-function renderAll() {
-    renderDashboard();
-    renderTable();
-    renderChart();
+// --- بقية وظائفك الأصلية حرفياً ---
+function saveToFile() {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Logistics_DB.json`;
+    a.click();
+}
+
+function changeMonth(step) { viewDate.setMonth(viewDate.getMonth() + step); renderDashboard(); }
+
+function getSum(type, year, month) {
+    return data[type]
+        .filter(d => { let dt = new Date(d.date); return dt.getFullYear() === year && dt.getMonth() === month; })
+        .reduce((sum, d) => sum + (d.delivered || 0), 0);
 }
 
 function renderDashboard() {
+    const year = viewDate.getFullYear();
+    const month = viewDate.getMonth();
+    document.getElementById("currentMonthDisplay").innerText = viewDate.toLocaleString('en-US', { month: 'long', year: 'numeric' });
     const container = document.getElementById("dashboard");
-    container.innerHTML = types.map(t => {
-        const sum = data[t].reduce((s, d) => s + (d.delivered || 0), 0);
-        return `
-            <div class="item-card" style="border-left-color: ${typeColors[t]}">
-                <span style="font-size:0.7rem; font-weight:900; color:var(--subtle)">${t}</span>
-                <span class="delivered-value" style="color:${typeColors[t]}">${sum}</span>
-            </div>`;
-    }).join('');
-}
-
-function renderTable() {
-    const tbody = document.getElementById("historyTableBody");
-    let allRows = [];
-    types.forEach(t => {
-        data[t].forEach(entry => allRows.push({ ...entry, type: t }));
-    });
-    // ترتيب حسب التاريخ الأحدث
-    allRows.sort((a, b) => new Date(b.date) - new Date(a.date));
-    
-    tbody.innerHTML = allRows.slice(0, 15).map(r => `
-        <tr>
-            <td>${r.date}</td>
-            <td><span class="status-dot" style="background:${typeColors[r.type]}"></span>${r.type}</td>
-            <td style="color:var(--deliv)">${r.delivered}</td>
-            <td style="color:var(--pend)">${r.pending}</td>
-            <td style="color:var(--canc)">${r.cancelled}</td>
-        </tr>
+    container.innerHTML = types.map(t => `
+        <div class="item-card" style="border-left: 6px solid ${typeColors[t]}">
+            <span class="item-name">${t}</span>
+            <span class="delivered-value" style="color:${typeColors[t]}">${getSum(t, year, month)}</span>
+            <span class="item-desc">Success Orders</span>
+        </div>
     `).join('');
+    renderMainChart();
 }
 
-function renderChart() {
-    const ctx = document.getElementById('main_chart').getContext('2d');
-    const last7Days = [...new Set(Object.values(data).flat().map(d => d.date))].sort().slice(-7);
+function renderMainChart() {
+    const filter = document.getElementById('chartFilter').value;
+    const year = viewDate.getFullYear();
+    const month = viewDate.getMonth();
+    let days = new Date(year, month + 1, 0).getDate();
+    let labels = Array.from({length: days}, (_, i) => i + 1);
+    let chartTypes = filter === 'all' ? types : [filter];
     
-    const datasets = types.map(t => ({
+    const ctx = document.getElementById('main_chart').getContext('2d');
+    let datasets = chartTypes.map(t => ({
         label: t,
-        data: last7Days.map(date => {
-            const entry = data[t].find(d => d.date === date);
-            return entry ? entry.delivered : 0;
+        data: labels.map(day => {
+            let dStr = `${year}-${String(month+1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            let e = data[t].find(d => d.date === dStr);
+            return e ? e.delivered : 0;
         }),
-        backgroundColor: typeColors[t]
+        backgroundColor: typeColors[t],
+        borderRadius: 8
     }));
 
-    if(window.chartObj) window.chartObj.destroy();
-    window.chartObj = new Chart(ctx, { type: 'bar', data: { labels: last7Days, datasets }, options: { responsive: true, maintainAspectRatio: false } });
+    if(window.mainChartObj) window.mainChartObj.destroy();
+    window.mainChartObj = new Chart(ctx, { 
+        type: 'bar', 
+        data: { labels, datasets }, 
+        options: { responsive: true, maintainAspectRatio: false } 
+    });
 }
 
 function openAddDataModal() {
     document.getElementById("addDataModal").style.display = "flex";
     document.getElementById("modalDate").value = new Date().toISOString().split('T')[0];
-    document.getElementById("modalInputs").innerHTML = types.map(t => `
-        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:5px; margin-top:10px;">
-            <b style="font-size:0.6rem;">${t}</b>
+    const container = document.getElementById("modalInputs");
+    container.innerHTML = types.map(t => `
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:8px; margin-top:10px; align-items:center;">
+            <b style="font-size:0.65rem;">${t}</b>
             <input type="number" id="d_${t}" placeholder="S">
             <input type="number" id="p_${t}" placeholder="P">
             <input type="number" id="c_${t}" placeholder="C">
-        </div>`).join('');
+        </div>
+    `).join('');
 
     document.getElementById("saveBtn").onclick = async () => {
         const date = document.getElementById("modalDate").value;
         types.forEach(t => {
-            const row = { date, delivered: parseInt(document.getElementById(`d_${t}`).value)||0, pending: parseInt(document.getElementById(`p_${t}`).value)||0, cancelled: parseInt(document.getElementById(`c_${t}`).value)||0 };
-            const idx = data[t].findIndex(d => d.date === date);
+            let row = { 
+                date, 
+                delivered: parseInt(document.getElementById(`d_${t}`).value)||0, 
+                pending: parseInt(document.getElementById(`p_${t}`).value)||0, 
+                cancelled: parseInt(document.getElementById(`c_${t}`).value)||0 
+            };
+            let idx = data[t].findIndex(d => d.date === date);
             if(idx >= 0) data[t][idx] = row; else data[t].push(row);
         });
         localStorage.setItem("shippingData", JSON.stringify(data));
-        closeAddDataModal();
-        renderAll();
-        await pushToGitHub();
+        closeAddDataModal(); 
+        renderDashboard();
+        await pushToCloud(); // رفع البيانات بعد الحفظ
     };
 }
 
 function closeAddDataModal() { document.getElementById("addDataModal").style.display = "none"; }
-function verifiedClearAll() { if(confirm("Delete all?")) { localStorage.clear(); location.reload(); } }
+function resetConfig() { localStorage.removeItem('gh_config'); location.reload(); }
+function verifiedClearAll() { if (prompt("Type 'DELETE':") === "DELETE") { localStorage.clear(); location.reload(); } }
 function exportExcel() { 
     const wb = XLSX.utils.book_new();
     types.forEach(t => XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data[t]), t));
     XLSX.writeFile(wb, "Logistics_Report.xlsx");
 }
 
-init();
+initSync();
 </script>
 </body>
-</html>
+    </html>
+    
