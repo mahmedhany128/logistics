@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Logistics Pro - Master Sync</title>
+<title>Logistics Pro - Final Sync</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
@@ -11,42 +11,39 @@
     :root {
         --primary: #111827; --subtle: #9ca3af; --border: #f3f4f6;
         --deliv: #10b981; --pend: #f59e0b; --canc: #ef4444; --bg: #f9fafb;
-        --blue-btn: #3b82f6;
     }
     * { box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
     body { background: var(--bg); margin: 0; padding: 15px; color: var(--primary); }
 
     header h1 { font-size: 1.4rem; font-weight: 900; text-align: center; margin-bottom: 20px; letter-spacing: -1px; }
-    #syncStatus { text-align: center; font-size: 0.6rem; font-weight: 900; color: var(--subtle); margin-bottom: 10px; }
+    #syncStatus { text-align: center; font-size: 0.6rem; font-weight: 900; color: var(--subtle); margin-bottom: 10px; text-transform: uppercase; }
 
-    .storage-tools { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 25px; padding: 12px; background: #fff; border-radius: 20px; border: 1px solid var(--border); }
-    .tool-btn { padding: 10px; border-radius: 12px; border: 1px solid #e5e7eb; background: #f9fafb; font-size: 0.7rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
-
-    .btn-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 25px; }
+    .btn-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px; }
     .btn { padding: 14px; border: 1px solid #e5e7eb; background: #fff; border-radius: 16px; font-size: 0.8rem; font-weight: 800; cursor: pointer; }
     .btn-dark { background: var(--primary); color: #fff; border: none; }
 
-    .date-nav { display: flex; align-items: center; justify-content: space-between; padding: 15px; background: #fff; border-radius: 20px; margin-bottom: 25px; border: 1px solid var(--border); }
+    .date-nav { display: flex; align-items: center; justify-content: space-between; padding: 15px; background: #fff; border-radius: 20px; margin-bottom: 20px; border: 1px solid var(--border); }
     .month-label { font-weight: 900; font-size: 1.1rem; }
 
-    /* الكروت كأزرار تفاعلية */
-    .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .item-card { padding: 20px; border-radius: 26px; background: #fff; border: 1px solid var(--border); transition: 0.2s; cursor: pointer; }
-    .item-card:active { transform: scale(0.95); background: #f9fafb; }
-    .item-card.active-card { border: 2px solid var(--primary); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+    .item-card { padding: 20px; border-radius: 26px; background: #fff; border: 1px solid var(--border); cursor: pointer; transition: 0.2s; position: relative; }
+    .item-card:active { transform: scale(0.96); }
+    .active-card { border: 2.5px solid var(--primary); box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
     .delivered-value { font-size: 2.1rem; font-weight: 900; display: block; letter-spacing: -1px; }
 
-    .chart-section { margin-top: 30px; background: #fff; padding: 22px; border-radius: 28px; border: 1px solid var(--border); }
-    .chart-viewport { width: 100%; overflow-x: auto; }
-    .chart-wrapper { min-width: 900px; height: 320px; }
+    /* الجدول التفصيلي */
+    .detail-section { display: none; margin-bottom: 25px; background: #fff; border-radius: 24px; border: 1px solid var(--border); overflow: hidden; animation: slideIn 0.3s ease-out; }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    
+    .table-header { padding: 15px 20px; font-weight: 900; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .table-wrapper { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 450px; }
+    th { padding: 12px 15px; background: #f9fafb; font-size: 0.6rem; color: var(--subtle); text-transform: uppercase; text-align: center; }
+    td { padding: 12px 15px; text-align: center; font-size: 0.75rem; font-weight: 700; border-bottom: 1px solid #f9fafb; }
 
-    /* تفاصيل الجدول التفاعلي */
-    .detail-section { margin-top: 30px; margin-bottom: 50px; display: none; }
-    .table-card { background: #fff; border-radius: 24px; border: 1px solid var(--border); overflow: hidden; }
-    .table-header { padding: 15px 20px; font-weight: 900; background: #fff; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
-    th { text-align: left; padding: 12px 20px; background: #f9fafb; color: var(--subtle); text-transform: uppercase; font-size: 0.6rem; }
-    td { padding: 12px 20px; border-bottom: 1px solid #f9fafb; font-weight: 600; }
+    .chart-section { background: #fff; padding: 22px; border-radius: 28px; border: 1px solid var(--border); margin-bottom: 50px; }
+    .chart-viewport { width: 100%; overflow-x: auto; }
+    .chart-wrapper { min-width: 800px; height: 300px; }
 
     .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
     .modal-content { background: white; width: 92%; max-width: 400px; padding: 30px; border-radius: 32px; }
@@ -56,15 +53,10 @@
 <body>
 
 <header><h1>Operations Hub</h1></header>
-<div id="syncStatus">🔄 Loading...</div>
-
-<div class="storage-tools">
-    <button class="tool-btn" onclick="saveToFile()">💾 Backup</button>
-    <button class="tool-btn" onclick="resetConfig()">⚙️ Cloud Setup</button>
-</div>
+<div id="syncStatus">🔄 Connecting...</div>
 
 <div class="btn-group">
-    <button class="btn" onclick="verifiedClearAll()">Reset</button>
+    <button class="btn" onclick="resetConfig()">Setup</button>
     <button class="btn" onclick="exportExcel()">Export</button>
     <button class="btn btn-dark" onclick="openAddDataModal()">+ Record</button>
 </div>
@@ -77,28 +69,35 @@
 
 <div class="card-grid" id="dashboard"></div>
 
+<div id="detailSection" class="detail-section">
+    <div class="table-header">
+        <span id="selectedTypeName">DETAILS</span>
+        <button onclick="closeDetails()" style="border:none; background:none; font-weight:900; color:var(--canc); cursor:pointer;">CLOSE ×</button>
+    </div>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Succ.</th>
+                    <th>Pend.</th>
+                    <th>Canc.</th>
+                    <th>Total</th>
+                    <th>Rate %</th>
+                </tr>
+            </thead>
+            <tbody id="detailTableBody"></tbody>
+        </table>
+    </div>
+</div>
+
 <div class="chart-section">
     <div class="chart-viewport"><div class="chart-wrapper"><canvas id="main_chart"></canvas></div></div>
 </div>
 
-<div id="detailSection" class="detail-section">
-    <div class="table-card">
-        <div class="table-header">
-            <span id="selectedTypeName" style="text-transform: uppercase; letter-spacing: 1px;">Details</span>
-            <button onclick="closeDetails()" style="border:none; background:none; font-size:1.2rem; cursor:pointer;">×</button>
-        </div>
-        <div style="overflow-x: auto;">
-            <table>
-                <thead><tr><th>Date</th><th>Success</th><th>Pending</th><th>Cancel</th></tr></thead>
-                <tbody id="detailTableBody"></tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
 <div id="addDataModal" class="modal">
     <div class="modal-content">
-        <h3 style="font-weight:900;">Daily Log</h3>
+        <h3>Daily Entry</h3>
         <input type="date" id="modalDate">
         <div id="modalInputs"></div>
         <button class="btn btn-dark" style="width:100%; margin-top:20px;" id="saveBtn">Save & Sync</button>
@@ -115,7 +114,7 @@ types.forEach(t => { if(!data[t]) data[t] = []; });
 let viewDate = new Date();
 let activeType = null;
 
-async function initSync() {
+async function init() {
     if (!config) {
         const token = prompt("GitHub Token:");
         const user = prompt("Username:");
@@ -150,68 +149,81 @@ async function pushToGitHub() {
             body: JSON.stringify({ message: "update", content: btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2)))), sha: sha })
         });
         document.getElementById('syncStatus').innerText = "✅ Saved";
-    } catch (e) { alert("Sync Error"); }
+    } catch (e) { document.getElementById('syncStatus').innerText = "❌ Error"; }
 }
 
 function renderAll() {
-    renderDashboard();
-    renderChart();
-    if(activeType) showDetails(activeType);
-}
-
-function renderDashboard() {
     const year = viewDate.getFullYear();
     const month = viewDate.getMonth();
     document.getElementById("currentMonthDisplay").innerText = viewDate.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+    
     document.getElementById("dashboard").innerHTML = types.map(t => {
-        const sum = data[t].filter(d => { let dt = new Date(d.date); return dt.getFullYear() === year && dt.getMonth() === month; }).reduce((s, d) => s + (d.delivered || 0), 0);
-        return `<div class="item-card ${activeType === t ? 'active-card' : ''}" style="border-left: 6px solid ${typeColors[t]}" onclick="showDetails('${t}')">
+        const sum = data[t].filter(d => { 
+            let dt = new Date(d.date); return dt.getFullYear() === year && dt.getMonth() === month; 
+        }).reduce((s, d) => s + (d.delivered || 0), 0);
+        return `<div class="item-card ${activeType === t ? 'active-card' : ''}" onclick="showDetails('${t}')" style="border-left: 6px solid ${typeColors[t]}">
             <span style="font-size:0.7rem; font-weight:900; color:var(--subtle); text-transform:uppercase;">${t}</span>
             <span class="delivered-value" style="color:${typeColors[t]}">${sum}</span>
-            <span style="font-size:0.6rem; color:var(--subtle);">Tap for details</span>
         </div>`;
     }).join('');
+
+    renderChart(year, month);
+    if(activeType) showDetails(activeType);
 }
 
 function showDetails(type) {
     activeType = type;
-    renderDashboard(); // لتحديث الـ Border الخاص بالكرت النشط
+    document.querySelectorAll('.item-card').forEach((c,i) => {
+        c.classList.toggle('active-card', types[i] === type);
+    });
     const section = document.getElementById("detailSection");
-    const title = document.getElementById("selectedTypeName");
     const tbody = document.getElementById("detailTableBody");
-    
+    const title = document.getElementById("selectedTypeName");
+
     section.style.display = "block";
-    title.innerText = `${type} History`;
+    title.innerText = `${type} Report`;
     title.style.color = typeColors[type];
 
     const year = viewDate.getFullYear();
     const month = viewDate.getMonth();
-    const filtered = data[type].filter(d => { let dt = new Date(d.date); return dt.getFullYear() === year && dt.getMonth() === month; });
-    
-    tbody.innerHTML = filtered.sort((a,b)=>new Date(b.date)-new Date(a.date)).map(r => `
-        <tr>
+    const filtered = data[type].filter(d => { 
+        let dt = new Date(d.date); return dt.getFullYear() === year && dt.getMonth() === month; 
+    }).sort((a,b) => new Date(b.date) - new Date(a.date));
+
+    tbody.innerHTML = filtered.map(r => {
+        const total = (r.delivered || 0) + (r.pending || 0) + (r.cancelled || 0);
+        const rate = total > 0 ? ((r.delivered / total) * 100).toFixed(1) : "0.0";
+        return `<tr>
             <td>${r.date}</td>
             <td style="color:var(--deliv)">${r.delivered}</td>
             <td style="color:var(--pend)">${r.pending}</td>
             <td style="color:var(--canc)">${r.cancelled}</td>
-        </tr>
-    `).join('');
-    
-    section.scrollIntoView({ behavior: 'smooth' });
+            <td style="background:#f9fafb">${total}</td>
+            <td><span style="padding:2px 6px; background:#ecfdf5; color:var(--deliv); border-radius:6px;">${rate}%</span></td>
+        </tr>`;
+    }).join('');
 }
 
 function closeDetails() {
     activeType = null;
     document.getElementById("detailSection").style.display = "none";
-    renderDashboard();
+    renderAll();
 }
 
-function renderChart() {
+function renderChart(year, month) {
     const ctx = document.getElementById('main_chart').getContext('2d');
-    const year = viewDate.getFullYear(); const month = viewDate.getMonth();
     let days = new Date(year, month + 1, 0).getDate();
     let labels = Array.from({length: days}, (_, i) => i + 1);
-    let datasets = types.map(t => ({ label: t, data: labels.map(day => { let dStr = `${year}-${String(month+1).padStart(2, '0')}-${String(day).padStart(2, '0')}`; let e = data[t].find(d => d.date === dStr); return e ? e.delivered : 0; }), backgroundColor: typeColors[t], borderRadius: 5 }));
+    let datasets = types.map(t => ({
+        label: t,
+        data: labels.map(day => {
+            let dStr = `${year}-${String(month+1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            let e = data[t].find(d => d.date === dStr);
+            return e ? e.delivered : 0;
+        }),
+        backgroundColor: typeColors[t],
+        borderRadius: 5
+    }));
     if(window.ch) window.ch.destroy();
     window.ch = new Chart(ctx, { type: 'bar', data: { labels, datasets }, options: { responsive: true, maintainAspectRatio: false } });
 }
@@ -219,10 +231,21 @@ function renderChart() {
 function openAddDataModal() {
     document.getElementById("addDataModal").style.display = "flex";
     document.getElementById("modalDate").value = new Date().toISOString().split('T')[0];
-    document.getElementById("modalInputs").innerHTML = types.map(t => `<div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:8px; margin-top:10px; align-items:center;"><b>${t}</b><input type="number" id="d_${t}" placeholder="S"><input type="number" id="p_${t}" placeholder="P"><input type="number" id="c_${t}" placeholder="C"></div>`).join('');
+    document.getElementById("modalInputs").innerHTML = types.map(t => `
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:8px; margin-top:10px; align-items:center;">
+            <b>${t.charAt(0)}</b>
+            <input type="number" id="d_${t}" placeholder="S">
+            <input type="number" id="p_${t}" placeholder="P">
+            <input type="number" id="c_${t}" placeholder="C">
+        </div>`).join('');
+
     document.getElementById("saveBtn").onclick = async () => {
         const date = document.getElementById("modalDate").value;
-        types.forEach(t => { const row = { date, delivered: parseInt(document.getElementById(`d_${t}`).value)||0, pending: parseInt(document.getElementById(`p_${t}`).value)||0, cancelled: parseInt(document.getElementById(`c_${t}`).value)||0 }; let idx = data[t].findIndex(d => d.date === date); if(idx >= 0) data[t][idx] = row; else data[t].push(row); });
+        types.forEach(t => {
+            const row = { date, delivered: parseInt(document.getElementById(`d_${t}`).value)||0, pending: parseInt(document.getElementById(`p_${t}`).value)||0, cancelled: parseInt(document.getElementById(`c_${t}`).value)||0 };
+            let idx = data[t].findIndex(d => d.date === date);
+            if(idx >= 0) data[t][idx] = row; else data[t].push(row);
+        });
         localStorage.setItem("shippingData", JSON.stringify(data));
         closeAddDataModal(); renderAll(); await pushToGitHub();
     };
@@ -231,12 +254,13 @@ function openAddDataModal() {
 function closeAddDataModal() { document.getElementById("addDataModal").style.display = "none"; }
 function resetConfig() { localStorage.removeItem('gh_config'); location.reload(); }
 function changeMonth(step) { viewDate.setMonth(viewDate.getMonth() + step); renderAll(); }
-function verifiedClearAll() { if (prompt("Type 'DELETE':") === "DELETE") { localStorage.clear(); location.reload(); } }
-function saveToFile() { const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `Backup.json`; a.click(); }
-function exportExcel() { const wb = XLSX.utils.book_new(); types.forEach(t => XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data[t]), t)); XLSX.writeFile(wb, "Report.xlsx"); }
+function exportExcel() { 
+    const wb = XLSX.utils.book_new();
+    types.forEach(t => XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data[t]), t));
+    XLSX.writeFile(wb, "Report.xlsx");
+}
 
-initSync();
+init();
 </script>
 </body>
-    </html>
-    
+</html>
