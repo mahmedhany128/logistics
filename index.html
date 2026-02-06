@@ -1,102 +1,92 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Barcode Pro - Advanced Edition</title>
-
+    <title>Logistics Pro - Full Dashboard</title>
+    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     
     <style>
         :root { 
             --bg: #0f172a; --card: #1e293b; --brand: #818cf8; --text: #f1f5f9; 
-            --dim: #94a3b8; --border: #334155; 
-            --success: #22c55e; --warning: #eab308; --danger: #ef4444; 
+            --success: #22c55e; --warning: #eab308; --danger: #ef4444; --border: #334155;
         }
-        * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: var(--text); margin: 0; padding: 15px; padding-bottom: 120px; }
+        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; }
+        body { background: var(--bg); color: var(--text); margin: 0; padding: 15px; padding-bottom: 100px; }
         
-        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .sync-badge { font-size: 0.65rem; font-weight: 800; color: var(--brand); background: #818cf820; padding: 6px 12px; border-radius: 20px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
+        .stat-card { background: var(--card); padding: 15px; border-radius: 20px; border: 1px solid var(--border); position: relative; }
+        .stat-val { font-size: 1.5rem; font-weight: 900; display: block; }
+        .percent-tag { position: absolute; top: 8px; left: 8px; font-size: 0.75rem; font-weight: bold; }
 
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-        .stat-card { background: var(--card); padding: 18px; border-radius: 24px; border: 1px solid var(--border); position: relative; cursor: pointer; transition: 0.2s; }
-        .stat-card:active { transform: scale(0.96); background: #243147; }
-        .stat-val { font-size: 1.5rem; font-weight: 800; display: block; margin-top: 5px; color: #fff; }
+        .chart-container { background: var(--card); padding: 15px; border-radius: 25px; margin-top: 20px; border: 1px solid var(--border); height: 250px; }
 
-        #detailsArea { display: none; margin-bottom: 25px; animation: slideUp 0.3s ease; }
-        .table-container { background: var(--card); border-radius: 24px; border: 1px solid var(--border); overflow: hidden; }
-        table { width: 100%; border-collapse: collapse; }
-        th { font-size: 0.6rem; color: var(--dim); padding: 15px; border-bottom: 1px solid var(--border); text-transform: uppercase; }
-        td { padding: 15px 10px; text-align: center; border-bottom: 1px solid #334155; font-size: 0.85rem; font-weight: 600; }
+        .input-group { background: var(--card); padding: 20px; border-radius: 25px; margin-top: 20px; border: 1px solid var(--border); }
+        .input-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+        input, select { flex: 1; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg); color: white; font-size: 0.9rem; }
+        .cam-btn { background: var(--brand); border: none; padding: 12px; border-radius: 12px; color: white; cursor: pointer; display: flex; align-items: center; }
 
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
-        .modal-content { background: var(--card); width: 92%; max-width: 400px; padding: 25px; border-radius: 35px; max-height: 90vh; overflow-y: auto; }
-        
-        .scan-box { background: var(--bg); border: 1px solid var(--border); padding: 12px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-        .cam-icon { background: var(--brand); width: 35px; height: 35px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; }
+        .table-container { background: var(--card); border-radius: 20px; margin-top: 20px; overflow: hidden; border: 1px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th { background: #ffffff05; padding: 12px; color: var(--brand); }
+        td { padding: 12px; text-align: center; border-top: 1px solid var(--border); }
 
-        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 2000; align-items: flex-end; }
-        .bottom-sheet { background: var(--card); width: 100%; border-radius: 30px 30px 0 0; padding: 25px; max-height: 70vh; overflow-y: auto; animation: slideUp 0.3s ease-out; border-top: 3px solid var(--brand); }
-        .code-item { display: flex; justify-content: space-between; align-items: center; background: var(--bg); padding: 12px 15px; border-radius: 12px; margin-bottom: 8px; border: 1px solid var(--border); }
-        .btn-del { color: var(--danger); font-size: 0.75rem; font-weight: 800; padding: 5px 10px; }
+        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; align-items: flex-end; }
+        .bottom-sheet { background: var(--card); width: 100%; border-radius: 25px 25px 0 0; padding: 20px; max-height: 70vh; overflow-y: auto; border-top: 3px solid var(--brand); }
+        .code-item { display: flex; justify-content: space-between; background: var(--bg); padding: 12px; border-radius: 12px; margin-bottom: 8px; border: 1px solid var(--border); }
 
-        .footer { position: fixed; bottom: 20px; left: 15px; right: 15px; display: grid; grid-template-columns: 2.5fr 1fr 1fr; gap: 10px; z-index: 100; }
-        .btn-main { background: var(--brand); color: #fff; border: none; padding: 18px; border-radius: 22px; font-weight: 800; font-size: 0.9rem; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
-        
-        #reader { width: 100%; border-radius: 20px; overflow: hidden; margin-bottom: 15px; display: none; border: 2px solid var(--brand); }
-
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .footer-btns { position: fixed; bottom: 15px; left: 15px; right: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .btn { border: none; padding: 15px; border-radius: 18px; font-weight: bold; cursor: pointer; color: white; font-size: 0.9rem; }
+        #reader { width: 100%; border-radius: 15px; margin-bottom: 10px; display: none; border: 2px solid var(--brand); }
     </style>
 </head>
 <body>
 
-<header>
-    <h1 style="margin:0; font-size:1.4rem; font-weight:800; color:#fff">Barcode Pro</h1>
-    <div id="sync" class="sync-badge">Connecting...</div>
+<header style="display:flex; justify-content:space-between; align-items:center;">
+    <h3 style="margin:0;">Logistics Pro 🚀</h3>
+    <div id="syncStatus" style="font-size:0.7rem; font-weight:bold; color:var(--brand);">مزامنة...</div>
 </header>
 
-<div class="grid" id="metricsPanel"></div>
+<div class="grid" id="metrics"></div>
 
-<div id="detailsArea">
+<div class="chart-container">
+    <canvas id="mainChart"></canvas>
+</div>
+
+<div class="input-group">
+    <div id="reader"></div>
+    <div class="input-row">
+        <select id="coSelect"><option>Delivery</option><option>PickUp</option><option>SameDay</option><option>Khazenly</option></select>
+        <select id="statusSelect"><option value="s">ناجح ✅</option><option value="p">معلق ⏳</option><option value="c">مرتجع ❌</option></select>
+    </div>
+    <div class="input-row">
+        <input type="text" id="barcodeInput" placeholder="أدخل الكود يدوياً...">
+        <button class="cam-btn" onclick="toggleScanner()">📷</button>
+    </div>
+    <button class="btn" style="background:var(--brand); width:100%;" onclick="addManual()">إضافة البيانات</button>
+</div>
+
+<div id="detailsArea" style="display:none;">
     <div class="table-container">
-        <div style="padding:15px; display:flex; justify-content:space-between; align-items:center;">
-            <b id="activeTitle" style="color:var(--brand)">Audit View</b>
-            <button onclick="document.getElementById('detailsArea').style.display='none'" style="border:none; background:none; color:var(--text); font-weight:800;">&times;</button>
-        </div>
         <table>
-            <thead><tr><th>Day</th><th>S</th><th>P</th><th>C</th><th>Total</th></tr></thead>
+            <thead><tr><th>اليوم</th><th>✅</th><th>⏳</th><th>❌</th><th>إجمالي</th></tr></thead>
             <tbody id="tableBody"></tbody>
         </table>
     </div>
 </div>
 
-<div class="footer">
-    <button class="btn-main" onclick="openLogModal()">+ Scan Shipment</button>
-    <button class="btn-main" style="background:var(--card); border:1px solid var(--border);" onclick="exportToExcel()">📊</button>
-    <button class="btn-main" style="background:var(--card); border:1px solid var(--border); color:var(--danger);" onclick="wipeAll()">🗑️</button>
+<div class="footer-btns">
+    <button class="btn" style="background:var(--card); border:1px solid var(--border);" onclick="exportExcel()">تقرير Excel 📊</button>
+    <button class="btn" style="background:var(--danger);" onclick="wipeData()">تصفير 🗑️</button>
 </div>
 
-<div id="logModal" class="modal">
-    <div class="modal-content">
-        <h3 style="margin-top:0;">Daily Logistics Scan</h3>
-        <input type="date" id="logDate" style="width:100%; padding:12px; border-radius:12px; background:var(--bg); color:white; border:1px solid var(--border); margin-bottom:15px;">
-        <div id="reader"></div>
-        <div id="scanForm"></div>
-        <button class="btn-main" style="width:100%; margin-top:20px;" onclick="saveData()">Save & Sync Cloud</button>
-        <button onclick="closeLogModal()" style="width:100%; border:none; background:none; margin-top:10px; color:var(--dim);">Cancel</button>
-    </div>
-</div>
-
-<div id="codeSheet" class="overlay" onclick="closeSheet()">
+<div id="codeSheet" class="overlay" onclick="this.style.display='none'">
     <div class="bottom-sheet" onclick="event.stopPropagation()">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h3 id="sheetTitle" style="margin:0;">Code Audit</h3>
-            <button onclick="closeSheet()" style="background:none; border:none; color:var(--dim); font-size:1.5rem;">&times;</button>
-        </div>
+        <h4 id="sheetTitle" style="margin:0 0 15px 0;">الأكواد المسجلة</h4>
         <div id="sheetBody"></div>
     </div>
 </div>
@@ -104,36 +94,160 @@
 <script>
 let config = JSON.parse(localStorage.getItem('gh_config'));
 const types = ["Delivery", "PickUp", "SameDay", "Khazenly"];
-let storage = JSON.parse(localStorage.getItem("logistics_final_v1")) || {};
+let myChart;
+
+function loadData() {
+    const keys = ["logistics_final_v1", "logistics_v16_data", "logistics_v15_data", "logistics_v12_data"];
+    for (let k of keys) {
+        let d = localStorage.getItem(k);
+        if(d) return JSON.parse(d);
+    }
+    return {};
+}
+
+let storage = loadData();
 types.forEach(t => { if(!storage[t]) storage[t] = []; });
 
-let scanner;
-
-async function start() {
-    if (!config) {
+async function init() {
+    if(!config) {
         const token = prompt("GitHub Token:"), user = prompt("User:"), repo = prompt("Repo:");
         if(token) { config={token,user,repo}; localStorage.setItem('gh_config', JSON.stringify(config)); location.reload(); }
-    } else { await pullData(); }
+    } else {
+        updateUI();
+        await syncCloud();
+    }
 }
 
-async function pullData() {
-    const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
-    try {
-        const r = await fetch(url, { headers: {'Authorization': `token ${config.token}`} });
-        if(r.ok) {
-            const j = await r.json();
-            storage = JSON.parse(decodeURIComponent(escape(atob(j.content))));
-            localStorage.setItem("logistics_final_v1", JSON.stringify(storage));
-            document.getElementById('sync').innerText = "☁️ Synced";
+function updateUI() {
+    renderCards();
+    updateChart();
+    if(document.getElementById('detailsArea').style.display === 'block') {
+        const activeCo = document.querySelector('.stat-card[style*="border: 2px"]') || {innerText: types[0]};
+        showTable(activeCo.innerText.split('\n')[1] || types[0]);
+    }
+}
+
+function renderCards() {
+    document.getElementById('metrics').innerHTML = types.map(t => {
+        const m = storage[t] || [];
+        const s = m.reduce((a,b) => a + (b.s?.length || 0), 0);
+        const total = m.reduce((a,b) => a + (b.s?.length + b.p?.length + b.c?.length || 0), 0);
+        const p = total > 0 ? ((s/total)*100).toFixed(1) : 0;
+        const color = p >= 90 ? 'var(--success)' : (p >= 70 ? 'var(--warning)' : 'var(--danger)');
+        
+        return `<div class="stat-card" onclick="showTable('${t}')">
+            <span class="percent-tag" style="color:${color}">${p}%</span>
+            <small style="color:var(--dim)">${t}</small>
+            <span class="stat-val">${s}</span>
+        </div>`;
+    }).join('');
+}
+
+function updateChart() {
+    const ctx = document.getElementById('mainChart').getContext('2d');
+    const allS = types.reduce((acc, t) => acc + storage[t].reduce((a,b) => a + b.s.length, 0), 0);
+    const allP = types.reduce((acc, t) => acc + storage[t].reduce((a,b) => a + b.p.length, 0), 0);
+    const allC = types.reduce((acc, t) => acc + storage[t].reduce((a,b) => a + b.c.length, 0), 0);
+
+    if(myChart) myChart.destroy();
+    myChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['ناجح ✅', 'معلق ⏳', 'مرتجع ❌'],
+            datasets: [{
+                data: [allS, allP, allC],
+                backgroundColor: ['#22c55e', '#eab308', '#ef4444'],
+                borderRadius: 10
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }, x: { ticks: { color: '#f1f5f9' } } }
         }
-    } catch(e) { document.getElementById('sync').innerText = "⚠️ Offline"; }
-    render();
+    });
 }
 
-async function saveData() {
+function addManual() {
+    const code = document.getElementById('barcodeInput').value;
+    const co = document.getElementById('coSelect').value;
+    const status = document.getElementById('statusSelect').value;
+    const date = new Date().toISOString().split('T')[0];
+
+    if(!code) return alert("أدخل الكود أولاً");
+
+    let dayEntry = storage[co].find(x => x.date === date);
+    if(!dayEntry) {
+        dayEntry = { date, s:[], p:[], c:[] };
+        storage[co].push(dayEntry);
+    }
+
+    if(!dayEntry[status].includes(code)) {
+        dayEntry[status].push(code);
+        document.getElementById('barcodeInput').value = "";
+        save();
+    } else {
+        alert("هذا الكود مسجل مسبقاً لهذا اليوم!");
+    }
+}
+
+function toggleScanner() {
+    const r = document.getElementById('reader');
+    const scannerObj = new Html5Qrcode("reader");
+    if(r.style.display === 'block') {
+        r.style.display = 'none';
+        Html5Qrcode.terminate();
+    } else {
+        r.style.display = 'block';
+        scannerObj.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (txt) => {
+            document.getElementById('barcodeInput').value = txt;
+            navigator.vibrate(100);
+            r.style.display = 'none';
+            scannerObj.stop();
+        });
+    }
+}
+
+function showTable(type) {
+    document.getElementById('detailsArea').style.display = 'block';
+    const data = storage[type].sort((a,b) => new Date(b.date) - new Date(a.date));
+    document.getElementById('tableBody').innerHTML = data.map(r => `
+        <tr>
+            <td>${r.date.split('-').slice(1).join('/')}</td>
+            <td style="color:var(--success)" onclick="openSheet('${type}','${r.date}','s')">${r.s.length}</td>
+            <td style="color:var(--warning)" onclick="openSheet('${type}','${r.date}','p')">${r.p.length}</td>
+            <td style="color:var(--danger)" onclick="openSheet('${type}','${r.date}','c')">${r.c.length}</td>
+            <td style="font-weight:900;">${r.s.length+r.p.length+r.c.length}</td>
+        </tr>
+    `).join('');
+}
+
+function openSheet(type, date, cat) {
+    const codes = storage[type].find(x => x.date === date)[cat];
+    document.getElementById('sheetBody').innerHTML = codes.length > 0 ? codes.map((c, i) => `
+        <div class="code-item">
+            <span style="font-weight:bold;">${c}</span>
+            <span style="color:var(--danger); font-size:0.8rem;" onclick="deleteCode('${type}','${date}','${cat}',${i})">حذف 🗑️</span>
+        </div>
+    `).join('') : '<p style="text-align:center;">لا توجد أكواد مسجلة</p>';
+    document.getElementById('codeSheet').style.display = 'flex';
+}
+
+function deleteCode(t, d, c, i) {
+    storage[t].find(x => x.date === d)[c].splice(i, 1);
+    save();
+    document.getElementById('codeSheet').style.display = 'none';
+}
+
+async function save() {
     localStorage.setItem("logistics_final_v1", JSON.stringify(storage));
-    render(); closeLogModal();
-    document.getElementById('sync').innerText = "⏳ Saving...";
+    updateUI();
+    await syncCloud();
+}
+
+async function syncCloud() {
+    document.getElementById('syncStatus').innerText = "جاري الحفظ...";
     const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
     try {
         const r = await fetch(url, { headers: {'Authorization': `token ${config.token}`} });
@@ -141,142 +255,28 @@ async function saveData() {
         await fetch(url, {
             method: 'PUT',
             headers: {'Authorization': `token ${config.token}`},
-            body: JSON.stringify({ message:"Daily Sync", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage)))), sha })
+            body: JSON.stringify({ message:"Auto Sync", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage)))), sha })
         });
-        document.getElementById('sync').innerText = "☁️ Synced";
-    } catch(e) { document.getElementById('sync').innerText = "❌ Fail"; }
+        document.getElementById('syncStatus').innerText = "تم الحفظ سحابياً ✅";
+    } catch(e) { document.getElementById('syncStatus').innerText = "خطأ في المزامنة ⚠️"; }
 }
 
-// الريندر المحدث بالنسبة المئوية الملونة
-function render() {
-    document.getElementById('metricsPanel').innerHTML = types.map(t => {
-        const mData = storage[t] || [];
-        const sCount = mData.reduce((a, b) => a + (b.s?.length || 0), 0);
-        const totalCount = mData.reduce((a, b) => a + (b.s?.length + b.p?.length + b.c?.length || 0), 0);
-        
-        const percentage = totalCount > 0 ? (sCount / totalCount) * 100 : 0;
-        let statusColor = "var(--danger)";
-        if (percentage >= 90) statusColor = "var(--success)";
-        else if (percentage >= 70) statusColor = "var(--warning)";
-
-        return `<div class="stat-card" onclick="showTable('${t}')">
-            <span style="font-size:0.75rem; font-weight:900; color:${statusColor}; position:absolute; top:15px; right:15px">
-                ${percentage.toFixed(1)}%
-            </span>
-            <span class="stat-label" style="font-size:0.65rem; color:var(--dim); font-weight:800; text-transform:uppercase;">${t}</span>
-            <span class="stat-val">${sCount}</span>
-        </div>`;
-    }).join('');
-}
-
-function showTable(type) {
-    document.getElementById('detailsArea').style.display = 'block';
-    document.getElementById('activeTitle').innerText = `${type} History`;
-    const data = (storage[type] || []).sort((a,b) => new Date(b.date) - new Date(a.date));
-    
-    document.getElementById('tableBody').innerHTML = data.map(r => {
-        const s = r.s?.length || 0, p = r.p?.length || 0, c = r.c?.length || 0;
-        return `<tr>
-            <td>${r.date.split('-').slice(1).join('/')}</td>
-            <td style="color:var(--success)" onclick="openSheet('${type}', '${r.date}', 's')">${s}</td>
-            <td style="color:var(--warning)" onclick="openSheet('${type}', '${r.date}', 'p')">${p}</td>
-            <td style="color:var(--danger)" onclick="openSheet('${type}', '${r.date}', 'c')">${c}</td>
-            <td style="background:#ffffff10; border-radius:8px; font-weight:800;">${s+p+c}</td>
-        </tr>`;
-    }).join('');
-    document.getElementById('detailsArea').scrollIntoView({behavior:'smooth'});
-}
-
-function openSheet(type, date, cat) {
-    const entry = storage[type].find(x => x.date === date);
-    const codes = entry[cat] || [];
-    const titles = { s: "Successful Delivered ✅", p: "Pending / Re-attempt ⏳", c: "Canceled / Returned ❌" };
-    
-    document.getElementById('sheetTitle').innerText = titles[cat];
-    document.getElementById('sheetBody').innerHTML = codes.length > 0 ? 
-        codes.map((code, idx) => `
-            <div class="code-item">
-                <span style="font-family:monospace; color:#fff; font-size:0.9rem;">${code}</span>
-                <span class="btn-del" onclick="deleteCode('${type}', '${date}', '${cat}', ${idx})">DELETE</span>
-            </div>
-        `).join('') : '<p style="text-align:center; color:var(--dim);">No barcode data recorded.</p>';
-    
-    document.getElementById('codeSheet').style.display = 'flex';
-}
-
-function deleteCode(type, date, cat, idx) {
-    if(confirm("Delete this specific shipment?")) {
-        storage[type].find(x => x.date === date)[cat].splice(idx, 1);
-        localStorage.setItem("logistics_final_v1", JSON.stringify(storage));
-        openSheet(type, date, cat); showTable(type); render();
-    }
-}
-
-function closeSheet() { document.getElementById('codeSheet').style.display = 'none'; }
-
-function openLogModal() {
-    document.getElementById('logModal').style.display='flex';
-    document.getElementById('logDate').value = new Date().toISOString().split('T')[0];
-    updateScanForm();
-}
-
-function updateScanForm() {
-    const d = document.getElementById('logDate').value;
-    document.getElementById('scanForm').innerHTML = types.map(t => {
-        let entry = storage[t].find(x => x.date === d) || { date:d, s:[], p:[], c:[] };
-        if(!storage[t].find(x => x.date === d)) storage[t].push(entry);
-        return `
-        <div style="margin-bottom:15px; background:#00000020; padding:15px; border-radius:20px; border:1px solid #ffffff05;">
-            <b style="color:var(--brand); display:block; margin-bottom:10px; font-size:0.8rem;">${t}</b>
-            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px;">
-                <div class="scan-box" onclick="startScan('${t}','s')"><span>✅ ${entry.s.length}</span> <div class="cam-icon">📷</div></div>
-                <div class="scan-box" onclick="startScan('${t}','p')"><span>⏳ ${entry.p.length}</span> <div class="cam-icon">📷</div></div>
-                <div class="scan-box" onclick="startScan('${t}','c')"><span>❌ ${entry.c.length}</span> <div class="cam-icon">📷</div></div>
-            </div>
-        </div>`;
-    }).join('');
-}
-
-function startScan(type, cat) {
-    document.getElementById('reader').style.display = 'block';
-    if(scanner) scanner.clear();
-    scanner = new Html5Qrcode("reader");
-    scanner.start({ facingMode: "environment" }, { fps: 15, qrbox: {width:250, height:150} }, 
-    (txt) => {
-        const d = document.getElementById('logDate').value;
-        const entry = storage[type].find(x => x.date === d);
-        if(!entry[cat].includes(txt)) {
-            entry[cat].push(txt);
-            navigator.vibrate(100);
-            updateScanForm();
-        }
-    });
-}
-
-function closeLogModal() {
-    if(scanner) { try { scanner.stop(); } catch(e){} }
-    document.getElementById('logModal').style.display='none';
-}
-
-function exportToExcel() {
-    let data = [];
-    types.forEach(t => {
-        storage[t].forEach(d => {
-            d.s.forEach(c => data.push({Date:d.date, Company:t, Barcode:c, Status:"Success"}));
-            d.p.forEach(c => data.push({Date:d.date, Company:t, Barcode:c, Status:"Pending"}));
-            d.c.forEach(c => data.push({Date:d.date, Company:t, Barcode:c, Status:"Canceled"}));
-        });
-    });
-    if(data.length === 0) return alert("No scans to export!");
-    const ws = XLSX.utils.json_to_sheet(data);
+function exportExcel() {
+    let rows = [];
+    types.forEach(t => storage[t].forEach(d => {
+        d.s.forEach(c => rows.push({التاريخ: d.date, الشركة: t, الكود: c, الحالة: "ناجح"}));
+        d.p.forEach(c => rows.push({التاريخ: d.date, الشركة: t, الكود: c, الحالة: "معلق"}));
+        d.c.forEach(c => rows.push({التاريخ: d.date, الشركة: t, الكود: c, الحالة: "مرتجع"}));
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "AuditLog");
-    XLSX.writeFile(wb, `Logistics_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
+    XLSX.utils.book_append_sheet(wb, ws, "التقرير");
+    XLSX.writeFile(wb, `Report_${new Date().toLocaleDateString()}.xlsx`);
 }
 
-function wipeAll() { if(confirm("DANGER: WIPE ALL DATA?")) { storage={}; types.forEach(t=>storage[t]=[]); saveData(); } }
+function wipeData() { if(confirm("سيتم حذف كل البيانات نهائياً! هل أنت متأكد؟")) { storage={}; types.forEach(t=>storage[t]=[]); save(); } }
 
-start();
+init();
 </script>
 </body>
 </html>
