@@ -14,17 +14,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     
     <style>
-        :root { 
-            /* تم تحديث الخلفية للون هادئ (Slate-50) */
-            --bg: #f8fafc; 
-            --card: #ffffff; 
-            --brand: #6366f1; 
-            --text: #0f172a; 
-            --dim: #64748b; 
-            --border: #e2e8f0; 
-            --success: #10b981; 
-            --danger: #ef4444; 
-        }
+        :root { --bg: #f8fafc; --card: #ffffff; --brand: #6366f1; --text: #0f172a; --dim: #64748b; --border: #e2e8f0; --success: #10b981; --danger: #ef4444; }
         * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--text); margin: 0; padding: 15px; padding-bottom: 120px; }
         
@@ -43,13 +33,15 @@
         .stat-val { font-size: 1.6rem; font-weight: 800; display: block; margin-top: 8px; }
         .stat-perc { font-size: 0.7rem; font-weight: 800; color: var(--success); position: absolute; top: 20px; right: 20px; }
 
+        /* تعديلات الجدول والفواصل */
         #detailsTable { display: none; margin-bottom: 25px; animation: slideUp 0.3s ease; }
         .table-container { background: var(--card); border-radius: 24px; border: 1px solid var(--border); overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
-        table { width: 100%; border-collapse: collapse; }
-        th { font-size: 0.6rem; color: var(--dim); text-transform: uppercase; padding: 15px; border-bottom: 1px solid var(--border); background: #f1f5f9; }
-        td { padding: 15px; text-align: center; border-bottom: 1px solid #f8fafc; font-size: 0.85rem; font-weight: 600; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        th { font-size: 0.6rem; color: var(--dim); text-transform: uppercase; padding: 15px; background: #f1f5f9; border-bottom: 2px solid var(--border); }
+        td { padding: 16px 10px; text-align: center; border-bottom: 1px solid #edf2f7; font-size: 0.85rem; font-weight: 600; }
+        tr:last-child td { border-bottom: none; }
 
-        .chart-card { background: var(--card); padding: 20px; border-radius: 24px; border: 1px solid var(--border); height: 260px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
+        .chart-card { background: var(--card); padding: 20px; border-radius: 24px; border: 1px solid var(--border); height: 280px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
         
         .footer { position: fixed; bottom: 20px; left: 15px; right: 15px; display: grid; grid-template-columns: 3fr 1fr; gap: 10px; z-index: 100; }
         .btn-add { background: var(--text); color: #fff; border: none; padding: 18px; border-radius: 22px; font-weight: 800; font-size: 0.95rem; box-shadow: 0 10px 20px rgba(0,0,0,0.15); }
@@ -116,10 +108,8 @@
 </div>
 
 <script>
-// Service Worker Registration
-if ('serviceWorker' in navigator) { 
-    navigator.serviceWorker.register('sw.js').then(() => console.log("SW Registered"));
-}
+// PWA
+if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
 
 let promptEvt;
 window.addEventListener('beforeinstallprompt', (e) => {
@@ -128,7 +118,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
 });
 function doInstall() { if (promptEvt) { promptEvt.prompt(); document.getElementById('pwaInstall').style.display = 'none'; } }
 
-// Data Management
+// Storage
 let config = JSON.parse(localStorage.getItem('gh_config'));
 const types = ["Delivery", "PickUp", "SameDay", "Khazenly"];
 const colors = { Delivery: '#6366f1', PickUp: '#10b981', SameDay: '#f59e0b', Khazenly: '#ef4444' };
@@ -140,11 +130,7 @@ let chart, viewDate = new Date();
 async function start() {
     if (!config) {
         const token = prompt("GitHub Token:"), user = prompt("User:"), repo = prompt("Repo:");
-        if(token && user && repo) { 
-            config = {token, user, repo}; 
-            localStorage.setItem('gh_config', JSON.stringify(config)); 
-            location.reload(); 
-        }
+        if(token && user && repo) { config = {token, user, repo}; localStorage.setItem('gh_config', JSON.stringify(config)); location.reload(); }
     } else { await pullData(); }
 }
 
@@ -174,7 +160,7 @@ async function pushData() {
             body: JSON.stringify({ message:"Cloud Update", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage, null, 2)))), sha })
         });
         document.getElementById('sync').innerText = "☁️ Synced";
-    } catch(e) { alert("Cloud Sync Failed"); }
+    } catch(e) {}
 }
 
 function render() {
@@ -182,19 +168,15 @@ function render() {
     document.getElementById('monthLab').innerText = viewDate.toLocaleString('en-US',{month:'long', year:'numeric'});
     
     document.getElementById('metricsPanel').innerHTML = types.map(t => {
-        const mData = storage[t].filter(d => {
-            const dt = new Date(d.date);
-            return dt.getMonth() === m && dt.getFullYear() === y;
-        });
+        const mData = storage[t].filter(d => { const dt = new Date(d.date); return dt.getMonth() === m && dt.getFullYear() === y; });
         const s = mData.reduce((a,b) => a + (b.s||0), 0);
         const tot = mData.reduce((a,b) => a + (b.s+b.p+b.c||0), 0);
         const rate = tot > 0 ? ((s/tot)*100).toFixed(1) : "0";
-        return `
-            <div class="stat-card" onclick="showTable('${t}')">
-                <span class="stat-perc">${rate}%</span>
-                <span class="stat-label" style="color:${colors[t]}">${t}</span>
-                <span class="stat-val">${s.toLocaleString()}</span>
-            </div>`;
+        return `<div class="stat-card" onclick="showTable('${t}')">
+            <span class="stat-perc">${rate}%</span>
+            <span class="stat-label" style="color:${colors[t]}">${t}</span>
+            <span class="stat-val">${s.toLocaleString()}</span>
+        </div>`;
     }).join('');
     updateChart(y, m);
 }
@@ -204,17 +186,18 @@ function showTable(type) {
     document.getElementById("detailsTable").style.display = "block";
     document.getElementById("activeTitle").innerText = `${type} - ${viewDate.toLocaleString('en',{month:'short'})}`;
     
+    // الترتيب من الأصغر للأكبر (Ascending)
     const filtered = storage[type].filter(d => {
         const dt = new Date(d.date);
         return dt.getMonth() === m && dt.getFullYear() === y && (d.s+d.p+d.c) > 0;
-    }).sort((a,b) => new Date(b.date) - new Date(a.date));
+    }).sort((a,b) => new Date(a.date) - new Date(b.date));
 
     document.getElementById("tableBody").innerHTML = filtered.map(r => {
         const tot = r.s + r.p + r.c;
         const rate = ((r.s/tot)*100).toFixed(1);
         const dt = new Date(r.date);
         return `<tr>
-            <td style="font-weight:800; text-align:left">${dt.getDate()} ${dt.toLocaleString('en',{month:'short'})}</td>
+            <td style="font-weight:800; text-align:left; border-left:4px solid ${colors[type]}">${dt.getDate()} ${dt.toLocaleString('en',{month:'short'})}</td>
             <td style="color:var(--success)">${r.s}</td><td>${r.p}</td><td style="color:var(--danger)">${r.c}</td>
             <td style="color:var(--brand); font-weight:800">${rate}%</td>
         </tr>`;
@@ -225,6 +208,7 @@ function showTable(type) {
 function updateChart(y, m) {
     const ctx = document.getElementById('mainChart').getContext('2d');
     const days = new Date(y, m+1, 0).getDate();
+    
     const datasets = types.map(t => ({
         label: t,
         data: Array.from({length:days}, (_,i) => {
@@ -232,13 +216,25 @@ function updateChart(y, m) {
             const f = storage[t].find(x => x.date === dStr);
             return f ? f.s : 0;
         }),
-        borderColor: colors[t], tension: 0.4, borderWidth: 3, pointRadius: 0
+        backgroundColor: colors[t],
+        borderRadius: 5,
+        barPercentage: 0.8,
+        categoryPercentage: 0.8
     }));
+
     if(chart) chart.destroy();
     chart = new Chart(ctx, {
-        type: 'line',
+        type: 'bar', // تم التغيير لأعمدة
         data: { labels: Array.from({length:days}, (_,i)=>i+1), datasets },
-        options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{grid:{display:false}}, y:{beginAtZero:true, grid:{color:'#f1f5f9'}}} }
+        options: { 
+            responsive:true, 
+            maintainAspectRatio:false, 
+            plugins:{ legend:{display:false} },
+            scales:{ 
+                x:{ grid:{display:false}, stacked: false }, 
+                y:{ beginAtZero:true, grid:{color:'#f1f5f9'} } 
+            } 
+        }
     });
 }
 
@@ -248,7 +244,7 @@ function openLogModal() {
     document.getElementById('logDate').value = new Date().toISOString().split('T')[0];
     document.getElementById('logInputs').innerHTML = types.map(t => `
         <div style="margin-bottom:15px">
-            <span style="font-size:0.75rem; font-weight:800; color:${colors[t]}">${t} (S / P / C)</span>
+            <span style="font-size:0.75rem; font-weight:800; color:${colors[t]}">${t} (S/P/C)</span>
             <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px">
                 <input type="number" id="s_${t}" placeholder="S">
                 <input type="number" id="p_${t}" placeholder="P">
@@ -268,7 +264,7 @@ async function saveData() {
 }
 function closeLogModal() { document.getElementById('logModal').style.display='none'; }
 function closeTable() { document.getElementById('detailsTable').style.display='none'; }
-function wipeAll() { if(confirm("Confirm Wipe All Data?")) { types.forEach(t=>storage[t]=[]); pushData(); render(); } }
+function wipeAll() { if(confirm("Wipe All?")) { types.forEach(t=>storage[t]=[]); pushData(); render(); } }
 
 start();
 </script>
