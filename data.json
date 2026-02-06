@@ -1,0 +1,34 @@
+{
+  "Delivery": [
+    {
+      "date": "2026-02-06",
+      "delivered": 1,
+      "pending": 0,
+      "cancelled": 0
+    }
+  ],
+  "PickUp": [
+    {
+      "date": "2026-02-06",
+      "delivered": 2,
+      "pending": 0,
+      "cancelled": 0
+    }
+  ],
+  "SameDay": [
+    {
+      "date": "2026-02-06",
+      "delivered": 3,
+      "pending": 1,
+      "cancelled": 0
+    }
+  ],
+  "Khazenly": [
+    {
+      "date": "2026-02-06",
+      "delivered": 0,
+      "pending": 0,
+      "cancelled": 0
+    }
+  ]
+}
