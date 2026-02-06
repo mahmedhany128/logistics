@@ -3,129 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Insight Logistics Pro - Dark</title>
-
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#1e293b">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1162/1162499.png">
+    <title>Barcode Pro - Advanced Edition</title>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     
     <style>
         :root { 
-            /* ألوان الوضع الليلي المريحة */
-            --bg: #0f172a; 
-            --card: #1e293b; 
-            --brand: #818cf8; 
-            --text: #f1f5f9; 
-            --dim: #94a3b8; 
-            --border: #334155; 
-            --success: #34d399; 
-            --danger: #fb7185; 
+            --bg: #0f172a; --card: #1e293b; --brand: #818cf8; --text: #f1f5f9; 
+            --dim: #94a3b8; --border: #334155; 
+            --success: #22c55e; --warning: #eab308; --danger: #ef4444; 
         }
         * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: var(--text); margin: 0; padding: 15px; padding-bottom: 130px; }
+        body { background: var(--bg); color: var(--text); margin: 0; padding: 15px; padding-bottom: 120px; }
         
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .sync-badge { font-size: 0.65rem; font-weight: 800; color: var(--brand); background: #818cf820; padding: 6px 12px; border-radius: 20px; }
 
-        .month-ctrl { background: var(--card); border: 1px solid var(--border); padding: 12px 20px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .nav-btn { background: var(--bg); border: none; width: 42px; height: 42px; border-radius: 14px; cursor: pointer; color: var(--brand); font-weight: 800; font-size: 1.2rem; }
-
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-        .stat-card { background: var(--card); padding: 18px; border-radius: 24px; border: 1px solid var(--border); position: relative; cursor: pointer; }
-        .stat-label { font-size: 0.65rem; font-weight: 700; color: var(--dim); text-transform: uppercase; }
+        .stat-card { background: var(--card); padding: 18px; border-radius: 24px; border: 1px solid var(--border); position: relative; cursor: pointer; transition: 0.2s; }
+        .stat-card:active { transform: scale(0.96); background: #243147; }
         .stat-val { font-size: 1.5rem; font-weight: 800; display: block; margin-top: 5px; color: #fff; }
-        .stat-perc { font-size: 0.65rem; font-weight: 800; color: var(--success); position: absolute; top: 18px; right: 18px; background: #34d39915; padding: 2px 6px; border-radius: 6px; }
 
-        #detailsTable { display: none; margin-bottom: 25px; animation: slideUp 0.3s ease; }
+        #detailsArea { display: none; margin-bottom: 25px; animation: slideUp 0.3s ease; }
         .table-container { background: var(--card); border-radius: 24px; border: 1px solid var(--border); overflow: hidden; }
-        table { width: 100%; border-collapse: separate; border-spacing: 0; }
-        th { font-size: 0.6rem; color: var(--dim); text-transform: uppercase; padding: 15px; background: #1e293b; border-bottom: 1px solid var(--border); }
-        td { padding: 16px 10px; text-align: center; border-bottom: 1px solid #334155; font-size: 0.85rem; font-weight: 600; color: #cbd5e1; }
+        table { width: 100%; border-collapse: collapse; }
+        th { font-size: 0.6rem; color: var(--dim); padding: 15px; border-bottom: 1px solid var(--border); text-transform: uppercase; }
+        td { padding: 15px 10px; text-align: center; border-bottom: 1px solid #334155; font-size: 0.85rem; font-weight: 600; }
 
-        .chart-card { background: var(--card); padding: 20px 15px; border-radius: 28px; border: 1px solid var(--border); height: 380px; margin-bottom: 20px; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
+        .modal-content { background: var(--card); width: 92%; max-width: 400px; padding: 25px; border-radius: 35px; max-height: 90vh; overflow-y: auto; }
         
-        .footer { position: fixed; bottom: 20px; left: 15px; right: 15px; display: grid; grid-template-columns: 3.5fr 1fr; gap: 12px; z-index: 100; }
-        .btn-add { background: var(--brand); color: #fff; border: none; padding: 20px; border-radius: 24px; font-weight: 800; font-size: 1rem; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
-        .btn-wipe { background: var(--card); color: var(--danger); border: 1px solid #451a1a; border-radius: 24px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+        .scan-box { background: var(--bg); border: 1px solid var(--border); padding: 12px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .cam-icon { background: var(--brand); width: 35px; height: 35px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; }
 
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
-        .modal-content { background: var(--card); width: 92%; max-width: 400px; padding: 25px; border-radius: 35px; border: 1px solid var(--border); }
-        input { width: 100%; padding: 14px; margin: 10px 0; border: 1px solid var(--border); border-radius: 15px; font-weight: 700; background: var(--bg); color: #fff; outline: none; }
+        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 2000; align-items: flex-end; }
+        .bottom-sheet { background: var(--card); width: 100%; border-radius: 30px 30px 0 0; padding: 25px; max-height: 70vh; overflow-y: auto; animation: slideUp 0.3s ease-out; border-top: 3px solid var(--brand); }
+        .code-item { display: flex; justify-content: space-between; align-items: center; background: var(--bg); padding: 12px 15px; border-radius: 12px; margin-bottom: 8px; border: 1px solid var(--border); }
+        .btn-del { color: var(--danger); font-size: 0.75rem; font-weight: 800; padding: 5px 10px; }
 
-        @keyframes slideUp { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
+        .footer { position: fixed; bottom: 20px; left: 15px; right: 15px; display: grid; grid-template-columns: 2.5fr 1fr 1fr; gap: 10px; z-index: 100; }
+        .btn-main { background: var(--brand); color: #fff; border: none; padding: 18px; border-radius: 22px; font-weight: 800; font-size: 0.9rem; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        
+        #reader { width: 100%; border-radius: 20px; overflow: hidden; margin-bottom: 15px; display: none; border: 2px solid var(--brand); }
+
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
     </style>
 </head>
 <body>
 
 <header>
-    <h1 style="margin:0; font-size:1.4rem; font-weight:800; color:#fff">Insight Pro</h1>
+    <h1 style="margin:0; font-size:1.4rem; font-weight:800; color:#fff">Barcode Pro</h1>
     <div id="sync" class="sync-badge">Connecting...</div>
 </header>
 
-<div class="month-ctrl">
-    <button class="nav-btn" onclick="moveMonth(-1)">‹</button>
-    <span id="monthLab" style="font-weight:800; font-size:1.05rem">---</span>
-    <button class="nav-btn" onclick="moveMonth(1)">›</button>
-</div>
-
 <div class="grid" id="metricsPanel"></div>
 
-<div id="detailsTable">
+<div id="detailsArea">
     <div class="table-container">
-        <div style="padding:18px 20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center">
-            <span id="activeTitle" style="font-weight:800; color:var(--brand)">Details</span>
-            <button onclick="closeTable()" style="border:none; background:var(--bg); color:var(--text); border-radius:12px; padding:8px 15px; font-weight:800">Close</button>
+        <div style="padding:15px; display:flex; justify-content:space-between; align-items:center;">
+            <b id="activeTitle" style="color:var(--brand)">Audit View</b>
+            <button onclick="document.getElementById('detailsArea').style.display='none'" style="border:none; background:none; color:var(--text); font-weight:800;">&times;</button>
         </div>
-        <div style="overflow-x:auto">
-            <table>
-                <thead><tr><th>Day</th><th>S</th><th>P</th><th>C</th><th>Rate</th></tr></thead>
-                <tbody id="tableBody"></tbody>
-            </table>
-        </div>
+        <table>
+            <thead><tr><th>Day</th><th>S</th><th>P</th><th>C</th><th>Total</th></tr></thead>
+            <tbody id="tableBody"></tbody>
+        </table>
     </div>
-</div>
-
-<div class="chart-card">
-    <div style="display:flex; justify-content:space-between; margin-bottom:15px; padding:0 5px">
-        <span style="font-size:0.85rem; font-weight:800; color:#fff">Performance Chart</span>
-        <span style="font-size:0.6rem; color:var(--dim); font-weight:700">Night Mode Active</span>
-    </div>
-    <div style="height: 310px;"><canvas id="mainChart"></canvas></div>
 </div>
 
 <div class="footer">
-    <button class="btn-add" onclick="openLogModal()">+ New Activity Log</button>
-    <button class="btn-wipe" onclick="wipeAll()">🗑️</button>
+    <button class="btn-main" onclick="openLogModal()">+ Scan Shipment</button>
+    <button class="btn-main" style="background:var(--card); border:1px solid var(--border);" onclick="exportToExcel()">📊</button>
+    <button class="btn-main" style="background:var(--card); border:1px solid var(--border); color:var(--danger);" onclick="wipeAll()">🗑️</button>
 </div>
 
 <div id="logModal" class="modal">
     <div class="modal-content">
-        <h3 style="margin-top:0; font-weight:800; color:#fff">Daily Analytics Log</h3>
-        <input type="date" id="logDate">
-        <div id="logInputs"></div>
-        <button class="btn-add" style="width:100%; margin-top:20px" onclick="saveData()">Save & Sync</button>
-        <button onclick="closeLogModal()" style="width:100%; border:none; background:none; margin-top:15px; color:var(--dim); font-weight:700">Cancel</button>
+        <h3 style="margin-top:0;">Daily Logistics Scan</h3>
+        <input type="date" id="logDate" style="width:100%; padding:12px; border-radius:12px; background:var(--bg); color:white; border:1px solid var(--border); margin-bottom:15px;">
+        <div id="reader"></div>
+        <div id="scanForm"></div>
+        <button class="btn-main" style="width:100%; margin-top:20px;" onclick="saveData()">Save & Sync Cloud</button>
+        <button onclick="closeLogModal()" style="width:100%; border:none; background:none; margin-top:10px; color:var(--dim);">Cancel</button>
+    </div>
+</div>
+
+<div id="codeSheet" class="overlay" onclick="closeSheet()">
+    <div class="bottom-sheet" onclick="event.stopPropagation()">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h3 id="sheetTitle" style="margin:0;">Code Audit</h3>
+            <button onclick="closeSheet()" style="background:none; border:none; color:var(--dim); font-size:1.5rem;">&times;</button>
+        </div>
+        <div id="sheetBody"></div>
     </div>
 </div>
 
 <script>
 let config = JSON.parse(localStorage.getItem('gh_config'));
 const types = ["Delivery", "PickUp", "SameDay", "Khazenly"];
-// ألوان الشارت أصبحت أفتح قليلاً لتناسب الخلفية الغامقة
-const colors = { Delivery: '#818cf8', PickUp: '#34d399', SameDay: '#fbbf24', Khazenly: '#fb7185' };
-let storage = JSON.parse(localStorage.getItem("logistics_v12_data")) || {};
+let storage = JSON.parse(localStorage.getItem("logistics_final_v1")) || {};
 types.forEach(t => { if(!storage[t]) storage[t] = []; });
 
-let chart, viewDate = new Date();
+let scanner;
 
 async function start() {
     if (!config) {
         const token = prompt("GitHub Token:"), user = prompt("User:"), repo = prompt("Repo:");
-        if(token && user && repo) { config = {token, user, repo}; localStorage.setItem('gh_config', JSON.stringify(config)); location.reload(); }
+        if(token) { config={token,user,repo}; localStorage.setItem('gh_config', JSON.stringify(config)); location.reload(); }
     } else { await pullData(); }
 }
 
@@ -136,14 +123,16 @@ async function pullData() {
         if(r.ok) {
             const j = await r.json();
             storage = JSON.parse(decodeURIComponent(escape(atob(j.content))));
-            localStorage.setItem("logistics_v12_data", JSON.stringify(storage));
+            localStorage.setItem("logistics_final_v1", JSON.stringify(storage));
             document.getElementById('sync').innerText = "☁️ Synced";
         }
     } catch(e) { document.getElementById('sync').innerText = "⚠️ Offline"; }
     render();
 }
 
-async function pushData() {
+async function saveData() {
+    localStorage.setItem("logistics_final_v1", JSON.stringify(storage));
+    render(); closeLogModal();
     document.getElementById('sync').innerText = "⏳ Saving...";
     const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
     try {
@@ -152,125 +141,140 @@ async function pushData() {
         await fetch(url, {
             method: 'PUT',
             headers: {'Authorization': `token ${config.token}`},
-            body: JSON.stringify({ message:"Cloud Update", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage, null, 2)))), sha })
+            body: JSON.stringify({ message:"Daily Sync", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage)))), sha })
         });
         document.getElementById('sync').innerText = "☁️ Synced";
-    } catch(e) {}
+    } catch(e) { document.getElementById('sync').innerText = "❌ Fail"; }
 }
 
+// الريندر المحدث بالنسبة المئوية الملونة
 function render() {
-    const m = viewDate.getMonth(), y = viewDate.getFullYear();
-    document.getElementById('monthLab').innerText = viewDate.toLocaleString('en-US',{month:'long', year:'numeric'});
-    
     document.getElementById('metricsPanel').innerHTML = types.map(t => {
-        const mData = storage[t].filter(d => { const dt = new Date(d.date); return dt.getMonth() === m && dt.getFullYear() === y; });
-        const s = mData.reduce((a,b) => a + (b.s||0), 0);
-        const tot = mData.reduce((a,b) => a + (b.s+b.p+b.c||0), 0);
-        const rate = tot > 0 ? ((s/tot)*100).toFixed(1) : "0";
+        const mData = storage[t] || [];
+        const sCount = mData.reduce((a, b) => a + (b.s?.length || 0), 0);
+        const totalCount = mData.reduce((a, b) => a + (b.s?.length + b.p?.length + b.c?.length || 0), 0);
+        
+        const percentage = totalCount > 0 ? (sCount / totalCount) * 100 : 0;
+        let statusColor = "var(--danger)";
+        if (percentage >= 90) statusColor = "var(--success)";
+        else if (percentage >= 70) statusColor = "var(--warning)";
+
         return `<div class="stat-card" onclick="showTable('${t}')">
-            <span class="stat-perc">${rate}%</span>
-            <span class="stat-label" style="color:${colors[t]}">${t}</span>
-            <span class="stat-val">${s.toLocaleString()}</span>
+            <span style="font-size:0.75rem; font-weight:900; color:${statusColor}; position:absolute; top:15px; right:15px">
+                ${percentage.toFixed(1)}%
+            </span>
+            <span class="stat-label" style="font-size:0.65rem; color:var(--dim); font-weight:800; text-transform:uppercase;">${t}</span>
+            <span class="stat-val">${sCount}</span>
         </div>`;
     }).join('');
-    updateChart(y, m);
 }
 
 function showTable(type) {
-    const m = viewDate.getMonth(), y = viewDate.getFullYear();
-    document.getElementById("detailsTable").style.display = "block";
-    document.getElementById("activeTitle").innerText = `${type} Logistics`;
+    document.getElementById('detailsArea').style.display = 'block';
+    document.getElementById('activeTitle').innerText = `${type} History`;
+    const data = (storage[type] || []).sort((a,b) => new Date(b.date) - new Date(a.date));
     
-    const filtered = storage[type].filter(d => {
-        const dt = new Date(d.date);
-        return dt.getMonth() === m && dt.getFullYear() === y && (d.s+d.p+d.c) > 0;
-    }).sort((a,b) => new Date(a.date) - new Date(b.date));
-
-    document.getElementById("tableBody").innerHTML = filtered.map(r => {
-        const tot = r.s + r.p + r.c;
-        const rate = ((r.s/tot)*100).toFixed(1);
-        const dt = new Date(r.date);
+    document.getElementById('tableBody').innerHTML = data.map(r => {
+        const s = r.s?.length || 0, p = r.p?.length || 0, c = r.c?.length || 0;
         return `<tr>
-            <td style="font-weight:800; text-align:left; border-left:4px solid ${colors[type]}; color:#fff">${dt.getDate()} ${dt.toLocaleString('en',{month:'short'})}</td>
-            <td style="color:var(--success)">${r.s}</td><td style="color:#94a3b8">${r.p}</td><td style="color:var(--danger)">${r.c}</td>
-            <td style="color:var(--brand); font-weight:800">${rate}%</td>
+            <td>${r.date.split('-').slice(1).join('/')}</td>
+            <td style="color:var(--success)" onclick="openSheet('${type}', '${r.date}', 's')">${s}</td>
+            <td style="color:var(--warning)" onclick="openSheet('${type}', '${r.date}', 'p')">${p}</td>
+            <td style="color:var(--danger)" onclick="openSheet('${type}', '${r.date}', 'c')">${c}</td>
+            <td style="background:#ffffff10; border-radius:8px; font-weight:800;">${s+p+c}</td>
         </tr>`;
     }).join('');
-    document.getElementById("detailsTable").scrollIntoView({behavior:'smooth'});
+    document.getElementById('detailsArea').scrollIntoView({behavior:'smooth'});
 }
 
-function updateChart(y, m) {
-    const ctx = document.getElementById('mainChart').getContext('2d');
-    const days = new Date(y, m+1, 0).getDate();
+function openSheet(type, date, cat) {
+    const entry = storage[type].find(x => x.date === date);
+    const codes = entry[cat] || [];
+    const titles = { s: "Successful Delivered ✅", p: "Pending / Re-attempt ⏳", c: "Canceled / Returned ❌" };
     
-    const datasets = types.map(t => ({
-        label: t,
-        data: Array.from({length:days}, (_,i) => {
-            const dStr = `${y}-${String(m+1).padStart(2,'0')}-${String(i+1).padStart(2,'0')}`;
-            const f = storage[t].find(x => x.date === dStr);
-            return f ? f.s : 0;
-        }),
-        backgroundColor: colors[t],
-        borderRadius: 3,
-        barPercentage: 0.8
-    }));
+    document.getElementById('sheetTitle').innerText = titles[cat];
+    document.getElementById('sheetBody').innerHTML = codes.length > 0 ? 
+        codes.map((code, idx) => `
+            <div class="code-item">
+                <span style="font-family:monospace; color:#fff; font-size:0.9rem;">${code}</span>
+                <span class="btn-del" onclick="deleteCode('${type}', '${date}', '${cat}', ${idx})">DELETE</span>
+            </div>
+        `).join('') : '<p style="text-align:center; color:var(--dim);">No barcode data recorded.</p>';
+    
+    document.getElementById('codeSheet').style.display = 'flex';
+}
 
-    if(chart) chart.destroy();
-    chart = new Chart(ctx, {
-        type: 'bar',
-        data: { labels: Array.from({length:days}, (_,i)=>i+1), datasets },
-        options: { 
-            responsive:true, 
-            maintainAspectRatio:false,
-            plugins:{ legend:{ display:false } },
-            scales:{ 
-                x:{ 
-                    stacked: true, 
-                    grid:{ display:false },
-                    ticks: { 
-                        autoSkip: false, 
-                        color: '#94a3b8',
-                        font: { size: 8, weight: 'bold' } 
-                    }
-                }, 
-                y:{ 
-                    stacked: true, 
-                    beginAtZero:true, 
-                    grid:{ color:'#334155' }, 
-                    ticks: { color: '#94a3b8', font: { size: 10 } } 
-                } 
-            } 
+function deleteCode(type, date, cat, idx) {
+    if(confirm("Delete this specific shipment?")) {
+        storage[type].find(x => x.date === date)[cat].splice(idx, 1);
+        localStorage.setItem("logistics_final_v1", JSON.stringify(storage));
+        openSheet(type, date, cat); showTable(type); render();
+    }
+}
+
+function closeSheet() { document.getElementById('codeSheet').style.display = 'none'; }
+
+function openLogModal() {
+    document.getElementById('logModal').style.display='flex';
+    document.getElementById('logDate').value = new Date().toISOString().split('T')[0];
+    updateScanForm();
+}
+
+function updateScanForm() {
+    const d = document.getElementById('logDate').value;
+    document.getElementById('scanForm').innerHTML = types.map(t => {
+        let entry = storage[t].find(x => x.date === d) || { date:d, s:[], p:[], c:[] };
+        if(!storage[t].find(x => x.date === d)) storage[t].push(entry);
+        return `
+        <div style="margin-bottom:15px; background:#00000020; padding:15px; border-radius:20px; border:1px solid #ffffff05;">
+            <b style="color:var(--brand); display:block; margin-bottom:10px; font-size:0.8rem;">${t}</b>
+            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px;">
+                <div class="scan-box" onclick="startScan('${t}','s')"><span>✅ ${entry.s.length}</span> <div class="cam-icon">📷</div></div>
+                <div class="scan-box" onclick="startScan('${t}','p')"><span>⏳ ${entry.p.length}</span> <div class="cam-icon">📷</div></div>
+                <div class="scan-box" onclick="startScan('${t}','c')"><span>❌ ${entry.c.length}</span> <div class="cam-icon">📷</div></div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function startScan(type, cat) {
+    document.getElementById('reader').style.display = 'block';
+    if(scanner) scanner.clear();
+    scanner = new Html5Qrcode("reader");
+    scanner.start({ facingMode: "environment" }, { fps: 15, qrbox: {width:250, height:150} }, 
+    (txt) => {
+        const d = document.getElementById('logDate').value;
+        const entry = storage[type].find(x => x.date === d);
+        if(!entry[cat].includes(txt)) {
+            entry[cat].push(txt);
+            navigator.vibrate(100);
+            updateScanForm();
         }
     });
 }
 
-function moveMonth(dir) { viewDate.setMonth(viewDate.getMonth()+dir); render(); closeTable(); }
-function openLogModal() {
-    document.getElementById('logModal').style.display = 'flex';
-    document.getElementById('logDate').value = new Date().toISOString().split('T')[0];
-    document.getElementById('logInputs').innerHTML = types.map(t => `
-        <div style="margin-bottom:15px">
-            <span style="font-size:0.75rem; font-weight:800; color:${colors[t]}">${t}</span>
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px">
-                <input type="number" id="s_${t}" placeholder="S">
-                <input type="number" id="p_${t}" placeholder="P">
-                <input type="number" id="c_${t}" placeholder="C">
-            </div>
-        </div>`).join('');
+function closeLogModal() {
+    if(scanner) { try { scanner.stop(); } catch(e){} }
+    document.getElementById('logModal').style.display='none';
 }
-async function saveData() {
-    const d = document.getElementById('logDate').value;
+
+function exportToExcel() {
+    let data = [];
     types.forEach(t => {
-        const entry = { date: d, s: parseInt(document.getElementById(`s_${t}`).value)||0, p: parseInt(document.getElementById(`p_${t}`).value)||0, c: parseInt(document.getElementById(`c_${t}`).value)||0 };
-        const idx = storage[t].findIndex(x => x.date === d);
-        if(idx>=0) storage[t][idx]=entry; else storage[t].push(entry);
+        storage[t].forEach(d => {
+            d.s.forEach(c => data.push({Date:d.date, Company:t, Barcode:c, Status:"Success"}));
+            d.p.forEach(c => data.push({Date:d.date, Company:t, Barcode:c, Status:"Pending"}));
+            d.c.forEach(c => data.push({Date:d.date, Company:t, Barcode:c, Status:"Canceled"}));
+        });
     });
-    localStorage.setItem("logistics_v12_data", JSON.stringify(storage));
-    closeLogModal(); render(); await pushData();
+    if(data.length === 0) return alert("No scans to export!");
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "AuditLog");
+    XLSX.writeFile(wb, `Logistics_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
 }
-function closeLogModal() { document.getElementById('logModal').style.display='none'; }
-function closeTable() { document.getElementById('detailsTable').style.display='none'; }
-function wipeAll() { if(confirm("Confirm Wipe?")) { storage={}; types.forEach(t=>storage[t]=[]); pushData(); render(); } }
+
+function wipeAll() { if(confirm("DANGER: WIPE ALL DATA?")) { storage={}; types.forEach(t=>storage[t]=[]); saveData(); } }
 
 start();
 </script>
