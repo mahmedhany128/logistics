@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Insight Logistics Pro</title>
+    <title>Insight Logistics Pro - Custom</title>
 
-    <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIkluc2lnaHQgTG9naXN0aWNzIFBybyIsCiAgInshortX25hbWUiOiAiSW5zaWdodCIsCiAgInN0YXJ0X3VybCI6ICIuIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjMGYxNzJhIiwKICAidGhlbWVfY29sb3IiOiAiIzFlMjkzYiIsCiAgImljb25zIjogW3sgInNyYyI6ICJodHRwczovL2Nkbi1pY29ucy1wbmcuZmxhdGljb24uY29tLzUxMi8xMTYyLzExNjI0OTkucG5nIiwgInNpemVzIjogIjUxMng1MTIiLCAidHlwZSI6ICJpbWAGEUvcG5nIiB9IF0KfQ==">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -13,89 +12,70 @@
     <style>
         :root { --bg: #0f172a; --card: #1e293b; --brand: #818cf8; --text: #f1f5f9; --dim: #94a3b8; --border: #334155; --success: #34d399; --danger: #fb7185; --warning: #fbbf24; }
         * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
-        body { background: var(--bg); color: var(--text); margin: 0; padding: 15px; padding-bottom: 120px; }
+        body { background: var(--bg); color: var(--text); margin: 0; padding: 15px; padding-bottom: 100px; }
         
-        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-        .stat-card { background: var(--card); padding: 18px; border-radius: 24px; border: 1px solid var(--border); position: relative; cursor: pointer; }
-        .stat-val { font-size: 1.5rem; font-weight: 800; color: #fff; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .stat-card { background: var(--card); padding: 15px; border-radius: 20px; border: 1px solid var(--border); cursor: pointer; }
+        .stat-val { font-size: 1.4rem; font-weight: 800; color: #fff; }
 
-        .table-container { background: var(--card); border-radius: 24px; border: 1px solid var(--border); overflow: hidden; margin-top: 20px; display: none; }
+        .table-wrap { background: var(--card); border-radius: 20px; border: 1px solid var(--border); overflow: hidden; margin-top: 15px; display: none; }
         table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px; text-align: center; border-bottom: 1px solid var(--border); font-size: 0.8rem; }
-        td.clickable { cursor: pointer; text-decoration: underline; font-weight: bold; }
+        td, th { padding: 12px; text-align: center; border-bottom: 1px solid var(--border); font-size: 0.8rem; }
+        .clickable-num { cursor: pointer; text-decoration: underline; font-weight: bold; color: var(--brand); }
 
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
-        .modal-content { background: var(--card); width: 90%; max-width: 400px; padding: 25px; border-radius: 30px; border: 1px solid var(--border); }
-        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); color: #fff; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .modal-content { background: var(--card); width: 92%; max-width: 400px; padding: 20px; border-radius: 25px; border: 1px solid var(--border); max-height: 85vh; overflow-y: auto; }
         
-        .code-viewer { max-height: 200px; overflow-y: auto; background: var(--bg); padding: 15px; border-radius: 15px; margin-top: 10px; font-size: 0.9rem; }
-        .code-item { border-bottom: 1px solid #334155; padding: 8px 0; display: flex; justify-content: space-between; }
+        .entry-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; }
+        input { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: #fff; text-align: center; }
+        .btn-action { background: var(--brand); border: none; padding: 15px; border-radius: 15px; color: #fff; font-weight: bold; width: 100%; margin-top: 15px; cursor: pointer; }
         
-        #reader { width: 100%; border-radius: 15px; overflow: hidden; display: none; margin-bottom: 10px; }
-        .btn-main { background: var(--brand); color: #fff; border: none; padding: 18px; border-radius: 20px; width: 100%; font-weight: 800; cursor: pointer; }
+        .code-list-area { background: var(--bg); padding: 10px; border-radius: 12px; margin-top: 5px; font-size: 0.7rem; max-height: 80px; overflow-y: auto; color: var(--dim); border: 1px dashed var(--border); }
+        #reader { width: 100%; border-radius: 15px; overflow: hidden; display: none; margin: 10px 0; border: 2px solid var(--brand); }
     </style>
 </head>
 <body>
 
 <header>
-    <h1 style="margin:0; font-size:1.3rem; font-weight:800; color:#fff">Insight Pro</h1>
-    <div id="sync" style="font-size:0.7rem; color:var(--brand)">Connecting...</div>
+    <h2 style="margin:0; font-size:1.2rem;">Insight Pro</h2>
+    <div id="syncStatus" style="font-size:0.6rem; color:var(--brand)">Connecting...</div>
 </header>
 
 <div class="grid" id="metricsPanel"></div>
 
-<div class="table-container" id="detailsArea">
-    <div style="padding:15px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border)">
-        <span id="activeTitle" style="font-weight:800; color:var(--brand)">Log Details</span>
-        <button onclick="document.getElementById('detailsArea').style.display='none'" style="border:none; background:none; color:var(--dim)">Close</button>
-    </div>
-    <table>
+<div class="table-wrap" id="tableArea">
+    <table id="mainTable">
         <thead><tr><th>Date</th><th>S</th><th>P</th><th>C</th></tr></thead>
         <tbody id="tableBody"></tbody>
     </table>
 </div>
 
-<div style="position:fixed; bottom:20px; left:15px; right:15px;">
-    <button class="btn-main" onclick="openLogModal()">+ Add New Entry</button>
-</div>
+<button class="btn-action" style="position:fixed; bottom:20px; left:15px; right:15px; z-index:100;" onclick="openEntry()">+ New Entry</button>
 
-<div id="logModal" class="modal">
+<div id="entryModal" class="modal">
     <div class="modal-content">
-        <h3 style="margin:0; color:#fff">Log Activity</h3>
+        <h3 style="margin:0 0 10px 0">Log Activity</h3>
         <input type="date" id="logDate">
-        <select id="selCo" style="width:100%; padding:10px; border-radius:10px; background:var(--bg); color:#fff; margin:10px 0;">
-            <option>Delivery</option><option>PickUp</option><option>SameDay</option><option>Khazenly</option>
-        </select>
-        <select id="selType" style="width:100%; padding:10px; border-radius:10px; background:var(--bg); color:#fff;">
-            <option value="s">Success (S)</option><option value="p">Pending (P)</option><option value="c">Cancel (C)</option>
-        </select>
-        
         <div id="reader"></div>
-        
-        <div style="display:flex; gap:10px; margin-top:15px;">
-            <input type="text" id="manualCode" placeholder="Enter code manually...">
-            <button onclick="startScan()" style="background:var(--card); border:1px solid var(--brand); color:var(--brand); border-radius:12px; padding:0 15px;">📷</button>
-        </div>
-
-        <button class="btn-main" style="margin-top:15px;" onclick="addCode()">Add Code</button>
-        <button onclick="closeLogModal()" style="width:100%; background:none; border:none; color:var(--dim); margin-top:10px;">Done & Save</button>
+        <div id="inputsContainer"></div>
+        <button class="btn-action" onclick="saveAll()">Save & Sync</button>
+        <button onclick="closeEntry()" style="width:100%; background:none; border:none; color:var(--dim); margin-top:10px;">Cancel</button>
     </div>
 </div>
 
 <div id="viewModal" class="modal">
     <div class="modal-content">
-        <h3 id="viewTitle" style="margin:0; color:#fff">Shipment Codes</h3>
-        <div class="code-viewer" id="codeList"></div>
-        <button class="btn-main" style="margin-top:20px;" onclick="document.getElementById('viewModal').style.display='none'">Close</button>
+        <h3 id="viewTitle" style="margin:0 0 10px 0">Stored Codes</h3>
+        <div id="codesList" style="background:var(--bg); padding:15px; border-radius:15px; min-height:100px; font-size: 0.85rem; line-height: 1.6;"></div>
+        <button class="btn-action" onclick="document.getElementById('viewModal').style.display='none'">Close</button>
     </div>
 </div>
 
 <script>
 let config = JSON.parse(localStorage.getItem('gh_config'));
 const types = ["Delivery", "PickUp", "SameDay", "Khazenly"];
-// تخزين البيانات كمصفوفات للأكواد
-let storage = JSON.parse(localStorage.getItem("logistics_v12_data")) || {};
+let storage = JSON.parse(localStorage.getItem("log_v14")) || {};
 types.forEach(t => { if(!storage[t]) storage[t] = []; });
 
 let scanner;
@@ -104,90 +84,91 @@ async function init() {
     if(!config) {
         const t = prompt("Token:"), u = prompt("User:"), r = prompt("Repo:");
         if(t) { config={token:t, user:u, repo:r}; localStorage.setItem('gh_config', JSON.stringify(config)); location.reload(); }
-    } else { render(); await sync(); }
+    } else { render(); sync(); }
 }
 
 function render() {
     document.getElementById('metricsPanel').innerHTML = types.map(t => {
-        const count = storage[t].reduce((a,b) => a + (b.s ? b.s.length : 0), 0);
+        const s = storage[t].reduce((a,b) => a + (parseInt(b.s)||0), 0);
         return `<div class="stat-card" onclick="showTable('${t}')">
-            <span style="font-size:0.7rem; color:var(--brand); font-weight:800">${t}</span>
-            <span class="stat-val">${count}</span>
+            <div style="font-size:0.7rem; color:var(--brand); font-weight:800">${t}</div>
+            <div class="stat-val">${s}</div>
         </div>`;
     }).join('');
 }
 
-function showTable(type) {
-    document.getElementById('detailsArea').style.display = 'block';
-    document.getElementById('activeTitle').innerText = type + " Log";
-    const data = storage[type].sort((a,b) => new Date(b.date) - new Date(a.date));
-    
+function openEntry() {
+    document.getElementById('entryModal').style.display = 'flex';
+    document.getElementById('logDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('inputsContainer').innerHTML = types.map(t => `
+        <div style="margin-top:15px; border-bottom:1px solid #334155; padding-bottom:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center">
+                <span style="font-size:0.8rem; font-weight:bold">${t}</span>
+                <button onclick="startScan('${t}')" style="font-size:0.6rem; background:none; border:1px solid var(--brand); color:var(--brand); padding:2px 8px; border-radius:5px;">📷 Scan Code</button>
+            </div>
+            <div class="entry-row">
+                <input type="number" id="s_${t}" placeholder="S">
+                <input type="number" id="p_${t}" placeholder="P">
+                <input type="number" id="c_${t}" placeholder="C">
+            </div>
+            <div id="codes_display_${t}" class="code-list-area">No codes scanned</div>
+            <input type="hidden" id="codes_hidden_${t}" value="">
+        </div>
+    `).join('');
+}
+
+function startScan(type) {
+    const r = document.getElementById('reader');
+    r.style.display = 'block';
+    if(scanner) scanner.clear();
+    scanner = new Html5Qrcode("reader");
+    scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (txt) => {
+        const hiddenInp = document.getElementById(`codes_hidden_${type}`);
+        const displayDiv = document.getElementById(`codes_display_${type}`);
+        
+        // حفظ الكود فقط بدون زيادة العداد
+        if(!hiddenInp.value.includes(txt)) {
+            hiddenInp.value += (hiddenInp.value ? "," : "") + txt;
+            displayDiv.innerText = hiddenInp.value;
+            navigator.vibrate(100);
+        }
+    });
+}
+
+function showTable(t) {
+    document.getElementById('tableArea').style.display = 'block';
+    const data = storage[t].sort((a,b) => new Date(b.date) - new Date(a.date));
     document.getElementById('tableBody').innerHTML = data.map(r => `
         <tr>
             <td>${r.date.slice(5)}</td>
-            <td class="clickable" style="color:var(--success)" onclick="viewCodes('${type}','${r.date}','s')">${r.s.length}</td>
-            <td class="clickable" style="color:var(--warning)" onclick="viewCodes('${type}','${r.date}','p')">${r.p.length}</td>
-            <td class="clickable" style="color:var(--danger)" onclick="viewCodes('${type}','${r.date}','c')">${r.c.length}</td>
+            <td class="clickable-num" style="color:var(--success)" onclick="viewCodes('${r.codes_s || ''}')">${r.s}</td>
+            <td class="clickable-num" style="color:var(--warning)" onclick="viewCodes('${r.codes_p || ''}')">${r.p}</td>
+            <td class="clickable-num" style="color:var(--danger)" onclick="viewCodes('${r.codes_c || ''}')">${r.c}</td>
         </tr>
     `).join('');
 }
 
-function viewCodes(co, date, type) {
-    const day = storage[co].find(x => x.date === date);
-    const codes = day ? day[type] : [];
-    document.getElementById('viewTitle').innerText = `${co} - ${type.toUpperCase()} Codes`;
-    document.getElementById('codeList').innerHTML = codes.length > 0 ? 
-        codes.map((c, i) => `<div class="code-item"><span>${i+1}. ${c}</span><span style="color:var(--danger)" onclick="deleteCode('${co}','${date}','${type}',${i})">Delete</span></div>`).join('') : "No codes found.";
+function viewCodes(str) {
     document.getElementById('viewModal').style.display = 'flex';
+    document.getElementById('codesList').innerHTML = str ? 
+        str.split(',').map((c, i) => `<div>${i+1}. ${c}</div>`).join('') : "No codes found for this entry.";
 }
 
-function deleteCode(co, date, type, idx) {
-    storage[co].find(x => x.date === date)[type].splice(idx, 1);
-    saveLocal();
-    viewCodes(co, date, type);
-    showTable(co);
-    render();
-}
-
-function openLogModal() {
-    document.getElementById('logModal').style.display = 'flex';
-    document.getElementById('logDate').value = new Date().toISOString().split('T')[0];
-}
-
-function addCode() {
-    const code = document.getElementById('manualCode').value;
-    if(!code) return;
-    processCode(code);
-    document.getElementById('manualCode').value = '';
-}
-
-function processCode(code) {
-    const co = document.getElementById('selCo').value;
-    const type = document.getElementById('selType').value;
-    const date = document.getElementById('logDate').value;
-
-    let day = storage[co].find(x => x.date === date);
-    if(!day) { day = {date, s:[], p:[], c:[]}; storage[co].push(day); }
-    
-    if(!day[type].includes(code)) {
-        day[type].push(code);
-        saveLocal();
-        render();
-    }
-}
-
-function startScan() {
-    const r = document.getElementById('reader');
-    r.style.display = 'block';
-    scanner = new Html5Qrcode("reader");
-    scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (txt) => {
-        processCode(txt);
-        navigator.vibrate(100);
+async function saveAll() {
+    const d = document.getElementById('logDate').value;
+    types.forEach(t => {
+        const entry = {
+            date: d,
+            s: document.getElementById(`s_${t}`).value || 0,
+            p: document.getElementById(`p_${t}`).value || 0,
+            c: document.getElementById(`c_${t}`).value || 0,
+            codes_s: document.getElementById(`codes_hidden_${t}`).value // يحفظ الأكواد هنا
+        };
+        const idx = storage[t].findIndex(x => x.date === d);
+        if(idx >= 0) storage[t][idx] = entry; else storage[t].push(entry);
     });
-}
-
-function saveLocal() {
-    localStorage.setItem("logistics_v12_data", JSON.stringify(storage));
+    localStorage.setItem("log_v14", JSON.stringify(storage));
+    closeEntry(); render(); await sync();
 }
 
 async function sync() {
@@ -198,17 +179,13 @@ async function sync() {
         await fetch(url, {
             method: 'PUT',
             headers: {'Authorization': `token ${config.token}`},
-            body: JSON.stringify({ message:"Up", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage)))), sha })
+            body: JSON.stringify({ message:"Update", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage)))), sha })
         });
-        document.getElementById('sync').innerText = "☁️ Synced";
-    } catch(e) { document.getElementById('sync').innerText = "⚠️ Offline"; }
+        document.getElementById('syncStatus').innerText = "✅ Synced";
+    } catch(e) { document.getElementById('syncStatus').innerText = "⚠️ Offline"; }
 }
 
-function closeLogModal() {
-    if(scanner) scanner.stop();
-    document.getElementById('logModal').style.display = 'none';
-    sync();
-}
+function closeEntry() { if(scanner) try { scanner.stop(); } catch(e){} document.getElementById('entryModal').style.display = 'none'; }
 
 init();
 </script>
