@@ -1,95 +1,101 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Elite Logistics Dashboard</title>
+    <title>Elite Logistics Dashboard v11</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#4f46e5">
     <link rel="manifest" href="manifest.json">
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --brand: #4f46e5; --bg: #f8fafc; --surface: #ffffff;
-            --text: #0f172a; --text-dim: #64748b; --border: #e2e8f0;
-            --s-clr: #10b981; --p-clr: #f59e0b; --c-clr: #ef4444;
+            --brand: #4f46e5; --bg: #f0f4f8; --surface: #ffffff;
+            --text: #1a202c; --text-dim: #718096; --border: #edf2f7;
+            --s-clr: #38a169; --p-clr: #d69e2e; --c-clr: #e53e3e;
         }
-        * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: var(--text); margin: 0; padding: 15px; padding-bottom: 80px; }
+        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; }
+        body { background: var(--bg); color: var(--text); margin: 0; padding: 15px; }
 
-        header { padding: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .sync-tag { font-size: 0.65rem; font-weight: 800; padding: 6px 14px; border-radius: 30px; background: #fff; border: 1px solid var(--border); }
-        
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding: 5px; }
+        .sync-tag { font-size: 0.7rem; font-weight: 700; background: #fff; padding: 5px 15px; border-radius: 20px; border: 1px solid var(--border); color: var(--brand); }
+
         /* Metrics Grid */
-        .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 25px; }
-        .card { background: var(--surface); padding: 20px; border-radius: 28px; border: 1px solid var(--border); transition: 0.3s; cursor: pointer; position: relative; }
-        .card.active { border: 2.5px solid var(--brand); box-shadow: 0 12px 24px rgba(79,70,229,0.08); }
-        .card-label { font-size: 0.65rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; }
-        .card-val { font-size: 1.7rem; font-weight: 800; display: block; margin-top: 5px; letter-spacing: -1px; }
-        .card-perc { font-size: 0.75rem; font-weight: 800; color: var(--s-clr); background: #10b98115; padding: 2px 8px; border-radius: 8px; position: absolute; top: 20px; right: 20px; }
+        .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
+        .card { background: var(--surface); padding: 20px; border-radius: 24px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.02); transition: 0.3s; position: relative; overflow: hidden; }
+        .card.active { border: 2px solid var(--brand); transform: translateY(-3px); }
+        .card-label { font-size: 0.75rem; color: var(--text-dim); font-weight: 700; display: block; }
+        .card-val { font-size: 1.8rem; font-weight: 800; display: block; margin-top: 5px; }
+        .card-perc { position: absolute; top: 15px; left: 15px; font-size: 0.7rem; font-weight: 800; background: #e6fffa; color: var(--s-clr); padding: 2px 8px; border-radius: 10px; }
 
         /* Actions Bar */
         .actions { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 10px; margin-bottom: 25px; }
-        .btn { padding: 14px; border-radius: 18px; border: 1px solid var(--border); background: #fff; font-size: 0.72rem; font-weight: 700; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 5px; }
-        .btn-main { background: var(--text); color: #fff; border: none; }
-        .btn-danger { color: var(--c-clr); border-color: #fee2e2; background: #fff1f1; }
+        .btn { padding: 12px; border-radius: 15px; border: 1px solid var(--border); background: #fff; font-weight: 700; cursor: pointer; font-size: 0.75rem; transition: 0.2s; }
+        .btn-main { background: var(--brand); color: #fff; border: none; box-shadow: 0 4px 12px rgba(79,70,229,0.2); }
+        .btn-danger { color: var(--c-clr); background: #fff5f5; }
+
+        /* Chart Area */
+        .chart-container { background: #fff; padding: 25px; border-radius: 28px; border: 1px solid var(--border); margin-bottom: 30px; }
+        .chart-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .chart-wrap { height: 300px; position: relative; }
 
         /* Table Section */
-        .table-section { display: none; background: #fff; border-radius: 32px; border: 1px solid var(--border); margin-bottom: 30px; overflow: hidden; animation: slideUp 0.5s ease; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .table-section { display: none; background: #fff; border-radius: 28px; border: 1px solid var(--border); overflow: hidden; margin-top: 20px; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        .table-top { padding: 22px 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #fafbfc; }
-        .table-scroll { overflow-x: auto; max-height: 400px; }
-        table { width: 100%; border-collapse: collapse; min-width: 700px; }
-        th { background: #fff; padding: 18px; font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
-        td { padding: 18px 12px; border-bottom: 1px solid #f8fafc; text-align: center; }
-
-        .date-val { font-weight: 800; font-size: 0.92rem; display: block; }
-        .day-val { font-size: 0.68rem; color: var(--text-dim); font-weight: 600; }
-
-        /* Chart Card */
-        .chart-card { background: #fff; padding: 25px; border-radius: 32px; border: 1px solid var(--border); margin-bottom: 20px; }
-        .chart-wrap { height: 280px; }
+        .table-top { padding: 20px; background: #f8fafc; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; }
+        .table-scroll { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th { padding: 15px; font-size: 0.7rem; color: var(--text-dim); text-align: center; border-bottom: 1px solid var(--border); }
+        td { padding: 15px; text-align: center; border-bottom: 1px solid #f9fafb; font-size: 0.85rem; }
 
         /* Modal */
-        .modal { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.5); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
-        .modal-box { background: #fff; width: 92%; max-width: 400px; padding: 30px; border-radius: 30px; }
-        input { width: 100%; padding: 15px; margin: 10px 0; border: 1px solid var(--border); border-radius: 16px; font-weight: 600; background: #f8fafc; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .modal-box { background: #fff; width: 90%; max-width: 400px; padding: 30px; border-radius: 25px; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid var(--border); border-radius: 12px; text-align: center; font-weight: 700; }
     </style>
 </head>
 <body>
 
 <header>
-    <h1 style="letter-spacing:-1.5px; margin:0; font-size:1.4rem">Elite Logistics</h1>
-    <div id="syncStatus" class="sync-tag">INITIALIZING...</div>
+    <h2 style="margin:0; font-weight:800; letter-spacing:-1px">لوحة التحكم اللوجستية</h2>
+    <div id="syncStatus" class="sync-tag">جاري التحميل...</div>
 </header>
-
-<div class="actions">
-    <button class="btn btn-main" onclick="openAddModal()">+ New Entry</button>
-    <button class="btn" onclick="exportData()">Export</button>
-    <button class="btn btn-danger" onclick="wipeAllData()">🗑 Wipe</button>
-</div>
 
 <div class="metrics" id="metricsPanel"></div>
 
+<div class="actions">
+    <button class="btn btn-main" onclick="openAddModal()">+ إضافة بيانات</button>
+    <button class="btn" onclick="location.reload()">تحديث</button>
+    <button class="btn btn-danger" onclick="wipeData()">مسح البيانات</button>
+</div>
+
+<div class="chart-container">
+    <div class="chart-header">
+        <span style="font-weight:800; font-size:0.9rem">تحليل النمو الشهري</span>
+        <div id="legend" style="display:flex; gap:10px"></div>
+    </div>
+    <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
+</div>
+
 <div id="tableSection" class="table-section">
     <div class="table-top">
-        <h3 id="tableTitle" style="margin:0; font-size:1rem; font-weight:800; color:var(--brand)">ANALYTICS</h3>
-        <button onclick="closeTable()" style="border:none; background:#f1f5f9; width:35px; height:35px; border-radius:50%; font-weight:800; cursor:pointer;">×</button>
+        <span id="tableTitle" style="font-weight:800; color:var(--brand)">التفاصيل</span>
+        <button onclick="closeTable()" style="border:none; background:none; font-weight:800; cursor:pointer">إغلاق ×</button>
     </div>
     <div class="table-scroll">
         <table>
             <thead>
                 <tr>
-                    <th style="text-align:left; padding-left:25px">Timeline</th>
-                    <th style="color:var(--s-clr)">Success</th>
-                    <th style="color:var(--p-clr)">Pending</th>
-                    <th style="color:var(--c-clr)">Cancel</th>
-                    <th>Rate</th>
+                    <th>التاريخ</th>
+                    <th style="color:var(--s-clr)">ناجح</th>
+                    <th style="color:var(--p-clr)">معلق</th>
+                    <th style="color:var(--c-clr)">ملغي</th>
+                    <th>كفاءة اليوم</th>
                 </tr>
             </thead>
             <tbody id="tableBody"></tbody>
@@ -97,39 +103,31 @@
     </div>
 </div>
 
-<div class="chart-card">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
-        <h4 style="margin:0; font-size:0.85rem; font-weight:800">Growth Analysis</h4>
-        <div id="chartLegend" style="display:flex; gap:8px"></div>
-    </div>
-    <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
-</div>
-
 <div id="addModal" class="modal">
     <div class="modal-box">
-        <h2 style="margin:0 0 20px 0; font-weight:800">Add Log</h2>
+        <h3 style="margin-top:0">تسجيل النشاط اليومي</h3>
         <input type="date" id="modalDate">
         <div id="modalInputs"></div>
-        <button class="btn btn-main" style="width:100%; margin-top:15px" id="saveBtn">Confirm Sync</button>
-        <button class="btn" style="width:100%; margin-top:10px; border:none" onclick="closeAddModal()">Cancel</button>
+        <button class="btn btn-main" style="width:100%; margin-top:15px" id="saveBtn">حفظ ومزامنة</button>
+        <button class="btn" style="width:100%; margin-top:10px; border:none" onclick="closeAddModal()">إلغاء</button>
     </div>
 </div>
 
 <script>
+// الإعدادات العامة للبيانات
 let config = JSON.parse(localStorage.getItem('gh_config')) || null;
 const types = ["Delivery", "PickUp", "SameDay", "Khazenly"];
-const theme = { Delivery: '#4f46e5', PickUp: '#10b981', SameDay: '#f59e0b', Khazenly: '#ef4444' };
-let storage = JSON.parse(localStorage.getItem("logistics_v10_data")) || {};
+const colors = { Delivery: '#4f46e5', PickUp: '#38a169', SameDay: '#d69e2e', Khazenly: '#e53e3e' };
+let storage = JSON.parse(localStorage.getItem("logistics_v11_data")) || {};
 types.forEach(t => { if(!storage[t]) storage[t] = []; });
-let activeType = null;
 let mainChart = null;
 
+// التحقق من الإعدادات السحابية
 async function init() {
-    if (config) await pull(); 
-    else {
-        const t = prompt("GitHub Token:"), u = prompt("Username:"), r = prompt("Repo:");
-        if(t && u && r) { config = {token:t, user:u, repo:r}; localStorage.setItem('gh_config', JSON.stringify(config)); location.reload(); }
-    }
+    if (!config) {
+        const token = prompt("GitHub Token:"), user = prompt("Username:"), repo = prompt("Repo Name:");
+        if(token && user && repo) { config = {token, user, repo}; localStorage.setItem('gh_config', JSON.stringify(config)); location.reload(); }
+    } else { await pull(); }
 }
 
 async function pull() {
@@ -139,15 +137,15 @@ async function pull() {
         if(r.ok) {
             const j = await r.json();
             storage = JSON.parse(decodeURIComponent(escape(atob(j.content))));
-            localStorage.setItem("logistics_v10_data", JSON.stringify(storage));
-            document.getElementById('syncStatus').innerText = "✅ CLOUD ACTIVE";
+            localStorage.setItem("logistics_v11_data", JSON.stringify(storage));
+            document.getElementById('syncStatus').innerText = "✅ متصل بالسحابة";
         }
-    } catch(e) { document.getElementById('syncStatus').innerText = "⚠️ OFFLINE"; }
+    } catch(e) { document.getElementById('syncStatus').innerText = "⚠️ غير متصل"; }
     renderUI();
 }
 
 async function push() {
-    document.getElementById('syncStatus').innerText = "⏳ UPLOADING...";
+    document.getElementById('syncStatus').innerText = "⏳ جاري الرفع...";
     const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
     try {
         const r = await fetch(url, { headers: { 'Authorization': `token ${config.token}` } });
@@ -155,106 +153,102 @@ async function push() {
         await fetch(url, {
             method: 'PUT',
             headers: { 'Authorization': `token ${config.token}` },
-            body: JSON.stringify({ message: "V10 Update", content: btoa(unescape(encodeURIComponent(JSON.stringify(storage, null, 2)))), sha: sha })
+            body: JSON.stringify({ message: "Update v11", content: btoa(unescape(encodeURIComponent(JSON.stringify(storage, null, 2)))), sha: sha })
         });
-        document.getElementById('syncStatus').innerText = "✅ CLOUD ACTIVE";
-    } catch(e) { alert("Sync Failed"); }
+        document.getElementById('syncStatus').innerText = "✅ تم الحفظ سحابياً";
+    } catch(e) { alert("فشل المزامنة"); }
 }
 
 function renderUI() {
-    const m = new Date().getMonth(); const y = new Date().getFullYear();
+    const now = new Date();
     document.getElementById("metricsPanel").innerHTML = types.map(t => {
-        const monthData = storage[t].filter(d => {
-            const dt = new Date(d.date); return dt.getFullYear() === y && dt.getMonth() === m;
-        });
-        const s = monthData.reduce((a, b) => a + (b.s || 0), 0);
+        const monthData = storage[t].filter(d => new Date(d.date).getMonth() === now.getMonth());
+        const succ = monthData.reduce((a, b) => a + (b.s || 0), 0);
         const total = monthData.reduce((a, b) => a + (b.s + b.p + b.c || 0), 0);
-        const perc = total > 0 ? ((s / total) * 100).toFixed(1) : "0";
+        const perc = total > 0 ? ((succ / total) * 100).toFixed(1) : "0";
         return `
-            <div class="card ${activeType === t ? 'active' : ''}" onclick="showTable('${t}')">
-                <span class="card-label" style="color:${theme[t]}">${t}</span>
-                <span class="card-val">${s}</span>
+            <div class="card" onclick="showTable('${t}')">
                 <span class="card-perc">${perc}%</span>
+                <span class="card-label" style="color:${colors[t]}">${t}</span>
+                <span class="card-val">${succ.toLocaleString()}</span>
             </div>`;
     }).join('');
-    renderChart(y, m);
+    updateChart();
 }
 
 function showTable(type) {
-    activeType = type;
     const box = document.getElementById("tableSection");
     box.style.display = "block";
-    document.getElementById("tableTitle").innerText = type.toUpperCase();
-    
+    document.getElementById("tableTitle").innerText = `تفاصيل أداء: ${type}`;
+    // فلترة الأصفار لضمان احترافية الجدول
     const filtered = storage[type].filter(r => (r.s + r.p + r.c) > 0).sort((a,b) => new Date(b.date) - new Date(a.date));
+    
     document.getElementById("tableBody").innerHTML = filtered.map(r => {
         const total = r.s + r.p + r.c;
         const eff = ((r.s/total)*100).toFixed(1);
-        const d = new Date(r.date);
         return `<tr>
-            <td class="date-cell"><span class="date-val">${d.getDate()} ${d.toLocaleString('en', {month:'short'})}</span><span class="day-val">${d.toLocaleString('en', {weekday:'long'})}</span></td>
-            <td style="font-weight:700; color:var(--s-clr)">${r.s}</td>
-            <td style="font-weight:700; color:var(--p-clr)">${r.p}</td>
-            <td style="font-weight:700; color:var(--c-clr)">${r.c}</td>
-            <td style="font-weight:800">${eff}%</td>
+            <td>${r.date}</td>
+            <td style="font-weight:700">${r.s}</td>
+            <td>${r.p}</td>
+            <td style="color:var(--c-clr)">${r.c}</td>
+            <td style="font-weight:800; color:var(--brand)">${eff}%</td>
         </tr>`;
     }).join('');
-    renderUI();
+    box.scrollIntoView({ behavior: 'smooth' });
 }
 
-function renderChart(yr, mt) {
+function updateChart() {
     const ctx = document.getElementById('mainChart').getContext('2d');
-    const days = new Date(yr, mt + 1, 0).getDate();
+    const days = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
     const datasets = types.map(t => ({
-        label: t, data: Array.from({length: days}, (_, i) => {
-            const dStr = `${yr}-${String(mt+1).padStart(2,'0')}-${String(i+1).padStart(2,'0')}`;
-            const f = storage[t].find(d => d.date === dStr);
-            return f ? f.s : 0;
+        label: t,
+        data: Array.from({length: days}, (_, i) => {
+            const date = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(i+1).padStart(2,'0')}`;
+            const found = storage[t].find(d => d.date === date);
+            return found ? found.s : 0;
         }),
-        borderColor: theme[t], borderWidth: 3, tension: 0.4, pointRadius: 0
+        borderColor: colors[t],
+        tension: 0.4, borderWeight: 3, pointRadius: 0
     }));
-    if(mainChart) mainChart.destroy();
-    mainChart = new Chart(ctx, { type: 'line', data: { labels: Array.from({length: days}, (_, i) => i + 1), datasets }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
-}
 
-function wipeAllData() {
-    if(confirm("❗ ALERT: This will delete ALL data from Cloud and Phone. Are you sure?")) {
-        if(confirm("LAST CONFIRMATION: Are you really sure?")) {
-            types.forEach(t => storage[t] = []);
-            localStorage.setItem("logistics_v10_data", JSON.stringify(storage));
-            push(); renderUI(); closeTable();
-            alert("Data Wiped Successfully");
-        }
-    }
+    if(mainChart) mainChart.destroy();
+    mainChart = new Chart(ctx, {
+        type: 'line',
+        data: { labels: Array.from({length: days}, (_, i) => i + 1), datasets },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    });
+
+    document.getElementById('legend').innerHTML = types.map(t => `<div style="display:flex; align-items:center; gap:5px; font-size:0.6rem"><div style="width:8px; height:8px; border-radius:50%; background:${colors[t]}"></div>${t}</div>`).join('');
 }
 
 function openAddModal() {
     document.getElementById("addModal").style.display = "flex";
     document.getElementById("modalDate").value = new Date().toISOString().split('T')[0];
     document.getElementById("modalInputs").innerHTML = types.map(t => `
-        <div style="margin-bottom:10px; padding:10px; background:#f8fafc; border-radius:15px">
-            <span style="font-size:0.7rem; font-weight:800; color:${theme[t]}">${t}</span>
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px; margin-top:5px">
-                <input type="number" id="s_${t}" placeholder="S">
-                <input type="number" id="p_${t}" placeholder="P">
-                <input type="number" id="c_${t}" placeholder="C">
+        <div style="background:#f9fafb; padding:10px; border-radius:15px; margin-bottom:10px">
+            <span style="font-size:0.75rem; font-weight:800; color:${colors[t]}">${t}</span>
+            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; margin-top:5px">
+                <input type="number" id="s_${t}" placeholder="ناجح">
+                <input type="number" id="p_${t}" placeholder="معلق">
+                <input type="number" id="c_${t}" placeholder="ملغي">
             </div>
         </div>`).join('');
+
     document.getElementById("saveBtn").onclick = async () => {
-        const d = document.getElementById("modalDate").value;
+        const date = document.getElementById("modalDate").value;
         types.forEach(t => {
-            const entry = { date: d, s: parseInt(document.getElementById(`s_${t}`).value)||0, p: parseInt(document.getElementById(`p_${t}`).value)||0, c: parseInt(document.getElementById(`c_${t}`).value)||0 };
-            const idx = storage[t].findIndex(x => x.date === d);
+            const entry = { date, s: parseInt(document.getElementById(`s_${t}`).value)||0, p: parseInt(document.getElementById(`p_${t}`).value)||0, c: parseInt(document.getElementById(`c_${t}`).value)||0 };
+            const idx = storage[t].findIndex(x => x.date === date);
             if(idx >= 0) storage[t][idx] = entry; else storage[t].push(entry);
         });
-        localStorage.setItem("logistics_v10_data", JSON.stringify(storage));
+        localStorage.setItem("logistics_v11_data", JSON.stringify(storage));
         closeAddModal(); renderUI(); await push();
     };
 }
 
+function wipeData() { if(confirm("هل أنت متأكد من مسح جميع البيانات؟ لا يمكن التراجع!")) { types.forEach(t => storage[t] = []); localStorage.setItem("logistics_v11_data", JSON.stringify(storage)); push(); renderUI(); } }
 function closeAddModal() { document.getElementById("addModal").style.display = "none"; }
-function closeTable() { document.getElementById("tableSection").style.display = "none"; activeType = null; renderUI(); }
-function exportData() { alert("Data exported to CSV (Simulated)"); }
+function closeTable() { document.getElementById("tableSection").style.display = "none"; }
 
 init();
 </script>
