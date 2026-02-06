@@ -3,13 +3,14 @@
   "short_name": "Logistics",
   "start_url": "/logistics/",
   "display": "standalone",
-  "background_color": "#f9fafb",
-  "theme_color": "#111827",
+  "background_color": "#0f172a",
+  "theme_color": "#1e293b",
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/1554/1554561.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
