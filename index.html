@@ -3,288 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Insight Pro v18</title>
-    
+    <title>Insight Analytics</title>
+
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#6366f1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="InsightLog">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1162/1162499.png">
-    
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     
     <style>
-        :root {
-            --bg: #fcfcfd; --card: #ffffff; --brand: #6366f1;
-            --text: #111827; --dim: #64748b; --border: #f1f5f9;
-            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
-        }
+        :root { --bg: #fcfcfd; --card: #ffffff; --brand: #6366f1; --text: #111827; --dim: #64748b; --border: #f1f5f9; --success: #10b981; --danger: #ef4444; }
         * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--text); margin: 0; padding: 15px; padding-bottom: 100px; }
-
-        header { margin: 10px 0 25px 0; display: flex; justify-content: space-between; align-items: center; }
-        header h1 { font-size: 1.3rem; font-weight: 800; margin: 0; letter-spacing: -0.5px; }
-        .sync-indicator { font-size: 0.65rem; font-weight: 700; color: var(--brand); background: #6366f110; padding: 5px 12px; border-radius: 20px; }
-
-        /* إشعار التثبيت */
-        #pwaBanner {
-            display: none; background: var(--text); color: white; padding: 15px 20px;
-            border-radius: 20px; margin-bottom: 20px; align-items: center; justify-content: space-between;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1); animation: slideUp 0.5s ease;
-        }
-
-        .month-controller { 
-            background: #fff; border: 1px solid var(--border); padding: 12px 20px; 
-            border-radius: 20px; display: flex; justify-content: space-between; 
-            align-items: center; margin-bottom: 20px;
-        }
-        .nav-btn { background: var(--bg); border: none; width: 38px; height: 38px; border-radius: 12px; cursor: pointer; color: var(--brand); font-weight: bold; }
-        .month-label { font-weight: 800; font-size: 1rem; }
-
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 25px; }
-        .stat-card { background: var(--card); padding: 20px; border-radius: 24px; border: 1px solid var(--border); position: relative; cursor: pointer; }
-        .stat-badge { font-size: 0.7rem; font-weight: 800; color: var(--success); position: absolute; top: 20px; right: 20px; }
-        .stat-label { font-size: 0.7rem; font-weight: 700; color: var(--dim); text-transform: uppercase; }
-        .stat-val { font-size: 1.6rem; font-weight: 800; display: block; margin-top: 8px; }
-
-        #detailsTable { display: none; margin-bottom: 25px; }
-        .table-container { background: #fff; border-radius: 24px; border: 1px solid var(--border); overflow: hidden; }
-        table { width: 100%; border-collapse: collapse; }
-        td, th { padding: 15px; text-align: center; border-bottom: 1px solid #f9fafb; font-size: 0.85rem; font-weight: 600; }
-
-        .chart-section { background: #fff; padding: 20px; border-radius: 24px; border: 1px solid var(--border); }
-        .chart-wrap { height: 250px; }
-
-        .footer-actions { position: fixed; bottom: 20px; left: 15px; right: 15px; display: grid; grid-template-columns: 3fr 1fr; gap: 10px; }
-        .btn-main { background: var(--text); color: #fff; border: none; padding: 18px; border-radius: 20px; font-weight: 800; }
-        .btn-wipe { background: #fff; color: var(--danger); border: 1px solid #fee2e2; border-radius: 20px; }
-
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
-        .modal-content { background: #fff; width: 90%; max-width: 400px; padding: 25px; border-radius: 30px; }
-        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid var(--border); border-radius: 12px; font-weight: 700; outline: none; background: var(--bg); }
         
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        /* إشعار التثبيت */
+        #pwaInstall {
+            display: none; position: fixed; top: 15px; left: 15px; right: 15px; 
+            background: #1e293b; color: white; padding: 15px; border-radius: 20px;
+            z-index: 9999; align-items: center; justify-content: space-between;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2); animation: slideDown 0.5s ease;
+        }
+
+        .month-ctrl { background: #fff; border: 1px solid var(--border); padding: 12px 20px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 25px; }
+        .stat-card { background: var(--card); padding: 20px; border-radius: 24px; border: 1px solid var(--border); position: relative; }
+        .stat-val { font-size: 1.6rem; font-weight: 800; display: block; margin-top: 8px; }
+        .chart-card { background: #fff; padding: 20px; border-radius: 24px; border: 1px solid var(--border); height: 250px; }
+        .footer { position: fixed; bottom: 20px; left: 15px; right: 15px; display: grid; grid-template-columns: 3fr 1fr; gap: 10px; }
+        .btn-add { background: var(--text); color: #fff; border: none; padding: 18px; border-radius: 20px; font-weight: 800; cursor: pointer;}
+        @keyframes slideDown { from { transform: translateY(-100px); } to { transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-<div id="pwaBanner">
-    <div style="font-size: 0.8rem; font-weight: 700;">Install App for better experience</div>
-    <button onclick="installPWA()" style="background:var(--brand); border:none; color:white; padding:8px 15px; border-radius:12px; font-weight:800; font-size:0.75rem">Install</button>
+<div id="pwaInstall">
+    <span style="font-weight:700; font-size:0.85rem">Install App for Full Screen</span>
+    <button onclick="doInstall()" style="background:var(--brand); border:none; color:white; padding:8px 18px; border-radius:12px; font-weight:800">Install</button>
 </div>
 
-<header>
-    <h1>Insight Pro</h1>
-    <div id="syncStatus" class="sync-indicator">Connecting...</div>
+<header style="display:flex; justify-content:space-between; align-items:center; margin:10px 0 20px 0">
+    <h1 style="font-size:1.3rem; font-weight:800">Insight Pro</h1>
+    <div id="sync" style="font-size:0.6rem; font-weight:800; color:var(--brand); background:#6366f115; padding:5px 10px; border-radius:10px">Connecting...</div>
 </header>
 
-<div class="month-controller">
-    <button class="nav-btn" onclick="changeMonth(-1)">‹</button>
-    <span class="month-label" id="monthDisplay">Loading...</span>
-    <button class="nav-btn" onclick="changeMonth(1)">›</button>
+<div class="month-ctrl">
+    <button style="border:none; background:none; font-size:1.5rem" onclick="move(-1)">‹</button>
+    <span id="monthLab" style="font-weight:800">---</span>
+    <button style="border:none; background:none; font-size:1.5rem" onclick="move(1)">›</button>
 </div>
 
 <div class="grid" id="metricsPanel"></div>
+<div class="chart-card"><canvas id="mainChart"></canvas></div>
 
-<div id="detailsTable">
-    <div class="table-container">
-        <div style="padding:15px 20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center">
-            <span id="activeTitle" style="font-weight: 800; color: var(--brand)">Details</span>
-            <button onclick="closeTable()" style="border:none; background:var(--bg); border-radius:8px; padding:5px 10px; font-weight:700;">×</button>
-        </div>
-        <div style="overflow-x:auto">
-            <table>
-                <thead><tr><th>Date</th><th>S</th><th>P</th><th>C</th><th>Rate</th></tr></thead>
-                <tbody id="tableBody"></tbody>
-            </table>
-        </div>
-    </div>
+<div class="footer">
+    <button class="btn-add" onclick="openLog()">+ New Activity Log</button>
+    <button onclick="wipe()" style="border:1px solid #fee2e2; border-radius:20px; color:var(--danger); background:#fff; font-weight:800">Wipe</button>
 </div>
 
-<div class="chart-section">
-    <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
-</div>
-
-<div class="footer-actions">
-    <button class="btn-main" onclick="openAddModal()">+ New Activity Log</button>
-    <button class="btn-wipe" onclick="wipeData()">Wipe</button>
-</div>
-
-<div id="addModal" class="modal">
-    <div class="modal-content">
-        <h3 style="margin-top:0">Daily Log</h3>
-        <input type="date" id="modalDate">
-        <div id="modalInputs"></div>
-        <button class="btn-main" style="width:100%; margin-top:15px" id="saveBtn">Save & Sync</button>
-        <button onclick="closeAddModal()" style="border:none; background:none; width:100%; margin-top:10px; color:var(--dim); font-weight:600">Cancel</button>
+<div id="logModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.3); z-index:1000; align-items:center; justify-content:center; backdrop-filter:blur(8px)">
+    <div style="background:#fff; width:90%; max-width:400px; padding:25px; border-radius:30px">
+        <h3 style="margin-top:0">Daily Entry</h3>
+        <input type="date" id="logDate" style="width:100%; padding:12px; margin-bottom:15px; border-radius:12px; border:1px solid var(--border)">
+        <div id="logInputs"></div>
+        <button class="btn-add" style="width:100%; margin-top:15px" onclick="save()">Save & Sync</button>
+        <button onclick="closeLog()" style="width:100%; border:none; background:none; width:100%; margin-top:10px; color:var(--dim)">Cancel</button>
     </div>
 </div>
 
 <script>
-let deferredPrompt;
-const types = ["Delivery", "PickUp", "SameDay", "Khazenly"];
-const colors = { Delivery: '#6366f1', PickUp: '#10b981', SameDay: '#f59e0b', Khazenly: '#ef4444' };
+// تسجيل ملف الـ Service Worker (sw.js) الموجود في المستودع
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js')
+    .then(() => console.log("SW Registered"))
+    .catch(err => console.log("SW Failed", err));
+}
 
-// 1. منطق التثبيت (PWA)
+let promptEvt;
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
-    deferredPrompt = e;
-    document.getElementById('pwaBanner').style.display = 'flex';
+    promptEvt = e;
+    document.getElementById('pwaInstall').style.display = 'flex';
 });
 
-async function installPWA() {
-    if (deferredPrompt) {
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-            document.getElementById('pwaBanner').style.display = 'none';
-        }
-        deferredPrompt = null;
+function doInstall() {
+    if (promptEvt) {
+        promptEvt.prompt();
+        document.getElementById('pwaInstall').style.display = 'none';
     }
 }
 
-// 2. المزامنة والربط (GitHub & LocalStorage)
-let config = JSON.parse(localStorage.getItem('gh_config')) || null;
-let storage = JSON.parse(localStorage.getItem("logistics_v12_data")) || {};
-types.forEach(t => { if(!storage[t]) storage[t] = []; });
-
-let mainChart = null;
-let currentViewDate = new Date();
+// كود المزامنة والتحليل (ثابت ومربوط بـ logistics_v12_data)
+let config = JSON.parse(localStorage.getItem('gh_config'));
+const types = ["Delivery", "PickUp", "SameDay", "Khazenly"];
+let db = JSON.parse(localStorage.getItem("logistics_v12_data")) || {};
+types.forEach(t => { if(!db[t]) db[t] = []; });
+let chart, viewDate = new Date();
 
 async function init() {
     if (!config) {
-        const token = prompt("GitHub Token:"), user = prompt("Username:"), repo = prompt("Repo Name:");
-        if(token && user && repo) { 
-            config = {token, user, repo}; 
-            localStorage.setItem('gh_config', JSON.stringify(config)); 
-            location.reload(); 
-        }
-    } else { await pullData(); }
+        const token = prompt("Token:"), user = prompt("User:"), repo = prompt("Repo:");
+        if(token && user && repo) { config={token,user,repo}; localStorage.setItem('gh_config',JSON.stringify(config)); location.reload(); }
+    } else { pull(); }
 }
 
-async function pullData() {
+async function pull() {
     const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
     try {
-        const r = await fetch(url, { headers: { 'Authorization': `token ${config.token}` } });
+        const r = await fetch(url, { headers: {'Authorization': `token ${config.token}`} });
         if(r.ok) {
             const j = await r.json();
-            storage = JSON.parse(decodeURIComponent(escape(atob(j.content))));
-            localStorage.setItem("logistics_v12_data", JSON.stringify(storage));
-            document.getElementById('syncStatus').innerText = "☁️ Synced";
+            db = JSON.parse(decodeURIComponent(escape(atob(j.content))));
+            localStorage.setItem("logistics_v12_data", JSON.stringify(db));
+            document.getElementById('sync').innerText = "☁️ Synced";
         }
-    } catch(e) { document.getElementById('syncStatus').innerText = "⚠️ Offline"; }
-    renderUI();
-}
-
-async function pushData() {
-    document.getElementById('syncStatus').innerText = "⏳ Saving...";
-    const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
-    try {
-        const r = await fetch(url, { headers: { 'Authorization': `token ${config.token}` } });
-        let sha = (r.ok) ? (await r.json()).sha : "";
-        await fetch(url, {
-            method: 'PUT',
-            headers: { 'Authorization': `token ${config.token}` },
-            body: JSON.stringify({ 
-                message: "Cloud Update v18", 
-                content: btoa(unescape(encodeURIComponent(JSON.stringify(storage, null, 2)))), 
-                sha: sha 
-            })
-        });
-        document.getElementById('syncStatus').innerText = "☁️ Synced";
     } catch(e) {}
+    render();
 }
 
-function renderUI() {
-    const m = currentViewDate.getMonth(), y = currentViewDate.getFullYear();
-    document.getElementById("monthDisplay").innerText = currentViewDate.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+async function push() {
+    document.getElementById('sync').innerText = "⏳ Saving...";
+    const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
+    const r = await fetch(url, { headers: {'Authorization': `token ${config.token}`} });
+    let sha = r.ok ? (await r.json()).sha : "";
+    await fetch(url, {
+        method: 'PUT',
+        headers: {'Authorization': `token ${config.token}`},
+        body: JSON.stringify({ message:"update", content:btoa(unescape(encodeURIComponent(JSON.stringify(db)))), sha })
+    });
+    document.getElementById('sync').innerText = "☁️ Synced";
+}
 
-    document.getElementById("metricsPanel").innerHTML = types.map(t => {
-        const mData = storage[t].filter(d => {
-            const dt = new Date(d.date);
-            return dt.getMonth() === m && dt.getFullYear() === y;
-        });
-        const succ = mData.reduce((a, b) => a + (b.s || 0), 0);
-        const total = mData.reduce((a, b) => a + (b.s + b.p + b.c || 0), 0);
-        const perc = total > 0 ? ((succ / total) * 100).toFixed(1) : "0";
-        return `
-            <div class="stat-card" onclick="showTable('${t}')">
-                <span class="stat-badge">${perc}%</span>
-                <span class="stat-label" style="color:${colors[t]}">${t}</span>
-                <span class="stat-val">${succ.toLocaleString()}</span>
-            </div>`;
+function render() {
+    const m = viewDate.getMonth(), y = viewDate.getFullYear();
+    document.getElementById('monthLab').innerText = viewDate.toLocaleString('en',{month:'long',year:'numeric'});
+    document.getElementById('metricsPanel').innerHTML = types.map(t => {
+        const mData = db[t].filter(d => { const dt=new Date(d.date); return dt.getMonth()===m && dt.getFullYear()===y; });
+        const s = mData.reduce((a,b)=>a+(b.s||0),0);
+        return `<div class="stat-card">
+            <span style="font-size:0.7rem; color:var(--dim); font-weight:800">${t}</span>
+            <span class="stat-val">${s.toLocaleString()}</span>
+        </div>`;
     }).join('');
     updateChart(y, m);
 }
 
-function showTable(type) {
-    const m = currentViewDate.getMonth(), y = currentViewDate.getFullYear();
-    document.getElementById("detailsTable").style.display = "block";
-    document.getElementById("activeTitle").innerText = `${type} History`;
-    const filtered = storage[type].filter(d => {
-        const dt = new Date(d.date);
-        return dt.getMonth() === m && dt.getFullYear() === y && (d.s + d.p + d.c) > 0;
-    }).sort((a,b) => new Date(b.date) - new Date(a.date));
-    
-    document.getElementById("tableBody").innerHTML = filtered.map(r => {
-        const rate = ((r.s/(r.s+r.p+r.c))*100).toFixed(1);
-        const dt = new Date(r.date);
-        return `<tr>
-            <td style="font-weight:800; text-align:left">${dt.getDate()} ${dt.toLocaleString('en',{month:'short'})}</td>
-            <td style="color:var(--success)">${r.s}</td><td>${r.p}</td><td style="color:var(--danger)">${r.c}</td>
-            <td style="color:var(--brand)">${rate}%</td>
-        </tr>`;
-    }).join('');
-    document.getElementById("detailsTable").scrollIntoView({ behavior: 'smooth' });
-}
-
-function updateChart(yr, mt) {
+function updateChart(y, m) {
     const ctx = document.getElementById('mainChart').getContext('2d');
-    const days = new Date(yr, mt + 1, 0).getDate();
+    const days = new Date(y, m+1, 0).getDate();
     const datasets = types.map(t => ({
-        label: t,
-        data: Array.from({length: days}, (_, i) => {
-            const dStr = `${yr}-${String(mt+1).padStart(2,'0')}-${String(i+1).padStart(2,'0')}`;
-            const found = storage[t].find(d => d.date === dStr);
-            return found ? found.s : 0;
-        }),
-        borderColor: colors[t], tension: 0.4, borderWidth: 3, pointRadius: 0
+        label: t, data: Array.from({length:days},(_,i)=>{
+            const dStr = `${y}-${String(m+1).padStart(2,'0')}-${String(i+1).padStart(2,'0')}`;
+            const f = db[t].find(x=>x.date===dStr); return f?f.s:0;
+        }), borderColor: t==="Delivery"?'#6366f1':'#10b981', tension:0.4, pointRadius:0
     }));
-    if(mainChart) mainChart.destroy();
-    mainChart = new Chart(ctx, {
-        type: 'line',
-        data: { labels: Array.from({length: days}, (_, i) => i + 1), datasets },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grid: { color: '#f1f5f9' } } } }
-    });
+    if(chart) chart.destroy();
+    chart = new Chart(ctx, { type:'line', data:{labels:Array.from({length:days},(_,i)=>i+1), datasets}, options:{maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{grid:{display:false}}, y:{beginAtZero:true}}} });
 }
 
-function changeMonth(dir) { currentViewDate.setMonth(currentViewDate.getMonth() + dir); renderUI(); closeTable(); }
-function openAddModal() {
-    document.getElementById("addModal").style.display = "flex";
-    document.getElementById("modalDate").value = new Date().toISOString().split('T')[0];
-    document.getElementById("modalInputs").innerHTML = types.map(t => `
-        <div style="margin-bottom:15px">
-            <span style="font-size:0.75rem; font-weight:800; color:${colors[t]}">${t}</span>
-            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px">
-                <input type="number" id="s_${t}" placeholder="S">
-                <input type="number" id="p_${t}" placeholder="P">
-                <input type="number" id="c_${t}" placeholder="C">
+function move(d) { viewDate.setMonth(viewDate.getMonth()+d); render(); }
+function openLog() {
+    document.getElementById('logModal').style.display='flex';
+    document.getElementById('logDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('logInputs').innerHTML = types.map(t=>`
+        <div style="margin-bottom:10px">
+            <span style="font-size:0.7rem; font-weight:800">${t} (S/P/C)</span>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px">
+                <input type="number" id="s_${t}" style="padding:10px; border-radius:8px; border:1px solid #eee">
+                <input type="number" id="p_${t}" style="padding:10px; border-radius:8px; border:1px solid #eee">
+                <input type="number" id="c_${t}" style="padding:10px; border-radius:8px; border:1px solid #eee">
             </div>
         </div>`).join('');
-    document.getElementById("saveBtn").onclick = async () => {
-        const date = document.getElementById("modalDate").value;
-        types.forEach(t => {
-            const entry = { date, s: parseInt(document.getElementById(`s_${t}`).value)||0, p: parseInt(document.getElementById(`p_${t}`).value)||0, c: parseInt(document.getElementById(`c_${t}`).value)||0 };
-            const idx = storage[t].findIndex(x => x.date === date);
-            if(idx >= 0) storage[t][idx] = entry; else storage[t].push(entry);
-        });
-        localStorage.setItem("logistics_v12_data", JSON.stringify(storage));
-        closeAddModal(); renderUI(); await pushData();
-    };
 }
-function wipeData() { if(confirm("Confirm Wipe?")) { types.forEach(t => storage[t] = []); localStorage.setItem("logistics_v12_data", JSON.stringify(storage)); pushData(); renderUI(); } }
-function closeAddModal() { document.getElementById("addModal").style.display = "none"; }
-function closeTable() { document.getElementById("detailsTable").style.display = "none"; }
+function save() {
+    const d = document.getElementById('logDate').value;
+    types.forEach(t => {
+        const entry = { date:d, s:parseInt(document.getElementById(`s_${t}`).value)||0, p:parseInt(document.getElementById(`p_${t}`).value)||0, c:parseInt(document.getElementById(`c_${t}`).value)||0 };
+        const idx = db[t].findIndex(x=>x.date===d); if(idx>=0) db[t][idx]=entry; else db[t].push(entry);
+    });
+    localStorage.setItem("logistics_v12_data", JSON.stringify(db)); closeLog(); render(); push();
+}
+function closeLog() { document.getElementById('logModal').style.display='none'; }
+function wipe() { if(confirm("Clear All?")) { types.forEach(t=>db[t]=[]); push(); render(); } }
 
 init();
 </script>
