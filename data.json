@@ -2,10 +2,10 @@
   "Delivery": [
     {
       "date": "2026-02-06",
-      "s": 0,
+      "s": 3,
       "p": 0,
       "c": 0,
-      "codes_s": "6224009746774,6224009746774,http://www.ilock.eg",
+      "codes_s": "6224009746774,http://www.ilock.eg,6901004416580",
       "codes_p": "",
       "codes_c": ""
     }
