@@ -3,148 +3,167 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Logistics Pro - Master Edition</title>
+<title>Logistics Intelligence Pro</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
     :root {
-        --primary: #111827; --subtle: #9ca3af; --border: #f3f4f6;
-        --deliv: #10b981; --pend: #f59e0b; --canc: #ef4444; --bg: #f9fafb;
+        --primary: #0f172a; --accent: #6366f1; --success: #10b981; 
+        --warning: #f59e0b; --danger: #ef4444; --bg: #f8fafc; --card: #ffffff;
     }
-    * { box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
-    body { background: var(--bg); margin: 0; padding: 15px; color: var(--primary); }
+    * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background: var(--bg); margin: 0; padding: 20px; color: var(--primary); line-height: 1.6; }
 
-    header h1 { font-size: 1.4rem; font-weight: 900; text-align: center; margin-bottom: 20px; letter-spacing: -1px; }
-    #syncStatus { text-align: center; font-size: 0.6rem; font-weight: 900; color: var(--subtle); margin-bottom: 10px; text-transform: uppercase; }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+    header h1 { font-size: 1.5rem; font-weight: 800; margin: 0; letter-spacing: -0.5px; }
+    #syncStatus { font-size: 0.65rem; font-weight: 700; background: #fff; padding: 5px 12px; border-radius: 20px; border: 1px solid #e2e8f0; }
 
-    /* مجموعة الأزرار العلوية */
-    .btn-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-    .btn { padding: 14px; border: 1px solid #e5e7eb; background: #fff; border-radius: 16px; font-size: 0.75rem; font-weight: 800; cursor: pointer; }
-    .btn-dark { background: var(--primary); color: #fff; border: none; }
-    .btn-danger { color: var(--canc); background: #fef2f2; border-color: #fee2e2; }
+    /* الأزرار الاحترافية */
+    .action-bar { display: flex; gap: 10px; margin-bottom: 25px; overflow-x: auto; padding-bottom: 5px; }
+    .btn { padding: 12px 18px; border: 1px solid #e2e8f0; background: var(--card); border-radius: 14px; font-size: 0.8rem; font-weight: 700; cursor: pointer; white-space: nowrap; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
+    .btn:hover { background: #f1f5f9; }
+    .btn-dark { background: var(--primary); color: #fff; border: none; box-shadow: 0 4px 12px rgba(15,23,42,0.2); }
+    .btn-danger { color: var(--danger); background: #fff5f5; border-color: #feb2b2; }
 
-    .date-nav { display: flex; align-items: center; justify-content: space-between; padding: 15px; background: #fff; border-radius: 20px; margin-bottom: 20px; border: 1px solid var(--border); }
-    .month-label { font-weight: 900; font-size: 1.1rem; }
+    /* التحكم بالتاريخ */
+    .date-control { background: var(--card); padding: 10px 20px; border-radius: 18px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border: 1px solid #e2e8f0; }
+    .month-label { font-weight: 800; font-size: 1rem; color: var(--primary); }
 
-    /* الكروت التفاعلية */
-    .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-    .item-card { padding: 20px; border-radius: 26px; background: #fff; border: 1px solid var(--border); cursor: pointer; transition: 0.2s; }
-    .item-card:active { transform: scale(0.96); }
-    .active-card { border: 2.5px solid var(--primary); box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
-    .delivered-value { font-size: 2.1rem; font-weight: 900; display: block; letter-spacing: -1px; }
+    /* شبكة الكروت التحليلية */
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px; }
+    .item-card { background: var(--card); padding: 20px; border-radius: 24px; border: 1px solid #e2e8f0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; position: relative; overflow: hidden; }
+    .item-card:hover { transform: translateY(-5px); box-shadow: 0 12px 20px -10px rgba(0,0,0,0.1); }
+    .active-card { border: 2px solid var(--accent); background: #f5f7ff; }
+    .card-label { font-size: 0.7rem; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 8px; display: block; }
+    .card-value { font-size: 1.8rem; font-weight: 800; display: block; color: var(--primary); }
 
-    /* الجدول التفصيلي (فوق الشارت) */
-    .detail-section { display: none; margin-bottom: 25px; background: #fff; border-radius: 24px; border: 1px solid var(--border); overflow: hidden; animation: slideIn 0.3s ease-out; }
-    @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-    
-    .table-header { padding: 15px 20px; font-weight: 900; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-    .table-wrapper { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; min-width: 450px; }
-    th { padding: 12px 15px; background: #f9fafb; font-size: 0.6rem; color: var(--subtle); text-transform: uppercase; text-align: center; }
-    td { padding: 12px 15px; text-align: center; font-size: 0.75rem; font-weight: 700; border-bottom: 1px solid #f9fafb; }
+    /* الجدول الاحترافي */
+    .analysis-section { display: none; background: var(--card); border-radius: 28px; border: 1px solid #e2e8f0; margin-bottom: 25px; box-shadow: 0 10px 30px -15px rgba(0,0,0,0.05); }
+    .table-header { padding: 20px 25px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
+    .table-header h3 { margin: 0; font-size: 1rem; font-weight: 800; }
+    .table-scroll { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 550px; }
+    th { padding: 15px 25px; text-align: left; font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
+    td { padding: 15px 25px; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid #f8fafc; }
+    .date-cell { color: #64748b; font-size: 0.8rem; }
+    .badge { padding: 4px 10px; border-radius: 10px; font-size: 0.75rem; font-weight: 700; }
 
-    /* الشارت السفلي */
-    .chart-section { background: #fff; padding: 22px; border-radius: 28px; border: 1px solid var(--border); margin-bottom: 50px; }
-    .chart-viewport { width: 100%; overflow-x: auto; }
-    .chart-wrapper { min-width: 800px; height: 300px; }
+    /* قسم الشارت */
+    .chart-card { background: var(--card); padding: 25px; border-radius: 28px; border: 1px solid #e2e8f0; margin-bottom: 40px; }
+    .chart-container { height: 350px; position: relative; }
 
     /* المودال */
-    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
-    .modal-content { background: white; width: 92%; max-width: 400px; padding: 30px; border-radius: 32px; }
-    input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 12px; }
+    .modal { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.6); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+    .modal-content { background: white; width: 90%; max-width: 450px; padding: 35px; border-radius: 32px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+    input { width: 100%; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 16px; font-weight: 600; }
 </style>
 </head>
 <body>
 
-<header><h1>Operations Hub</h1></header>
-<div id="syncStatus">🔄 Loading...</div>
+<header>
+    <h1>Intelligence Hub</h1>
+    <div id="syncStatus">☁️ INITIALIZING</div>
+</header>
 
-<div class="btn-group">
-    <button class="btn btn-danger" onclick="fullReset()">Clear Data</button>
-    <button class="btn" onclick="resetConfig()">Setup Cloud</button>
-    <button class="btn btn-dark" onclick="openAddDataModal()">+ Record</button>
+<div class="action-bar">
+    <button class="btn btn-dark" onclick="openAddDataModal()"><span>+</span> New Entry</button>
+    <button class="btn" onclick="exportExcel()">Export Reports</button>
+    <button class="btn" onclick="resetConfig()">Cloud Settings</button>
+    <button class="btn btn-danger" onclick="fullReset()">Wipe Data</button>
 </div>
 
-<div class="date-nav">
-    <button class="btn" style="border:none; font-size:1.5rem" onclick="changeMonth(-1)">‹</button>
+<div class="date-control">
+    <button class="btn" style="padding:8px" onclick="changeMonth(-1)">←</button>
     <div class="month-label" id="currentMonthDisplay">...</div>
-    <button class="btn" style="border:none; font-size:1.5rem" onclick="changeMonth(1)">›</button>
+    <button class="btn" style="padding:8px" onclick="changeMonth(1)">→</button>
 </div>
 
 <div class="card-grid" id="dashboard"></div>
 
-<div id="detailSection" class="detail-section">
+<div id="analysisBox" class="analysis-section">
     <div class="table-header">
-        <span id="selectedTypeName">DETAILS</span>
-        <button onclick="closeDetails()" style="border:none; background:none; font-weight:900; color:var(--canc); cursor:pointer;">CLOSE ×</button>
+        <h3 id="analysisTitle">ANALYTICS</h3>
+        <button class="btn" style="padding:5px 12px; border-radius:10px" onclick="closeDetails()">Close</button>
     </div>
-    <div class="table-wrapper">
+    <div class="table-scroll">
         <table>
             <thead>
                 <tr>
                     <th>Date</th>
-                    <th>Succ.</th>
-                    <th>Pend.</th>
-                    <th>Canc.</th>
-                    <th>Total</th>
-                    <th>Rate %</th>
+                    <th>Succ. (S)</th>
+                    <th>Pend. (P)</th>
+                    <th>Canc. (C)</th>
+                    <th>Volume</th>
+                    <th>Efficiency</th>
                 </tr>
             </thead>
-            <tbody id="detailTableBody"></tbody>
+            <tbody id="analysisBody"></tbody>
         </table>
     </div>
 </div>
 
-<div class="chart-section">
-    <div class="chart-viewport"><div class="chart-wrapper"><canvas id="main_chart"></canvas></div></div>
+<div class="chart-card">
+    <div class="chart-container">
+        <canvas id="performanceChart"></canvas>
+    </div>
 </div>
 
 <div id="addDataModal" class="modal">
     <div class="modal-content">
-        <h3>Daily Entry</h3>
+        <h2 style="margin-top:0; font-weight:800">Add Logistics Log</h2>
         <input type="date" id="modalDate">
         <div id="modalInputs"></div>
-        <button class="btn btn-dark" style="width:100%; margin-top:20px;" id="saveBtn">Save & Sync</button>
-        <button class="btn" style="width:100%; margin-top:10px; border:none;" onclick="closeAddDataModal()">Cancel</button>
+        <button class="btn btn-dark" style="width:100%; margin-top:20px; justify-content:center" id="saveBtn">Save Record</button>
+        <button class="btn" style="width:100%; margin-top:10px; border:none; justify-content:center" onclick="closeAddDataModal()">Discard</button>
     </div>
 </div>
 
 <script>
-let config = JSON.parse(localStorage.getItem('gh_config')) || null;
-const types = ["Delivery", "PickUp", "SameDay", "Khazenly"];
-const typeColors = { Delivery: '#111827', PickUp: '#10b981', SameDay: '#f59e0b', Khazenly: '#ef4444' };
-let data = JSON.parse(localStorage.getItem("shippingData")) || {};
-types.forEach(t => { if(!data[t]) data[t] = []; });
+let config = JSON.parse(localStorage.getItem('bi_config')) || null;
+const channels = ["Delivery", "PickUp", "SameDay", "Khazenly"];
+const channelColors = { Delivery: '#6366f1', PickUp: '#10b981', SameDay: '#f59e0b', Khazenly: '#f43f5e' };
+let masterData = JSON.parse(localStorage.getItem("bi_data")) || {};
+channels.forEach(c => { if(!masterData[c]) masterData[c] = []; });
 let viewDate = new Date();
-let activeType = null;
+let selectedChannel = null;
+
+// وظيفة تنسيق التاريخ المطلوبة: 1 Feb 2025
+function formatProDate(dateStr) {
+    const d = new Date(dateStr);
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
 
 async function init() {
     if (!config) {
         const token = prompt("GitHub Token:");
-        const user = prompt("Username:");
+        const user = prompt("GitHub Username:");
         const repo = prompt("Repo Name:");
-        if (token) { config = { token, user, repo }; localStorage.setItem('gh_config', JSON.stringify(config)); location.reload(); }
-    } else { await fetchFromGitHub(); }
+        if (token && user && repo) {
+            config = { token, user, repo };
+            localStorage.setItem('bi_config', JSON.stringify(config));
+            location.reload();
+        }
+    } else { await syncWithCloud(); }
 }
 
-async function fetchFromGitHub() {
+async function syncWithCloud() {
     const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
     try {
         const res = await fetch(url, { headers: { 'Authorization': `token ${config.token}` } });
         if (res.ok) {
             const j = await res.json();
-            data = JSON.parse(decodeURIComponent(escape(atob(j.content))));
-            localStorage.setItem("shippingData", JSON.stringify(data));
-            document.getElementById('syncStatus').innerText = "✅ Cloud Synced";
+            masterData = JSON.parse(decodeURIComponent(escape(atob(j.content))));
+            localStorage.setItem("bi_data", JSON.stringify(masterData));
+            document.getElementById('syncStatus').innerText = "🟢 CLOUD SYNCED";
         }
-    } catch (e) { document.getElementById('syncStatus').innerText = "⚠️ Offline"; }
-    renderAll();
+    } catch (e) { document.getElementById('syncStatus').innerText = "🔴 OFFLINE MODE"; }
+    refreshUI();
 }
 
-async function pushToGitHub() {
-    if(!config) return;
-    document.getElementById('syncStatus').innerText = "⏳ Syncing...";
+async function pushToCloud() {
+    document.getElementById('syncStatus').innerText = "⏳ UPLOADING...";
     const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
     try {
         const res = await fetch(url, { headers: { 'Authorization': `token ${config.token}` } });
@@ -152,125 +171,142 @@ async function pushToGitHub() {
         await fetch(url, {
             method: 'PUT',
             headers: { 'Authorization': `token ${config.token}` },
-            body: JSON.stringify({ message: "update", content: btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2)))), sha: sha })
+            body: JSON.stringify({ message: "BI System Update", content: btoa(unescape(encodeURIComponent(JSON.stringify(masterData, null, 2)))), sha: sha })
         });
-        document.getElementById('syncStatus').innerText = "✅ Saved";
-    } catch (e) { document.getElementById('syncStatus').innerText = "❌ Error"; }
+        document.getElementById('syncStatus').innerText = "🟢 DATA SECURED";
+    } catch (e) { alert("Cloud Push Failed"); }
 }
 
-function renderAll() {
-    const year = viewDate.getFullYear();
-    const month = viewDate.getMonth();
-    document.getElementById("currentMonthDisplay").innerText = viewDate.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+function refreshUI() {
+    const yr = viewDate.getFullYear();
+    const mt = viewDate.getMonth();
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    document.getElementById("currentMonthDisplay").innerText = `${monthNames[mt]} ${yr}`;
     
-    document.getElementById("dashboard").innerHTML = types.map(t => {
-        const sum = data[t].filter(d => { 
-            let dt = new Date(d.date); return dt.getFullYear() === year && dt.getMonth() === month; 
-        }).reduce((s, d) => s + (d.delivered || 0), 0);
-        return `<div class="item-card ${activeType === t ? 'active-card' : ''}" onclick="showDetails('${t}')" style="border-left: 6px solid ${typeColors[t]}">
-            <span style="font-size:0.7rem; font-weight:900; color:var(--subtle); text-transform:uppercase;">${t}</span>
-            <span class="delivered-value" style="color:${typeColors[t]}">${sum}</span>
-        </div>`;
+    // بناء الكروت
+    document.getElementById("dashboard").innerHTML = channels.map(c => {
+        const totalSucc = masterData[c].filter(d => {
+            const dt = new Date(d.date); return dt.getFullYear() === yr && dt.getMonth() === mt;
+        }).reduce((sum, d) => sum + (d.s || 0), 0);
+        
+        return `
+            <div class="item-card ${selectedChannel === c ? 'active-card' : ''}" onclick="openAnalysis('${c}')">
+                <span class="card-label">${c}</span>
+                <span class="card-value">${totalSucc.toLocaleString()}</span>
+                <div style="height:4px; background:${channelColors[c]}; width:40%; border-radius:10px; margin-top:10px;"></div>
+            </div>`;
     }).join('');
 
-    renderChart(year, month);
-    if(activeType) showDetails(activeType);
+    renderMainChart(yr, mt);
+    if(selectedChannel) openAnalysis(selectedChannel);
 }
 
-function showDetails(type) {
-    activeType = type;
-    const section = document.getElementById("detailSection");
-    const tbody = document.getElementById("detailTableBody");
-    const title = document.getElementById("selectedTypeName");
+function openAnalysis(channel) {
+    selectedChannel = channel;
+    refreshUI(); // لتحديث الـ active class
+    const box = document.getElementById("analysisBox");
+    const body = document.getElementById("analysisBody");
+    const title = document.getElementById("analysisTitle");
+    
+    box.style.display = "block";
+    title.innerText = `${channel.toUpperCase()} EFFICIENCY ANALYSIS`;
 
-    section.style.display = "block";
-    title.innerText = `${type} - Daily Breakdown`;
-    title.style.color = typeColors[type];
-
-    const year = viewDate.getFullYear();
-    const month = viewDate.getMonth();
-    const filtered = data[type].filter(d => { 
-        let dt = new Date(d.date); return dt.getFullYear() === year && dt.getMonth() === month; 
+    const yr = viewDate.getFullYear();
+    const mt = viewDate.getMonth();
+    const history = masterData[channel].filter(d => {
+        const dt = new Date(d.date); return dt.getFullYear() === yr && dt.getMonth() === mt;
     }).sort((a,b) => new Date(b.date) - new Date(a.date));
 
-    tbody.innerHTML = filtered.map(r => {
-        const total = (r.delivered || 0) + (r.pending || 0) + (r.cancelled || 0);
-        const rate = total > 0 ? ((r.delivered / total) * 100).toFixed(1) : "0.0";
-        return `<tr>
-            <td>${r.date}</td>
-            <td style="color:var(--deliv)">${r.delivered}</td>
-            <td style="color:var(--pend)">${r.pending}</td>
-            <td style="color:var(--canc)">${r.cancelled}</td>
-            <td style="background:#f9fafb">${total}</td>
-            <td><span style="padding:2px 6px; background:#ecfdf5; color:var(--deliv); border-radius:6px;">${rate}%</span></td>
-        </tr>`;
+    body.innerHTML = history.map(r => {
+        const total = (r.s||0) + (r.p||0) + (r.c||0);
+        const efficiency = total > 0 ? ((r.s/total)*100).toFixed(1) : 0;
+        const effColor = efficiency > 85 ? '#10b981' : (efficiency > 60 ? '#f59e0b' : '#ef4444');
+        
+        return `
+            <tr>
+                <td class="date-cell">${formatProDate(r.date)}</td>
+                <td style="color:var(--success)">${r.s}</td>
+                <td>${r.p}</td>
+                <td style="color:var(--danger)">${r.c}</td>
+                <td style="background:#f8fafc; font-weight:800">${total}</td>
+                <td><span class="badge" style="background:${effColor}15; color:${effColor}">${efficiency}%</span></td>
+            </tr>`;
     }).join('');
+    box.scrollIntoView({behavior: 'smooth', block: 'center'});
+}
+
+function renderMainChart(yr, mt) {
+    const ctx = document.getElementById('performanceChart').getContext('2d');
+    const days = new Date(yr, mt + 1, 0).getDate();
+    const labels = Array.from({length: days}, (_, i) => i + 1);
     
-    document.querySelectorAll('.item-card').forEach((c,i) => {
-        c.classList.toggle('active-card', types[i] === type);
-    });
-}
-
-function closeDetails() {
-    activeType = null;
-    document.getElementById("detailSection").style.display = "none";
-    renderAll();
-}
-
-function renderChart(year, month) {
-    const ctx = document.getElementById('main_chart').getContext('2d');
-    let days = new Date(year, month + 1, 0).getDate();
-    let labels = Array.from({length: days}, (_, i) => i + 1);
-    let datasets = types.map(t => ({
-        label: t,
+    const datasets = channels.map(c => ({
+        label: c,
         data: labels.map(day => {
-            let dStr = `${year}-${String(month+1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            let e = data[t].find(d => d.date === dStr);
-            return e ? e.delivered : 0;
+            const dateStr = `${yr}-${String(mt+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+            const found = masterData[c].find(d => d.date === dateStr);
+            return found ? found.s : 0;
         }),
-        backgroundColor: typeColors[t],
-        borderRadius: 5
+        borderColor: channelColors[c],
+        backgroundColor: channelColors[c] + '20',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 2
     }));
-    if(window.ch) window.ch.destroy();
-    window.ch = new Chart(ctx, { type: 'bar', data: { labels, datasets }, options: { responsive: true, maintainAspectRatio: false } });
+
+    if(window.mainChart) window.mainChart.destroy();
+    window.mainChart = new Chart(ctx, {
+        type: 'line',
+        data: { labels, datasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'top', labels: { usePointStyle: true, font: { weight: 'bold', size: 10 } } } },
+            scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } }
+        }
+    });
 }
 
 function openAddDataModal() {
     document.getElementById("addDataModal").style.display = "flex";
     document.getElementById("modalDate").value = new Date().toISOString().split('T')[0];
-    document.getElementById("modalInputs").innerHTML = types.map(t => `
-        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:8px; margin-top:10px; align-items:center;">
-            <b>${t.charAt(0)}</b>
-            <input type="number" id="d_${t}" placeholder="S">
-            <input type="number" id="p_${t}" placeholder="P">
-            <input type="number" id="c_${t}" placeholder="C">
+    document.getElementById("modalInputs").innerHTML = channels.map(c => `
+        <div style="margin-bottom:15px; padding:10px; background:#f8fafc; border-radius:15px;">
+            <div style="font-weight:800; font-size:0.75rem; color:${channelColors[c]}; margin-bottom:8px;">${c.toUpperCase()}</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
+                <input type="number" id="s_${c}" placeholder="Succ." style="margin:0; padding:10px; font-size:0.8rem">
+                <input type="number" id="p_${c}" placeholder="Pend." style="margin:0; padding:10px; font-size:0.8rem">
+                <input type="number" id="c_${c}" placeholder="Canc." style="margin:0; padding:10px; font-size:0.8rem">
+            </div>
         </div>`).join('');
 
     document.getElementById("saveBtn").onclick = async () => {
         const date = document.getElementById("modalDate").value;
-        types.forEach(t => {
-            const row = { date, delivered: parseInt(document.getElementById(`d_${t}`).value)||0, pending: parseInt(document.getElementById(`p_${t}`).value)||0, cancelled: parseInt(document.getElementById(`c_${t}`).value)||0 };
-            let idx = data[t].findIndex(d => d.date === date);
-            if(idx >= 0) data[t][idx] = row; else data[t].push(row);
+        channels.forEach(c => {
+            const entry = { 
+                date, 
+                s: parseInt(document.getElementById(`s_${c}`).value)||0, 
+                p: parseInt(document.getElementById(`p_${c}`).value)||0, 
+                c: parseInt(document.getElementById(`c_${c}`).value)||0 
+            };
+            const idx = masterData[c].findIndex(d => d.date === date);
+            if(idx >= 0) masterData[c][idx] = entry; else masterData[c].push(entry);
         });
-        localStorage.setItem("shippingData", JSON.stringify(data));
-        closeAddDataModal(); renderAll(); await pushToGitHub();
+        localStorage.setItem("bi_data", JSON.stringify(masterData));
+        closeAddDataModal(); refreshUI(); await pushToCloud();
     };
 }
 
-async function fullReset() {
-    if (prompt("Type 'DELETE' to clear all data:") === "DELETE") {
-        types.forEach(t => data[t] = []);
-        localStorage.setItem("shippingData", JSON.stringify(data));
-        closeDetails();
-        renderAll();
-        await pushToGitHub();
-    }
-}
-
 function closeAddDataModal() { document.getElementById("addDataModal").style.display = "none"; }
-function resetConfig() { localStorage.removeItem('gh_config'); location.reload(); }
-function changeMonth(step) { viewDate.setMonth(viewDate.getMonth() + step); renderAll(); }
+function closeDetails() { selectedChannel = null; document.getElementById("analysisBox").style.display = "none"; refreshUI(); }
+function changeMonth(step) { viewDate.setMonth(viewDate.getMonth() + step); refreshUI(); }
+function resetConfig() { localStorage.removeItem('bi_config'); location.reload(); }
+function exportExcel() { 
+    const wb = XLSX.utils.book_new();
+    channels.forEach(c => XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(masterData[c]), c));
+    XLSX.writeFile(wb, `Logistics_Report_${viewDate.getMonth()+1}_${viewDate.getFullYear()}.xlsx`);
+}
+async function fullReset() { if(confirm("This will PERMANENTLY delete all data. Proceed?")) { if(prompt("Type DELETE to confirm") === "DELETE") { channels.forEach(c => masterData[c] = []); localStorage.setItem("bi_data", JSON.stringify(masterData)); refreshUI(); await pushToCloud(); } } }
 
 init();
 </script>
