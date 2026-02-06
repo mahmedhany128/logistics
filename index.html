@@ -3,102 +3,97 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Logistics Analytics - Light Edition</title>
+<title>Logistics Intelligence v5</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
     :root {
-        --bg: #f8fafc; --card-bg: #ffffff; --border: #e2e8f0;
-        --text-main: #1e293b; --text-dim: #64748b; --accent: #4f46e5;
-        --s-color: #10b981; --p-color: #f59e0b; --c-color: #ef4444;
+        --brand: #4f46e5; --bg: #f8fafc; --surface: #ffffff;
+        --text: #0f172a; --text-light: #64748b; --border: #e2e8f0;
+        --s: #10b981; --p: #f59e0b; --c: #ef4444;
     }
-    * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
-    body { background: var(--bg); color: var(--text-main); margin: 0; padding: 15px; overflow-x: hidden; }
+    * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; outline: none; }
+    body { background: var(--bg); color: var(--text); margin: 0; padding: 20px; line-height: 1.5; }
 
-    /* Header & Status */
-    header { padding: 15px 5px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-    header h1 { font-size: 1.3rem; font-weight: 800; margin: 0; letter-spacing: -0.8px; color: var(--text-main); }
-    #syncStatus { font-size: 0.65rem; font-weight: 700; color: var(--accent); background: #eff6ff; padding: 6px 12px; border-radius: 20px; border: 1px solid #dbeafe; }
+    /* Glass Header */
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+    header h1 { font-size: 1.4rem; font-weight: 800; letter-spacing: -1px; margin: 0; }
+    .sync-tag { font-size: 0.65rem; font-weight: 800; padding: 6px 14px; border-radius: 30px; background: #fff; border: 1px solid var(--border); box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
 
-    /* Action Bar */
-    .action-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 25px; }
-    .btn { background: var(--card-bg); border: 1px solid var(--border); color: var(--text-main); padding: 14px; border-radius: 16px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+    /* Action Grid */
+    .actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 30px; }
+    .btn { padding: 14px; border-radius: 18px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
     .btn:active { transform: scale(0.96); background: #f1f5f9; }
-    .btn-primary { background: var(--accent); color: #fff; border: none; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2); }
-    .btn-danger { color: var(--c-color); background: #fff1f2; border-color: #fecdd3; }
+    .btn-main { background: var(--text); color: #fff; border: none; box-shadow: 0 10px 15px -3px rgba(15,23,42,0.1); }
 
-    /* Date Scroller */
-    .date-scroller { background: var(--card-bg); display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-radius: 18px; border: 1px solid var(--border); margin-bottom: 25px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
-    .month-display { font-weight: 800; font-size: 0.95rem; color: var(--text-main); }
+    /* Metric Dashboard */
+    .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 30px; }
+    .card { background: var(--surface); padding: 22px; border-radius: 28px; border: 1px solid var(--border); position: relative; transition: 0.3s; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.05); }
+    .card.active { border: 2px solid var(--brand); background: #fdfdff; }
+    .card-label { font-size: 0.7rem; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.8px; }
+    .card-val { font-size: 2rem; font-weight: 800; display: block; margin-top: 4px; letter-spacing: -1px; }
 
-    /* Metrics Dashboard */
-    .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
-    .metric-card { background: var(--card-bg); border: 1px solid var(--border); padding: 20px; border-radius: 24px; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-    .metric-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
-    .active-card { border: 2px solid var(--accent); background: #f5f3ff; }
-    .metric-label { font-size: 0.7rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
-    .metric-value { font-size: 1.8rem; font-weight: 800; display: block; margin-top: 5px; color: var(--text-main); }
-    .metric-rate { font-size: 0.65rem; margin-top: 8px; font-weight: 700; padding: 4px 8px; background: #f8fafc; border-radius: 8px; display: inline-block; }
-
-    /* Advanced Analytics Table */
-    .table-container { display: none; background: var(--card-bg); border: 1px solid var(--border); border-radius: 24px; margin-bottom: 30px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.05); animation: slideIn 0.4s ease; }
-    @keyframes slideIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-    .table-head { padding: 18px 22px; background: #fcfcfd; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
-    .table-head h3 { margin: 0; font-size: 0.9rem; font-weight: 800; color: var(--accent); }
-    .table-scroll { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; min-width: 500px; }
-    th { text-align: center; padding: 14px; font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; border-bottom: 1px solid var(--border); background: #f8fafc; }
-    td { padding: 16px 12px; text-align: center; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid #f1f5f9; }
-    .date-col { color: var(--text-main); font-weight: 700; width: 120px; }
-    .perc-badge { padding: 5px 10px; border-radius: 10px; font-size: 0.75rem; font-weight: 800; }
+    /* Professional Table */
+    .table-section { display: none; background: var(--surface); border-radius: 32px; border: 1px solid var(--border); margin-bottom: 30px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.08); animation: reveal 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+    @keyframes reveal { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    
+    .table-top { padding: 22px 28px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #fafbfc; }
+    .table-top h3 { margin: 0; font-size: 1rem; font-weight: 800; color: var(--brand); }
+    
+    .table-wrap { overflow-x: auto; max-height: 450px; }
+    table { width: 100%; border-collapse: collapse; min-width: 600px; }
+    
+    th { position: sticky; top: 0; background: #fff; padding: 16px 20px; font-size: 0.65rem; color: var(--text-light); text-transform: uppercase; text-align: center; border-bottom: 1px solid var(--border); z-index: 10; }
+    
+    td { padding: 18px 20px; text-align: center; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid #f8fafc; }
+    
+    .date-cell { text-align: left; font-weight: 800; color: var(--text); width: 140px; }
+    .badge { padding: 6px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 800; }
+    .total-pill { background: #f1f5f9; color: var(--text); padding: 5px 10px; border-radius: 8px; }
 
     /* Chart Card */
-    .chart-card { background: var(--card-bg); border: 1px solid var(--border); padding: 25px; border-radius: 28px; margin-bottom: 50px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-    .chart-viewport { height: 280px; }
+    .chart-card { background: var(--surface); padding: 30px; border-radius: 32px; border: 1px solid var(--border); margin-bottom: 40px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.02); }
+    .chart-area { height: 300px; }
 
     /* Modal Styling */
-    .modal { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); z-index: 999; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
-    .modal-content { background: var(--card-bg); width: 92%; max-width: 420px; padding: 30px; border-radius: 30px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
-    input { background: #f8fafc; border: 1px solid var(--border); color: var(--text-main); width: 100%; padding: 14px; margin: 10px 0; border-radius: 12px; font-weight: 600; }
+    .modal { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.4); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
+    .modal-content { background: #fff; width: 90%; max-width: 440px; padding: 35px; border-radius: 35px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+    input { background: #f1f5f9; border: 1px solid transparent; width: 100%; padding: 16px; margin: 10px 0; border-radius: 16px; font-weight: 600; transition: 0.3s; }
+    input:focus { background: #fff; border-color: var(--brand); box-shadow: 0 0 0 4px rgba(79,70,229,0.1); }
 </style>
 </head>
 <body>
 
 <header>
-    <h1>Operations Hub</h1>
-    <div id="syncStatus">SYSTEM ONLINE</div>
+    <h1>Insights Pro</h1>
+    <div id="syncStatus" class="sync-tag">INITIALIZING...</div>
 </header>
 
-<div class="action-row">
-    <button class="btn btn-primary" onclick="openAddDataModal()">+ New Entry</button>
-    <button class="btn" onclick="exportExcel()">Export Report</button>
-    <button class="btn btn-danger" onclick="fullReset()">Wipe All</button>
+<div class="actions">
+    <button class="btn btn-main" onclick="openModal()">+ Add Data</button>
+    <button class="btn" onclick="exportData()">Export</button>
+    <button class="btn" style="color:var(--c)" onclick="wipeData()">Reset</button>
 </div>
 
-<div class="date-scroller">
-    <button onclick="changeMonth(-1)" style="background:none; border:none; color:var(--accent); font-weight:bold; cursor:pointer;">PREV</button>
-    <div class="month-display" id="currentMonthDisplay">...</div>
-    <button onclick="changeMonth(1)" style="background:none; border:none; color:var(--accent); font-weight:bold; cursor:pointer;">NEXT</button>
-</div>
+<div class="metrics" id="metricsPanel"></div>
 
-<div class="metrics-grid" id="metricsGrid"></div>
-
-<div id="tableSection" class="table-container">
-    <div class="table-head">
-        <h3 id="tableTitle">CHANNEL LOGS</h3>
-        <button onclick="closeDetails()" style="background:#f1f5f9; border:none; border-radius:50%; width:30px; height:30px; cursor:pointer; font-weight:bold;">×</button>
+<div id="tableSection" class="table-section">
+    <div class="table-top">
+        <h3 id="tableTitle">ANALYTICS</h3>
+        <button onclick="closeTable()" style="border:none; background:#f1f5f9; width:35px; height:35px; border-radius:50%; font-weight:bold; cursor:pointer;">×</button>
     </div>
-    <div class="table-scroll">
+    <div class="table-wrap">
         <table>
             <thead>
                 <tr>
-                    <th>Date</th>
-                    <th style="color:var(--s-color)">S</th>
-                    <th style="color:var(--p-color)">P</th>
-                    <th style="color:var(--c-color)">C</th>
-                    <th>Total</th>
-                    <th>Rate %</th>
+                    <th style="text-align:left; padding-left:25px">Logging Date</th>
+                    <th>Delivered</th>
+                    <th>Pending</th>
+                    <th>Cancelled</th>
+                    <th>Volume</th>
+                    <th>Efficiency</th>
                 </tr>
             </thead>
             <tbody id="tableBody"></tbody>
@@ -107,192 +102,155 @@
 </div>
 
 <div class="chart-card">
-    <div class="chart-viewport"><canvas id="mainChart"></canvas></div>
+    <div class="chart-area"><canvas id="mainChart"></canvas></div>
 </div>
 
-<div id="addDataModal" class="modal">
+<div id="entryModal" class="modal">
     <div class="modal-content">
-        <h2 style="margin:0 0 20px 0; font-size:1.1rem; font-weight:800">Add Daily Records</h2>
+        <h2 style="margin:0 0 20px 0; font-weight:800; letter-spacing:-1px">New Log Entry</h2>
         <input type="date" id="modalDate">
         <div id="modalInputs"></div>
-        <button class="btn btn-primary" style="width:100%; margin-top:20px" id="saveBtn">Save & Sync</button>
-        <button class="btn" style="width:100%; margin-top:10px; border:none" onclick="closeAddDataModal()">Dismiss</button>
+        <button class="btn btn-main" style="width:100%; margin-top:20px" id="saveBtn">Save & Upload</button>
+        <button class="btn" style="width:100%; margin-top:10px; border:none" onclick="closeModal()">Discard</button>
     </div>
 </div>
 
 <script>
 let config = JSON.parse(localStorage.getItem('gh_config')) || null;
-const channels = ["Delivery", "PickUp", "SameDay", "Khazenly"];
-const channelColors = { Delivery: '#4f46e5', PickUp: '#10b981', SameDay: '#f59e0b', Khazenly: '#ef4444' };
-let storageData = JSON.parse(localStorage.getItem("logisticsData")) || {};
-channels.forEach(c => { if(!storageData[c]) storageData[c] = []; });
-let currentView = new Date();
-let activeChannel = null;
+const types = ["Delivery", "PickUp", "SameDay", "Khazenly"];
+const theme = { Delivery: '#4f46e5', PickUp: '#10b981', SameDay: '#f59e0b', Khazenly: '#ef4444' };
+let storage = JSON.parse(localStorage.getItem("pro_logistics_v5")) || {};
+types.forEach(t => { if(!storage[t]) storage[t] = []; });
+let activeType = null;
 
-// صيغة التاريخ المطلوبة: 1 Feb 2025
-function formatCustomDate(dateStr) {
-    const d = new Date(dateStr);
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+// التنسيق المطلوب: 1 Feb 2025
+function formatEliteDate(str) {
+    const d = new Date(str);
+    return `${d.getDate()} ${["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getMonth()]} ${d.getFullYear()}`;
 }
 
-async function init() {
-    if (!config) {
-        const token = prompt("GitHub Token:"); const user = prompt("Username:"); const repo = prompt("Repo Name:");
-        if (token) { config = { token, user, repo }; localStorage.setItem('gh_config', JSON.stringify(config)); location.reload(); }
-    } else { await fetchCloud(); }
-}
+async function init() { if(!config) { /* كود الربط */ } else { await pull(); } }
 
-async function fetchCloud() {
+async function pull() {
     const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
     try {
-        const res = await fetch(url, { headers: { 'Authorization': `token ${config.token}` } });
-        if (res.ok) {
-            const j = await res.json();
-            storageData = JSON.parse(decodeURIComponent(escape(atob(j.content))));
-            localStorage.setItem("logisticsData", JSON.stringify(storageData));
-            document.getElementById('syncStatus').innerText = "✅ CLOUD SYNCED";
+        const r = await fetch(url, { headers: { 'Authorization': `token ${config.token}` } });
+        if(r.ok) {
+            const j = await r.json();
+            storage = JSON.parse(decodeURIComponent(escape(atob(j.content))));
+            localStorage.setItem("pro_logistics_v5", JSON.stringify(storage));
+            document.getElementById('syncStatus').innerText = "• SECURED CLOUD";
         }
-    } catch (e) { document.getElementById('syncStatus').innerText = "⚠️ LOCAL MODE"; }
-    renderAll();
+    } catch(e) { document.getElementById('syncStatus').innerText = "• OFFLINE"; }
+    draw();
 }
 
-async function pushCloud() {
-    document.getElementById('syncStatus').innerText = "⏳ UPLOADING...";
+async function push() {
+    document.getElementById('syncStatus').innerText = "• SYNCING...";
     const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
     try {
-        const res = await fetch(url, { headers: { 'Authorization': `token ${config.token}` } });
-        let sha = (res.ok) ? (await res.json()).sha : "";
+        const r = await fetch(url, { headers: { 'Authorization': `token ${config.token}` } });
+        let sha = (r.ok) ? (await r.json()).sha : "";
         await fetch(url, {
             method: 'PUT',
             headers: { 'Authorization': `token ${config.token}` },
-            body: JSON.stringify({ message: "Update", content: btoa(unescape(encodeURIComponent(JSON.stringify(storageData, null, 2)))), sha: sha })
+            body: JSON.stringify({ message: "Update V5", content: btoa(unescape(encodeURIComponent(JSON.stringify(storage, null, 2)))), sha: sha })
         });
-        document.getElementById('syncStatus').innerText = "✅ CLOUD SECURE";
-    } catch (e) { alert("Sync Error"); }
+        document.getElementById('syncStatus').innerText = "• SECURED CLOUD";
+    } catch(e) {}
 }
 
-function renderAll() {
-    const yr = currentView.getFullYear();
-    const mt = currentView.getMonth();
-    const names = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-    document.getElementById("currentMonthDisplay").innerText = `${names[mt]} ${yr}`;
-    
-    document.getElementById("metricsGrid").innerHTML = channels.map(c => {
-        const stats = storageData[c].filter(d => {
-            const dt = new Date(d.date); return dt.getFullYear() === yr && dt.getMonth() === mt;
-        });
-        const totalS = stats.reduce((acc, d) => acc + (d.s || 0), 0);
-        const totalAll = stats.reduce((acc, d) => acc + (d.s||0) + (d.p||0) + (d.c||0), 0);
-        const rate = totalAll > 0 ? ((totalS/totalAll)*100).toFixed(0) : 0;
-        
+function draw() {
+    const m = new Date().getMonth(); const y = new Date().getFullYear();
+    document.getElementById("metricsPanel").innerHTML = types.map(t => {
+        const total = storage[t].filter(d => {
+            const dt = new Date(d.date); return dt.getFullYear() === y && dt.getMonth() === m;
+        }).reduce((a, b) => a + (b.s || 0), 0);
         return `
-            <div class="metric-card ${activeChannel === c ? 'active-card' : ''}" onclick="showTable('${c}')">
-                <span class="metric-label" style="color:${channelColors[c]}">${c}</span>
-                <span class="metric-value">${totalS.toLocaleString()}</span>
-                <span class="metric-rate" style="color:${rate > 80 ? 'var(--s-color)' : 'var(--p-color)'}">${rate}% Monthly</span>
+            <div class="card ${activeType === t ? 'active' : ''}" onclick="openDetails('${t}')">
+                <span class="card-label" style="color:${theme[t]}">${t}</span>
+                <span class="card-val">${total.toLocaleString()}</span>
+                <div style="height:4px; width:40px; background:${theme[t]}; border-radius:10px; margin-top:12px"></div>
             </div>`;
     }).join('');
-
-    renderChart(yr, mt);
-    if(activeChannel) showTable(activeChannel);
+    renderChart(y, m);
 }
 
-function showTable(channel) {
-    activeChannel = channel;
+function openDetails(type) {
+    activeType = type;
     const box = document.getElementById("tableSection");
     const body = document.getElementById("tableBody");
-    const yr = currentView.getFullYear(); const mt = currentView.getMonth();
-    
     box.style.display = "block";
-    document.getElementById("tableTitle").innerText = `${channel.toUpperCase()} ANALYTICS`;
+    document.getElementById("tableTitle").innerText = `${type.toUpperCase()} DAILY LOGS`;
+    
+    const logs = storage[type].sort((a,b) => new Date(b.date) - new Date(a.date));
 
-    const filtered = storageData[channel].filter(d => {
-        const dt = new Date(d.date); return dt.getFullYear() === yr && dt.getMonth() === mt;
-    }).sort((a,b) => new Date(b.date) - new Date(a.date));
-
-    body.innerHTML = filtered.map(r => {
-        const sum = (r.s||0) + (r.p||0) + (r.c||0);
-        const eff = sum > 0 ? ((r.s/sum)*100).toFixed(1) : 0;
-        const color = eff > 85 ? 'var(--s-color)' : (eff > 60 ? 'var(--p-color)' : 'var(--c-color)');
+    body.innerHTML = logs.map(r => {
+        const all = (r.s||0) + (r.p||0) + (r.c||0);
+        const rate = all > 0 ? ((r.s/all)*100).toFixed(1) : 0;
+        const color = rate > 85 ? 'var(--s)' : (rate > 65 ? 'var(--p)' : 'var(--c)');
         return `
             <tr>
-                <td class="date-col">${formatCustomDate(r.date)}</td>
-                <td style="color:var(--s-color)">${r.s}</td>
-                <td style="color:var(--p-color)">${r.p}</td>
-                <td style="color:var(--c-color)">${r.c}</td>
-                <td style="background:#f8fafc; font-weight:800">${sum}</td>
-                <td><span class="perc-badge" style="background:${color}15; color:${color}">${eff}%</span></td>
+                <td class="date-cell">${formatEliteDate(r.date)}</td>
+                <td style="color:var(--s)">${r.s}</td>
+                <td style="color:var(--p)">${r.p}</td>
+                <td style="color:var(--c)">${r.c}</td>
+                <td><span class="total-pill">${all}</span></td>
+                <td><span class="badge" style="background:${color}10; color:${color}">${rate}%</span></td>
             </tr>`;
     }).join('');
-    
-    document.querySelectorAll('.metric-card').forEach((k, i) => k.classList.toggle('active-card', channels[i] === channel));
+    draw();
+    box.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
-function renderChart(yr, mt) {
+function renderChart(y, m) {
     const ctx = document.getElementById('mainChart').getContext('2d');
-    const days = new Date(yr, mt + 1, 0).getDate();
+    const days = new Date(y, m + 1, 0).getDate();
     const labels = Array.from({length: days}, (_, i) => i + 1);
-    
-    const datasets = channels.map(c => ({
-        label: c,
+    const datasets = types.map(t => ({
+        label: t,
         data: labels.map(day => {
-            const dStr = `${yr}-${String(mt+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-            const f = storageData[c].find(d => d.date === dStr);
+            const dStr = `${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+            const f = storage[t].find(d => d.date === dStr);
             return f ? f.s : 0;
         }),
-        borderColor: channelColors[c],
-        backgroundColor: channelColors[c] + '10',
+        borderColor: theme[t],
         borderWidth: 3,
-        pointRadius: 3,
         tension: 0.4,
-        fill: true
+        pointRadius: 0,
+        fill: false
     }));
-
-    if(window.chart) window.chart.destroy();
-    window.chart = new Chart(ctx, {
-        type: 'line',
-        data: { labels, datasets },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: { 
-                x: { grid: { display: false }, ticks: { color: '#94a3b8' } },
-                y: { grid: { color: '#f1f5f9' }, ticks: { color: '#94a3b8' } }
-            }
-        }
-    });
+    if(window.myChart) window.myChart.destroy();
+    window.myChart = new Chart(ctx, { type: 'line', data: { labels, datasets }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } } } });
 }
 
-function openAddDataModal() {
-    document.getElementById("addDataModal").style.display = "flex";
+function openModal() {
+    document.getElementById("entryModal").style.display = "flex";
     document.getElementById("modalDate").value = new Date().toISOString().split('T')[0];
-    document.getElementById("modalInputs").innerHTML = channels.map(c => `
-        <div style="margin-bottom:15px; background:#f8fafc; padding:12px; border-radius:15px">
-            <label style="font-size:0.7rem; font-weight:800; color:${channelColors[c]}; display:block; margin-bottom:8px">${c.toUpperCase()}</label>
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px">
-                <input type="number" id="s_${c}" placeholder="Succ.">
-                <input type="number" id="p_${c}" placeholder="Pend.">
-                <input type="number" id="c_${c}" placeholder="Canc.">
+    document.getElementById("modalInputs").innerHTML = types.map(t => `
+        <div style="margin-bottom:15px; padding:15px; background:#f8fafc; border-radius:20px">
+            <span style="font-size:0.7rem; font-weight:800; color:${theme[t]}">${t}</span>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:8px">
+                <input type="number" id="s_${t}" placeholder="S" style="margin:0; padding:10px">
+                <input type="number" id="p_${t}" placeholder="P" style="margin:0; padding:10px">
+                <input type="number" id="c_${t}" placeholder="C" style="margin:0; padding:10px">
             </div>
         </div>`).join('');
-
     document.getElementById("saveBtn").onclick = async () => {
-        const date = document.getElementById("modalDate").value;
-        channels.forEach(c => {
-            const entry = { date, s: parseInt(document.getElementById(`s_${c}`).value)||0, p: parseInt(document.getElementById(`p_${c}`).value)||0, c: parseInt(document.getElementById(`c_${c}`).value)||0 };
-            const idx = storageData[c].findIndex(d => d.date === date);
-            if(idx >= 0) storageData[c][idx] = entry; else storageData[c].push(entry);
+        const d = document.getElementById("modalDate").value;
+        types.forEach(t => {
+            const entry = { date: d, s: parseInt(document.getElementById(`s_${t}`).value)||0, p: parseInt(document.getElementById(`p_${t}`).value)||0, c: parseInt(document.getElementById(`c_${t}`).value)||0 };
+            const idx = storage[t].findIndex(x => x.date === d);
+            if(idx >= 0) storage[t][idx] = entry; else storage[t].push(entry);
         });
-        localStorage.setItem("logisticsData", JSON.stringify(storageData));
-        closeAddDataModal(); renderAll(); await pushCloud();
+        localStorage.setItem("pro_logistics_v5", JSON.stringify(storage));
+        closeModal(); draw(); await push();
     };
 }
 
-function closeAddDataModal() { document.getElementById("addDataModal").style.display = "none"; }
-function closeDetails() { activeChannel = null; document.getElementById("tableSection").style.display = "none"; renderAll(); }
-function changeMonth(s) { currentView.setMonth(currentView.getMonth() + s); renderAll(); }
-function fullReset() { if(confirm("Clear everything?")) { if(prompt("Type DELETE:") === "DELETE") { channels.forEach(c => storageData[c] = []); localStorage.setItem("logisticsData", JSON.stringify(storageData)); renderAll(); pushCloud(); } } }
+function closeModal() { document.getElementById("entryModal").style.display = "none"; }
+function closeTable() { activeType = null; document.getElementById("tableSection").style.display = "none"; draw(); }
+function wipeData() { if(confirm("Reset everything?")) { localStorage.clear(); location.reload(); } }
 
 init();
 </script>
