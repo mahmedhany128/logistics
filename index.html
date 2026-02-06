@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Insight Logistics Pro - Full Edition</title>
+    <title>Insight Pro - Professional Scanner</title>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
@@ -85,27 +85,27 @@
 </div>
 
 <div style="position: fixed; bottom: 20px; left: 15px; right: 15px; z-index: 100;">
-    <button class="btn-add" onclick="openLogModal()">+ Update Today</button>
+    <button class="btn-add" onclick="openLogModal()">+ Update Activity</button>
 </div>
 
 <div id="scannerOverlay">
     <div id="reader"></div>
     <div class="scanner-ui">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
-            <span id="scanInfo" style="color:#fff; font-weight:800">Ready...</span>
+            <span id="scanInfo" style="color:#fff; font-weight:800">Pro Mode: QR/128</span>
             <span id="scanCount" class="sync-badge">0 Items</span>
         </div>
         <div id="livePreview" style="height:80px; overflow-y:auto; background:var(--bg); border-radius:15px; padding:10px; font-size:0.75rem; color:var(--success); border:1px solid var(--border); margin-bottom:15px"></div>
-        <button class="btn-done" onclick="stopScanner()">FINISH & SAVE SCAN</button>
+        <button class="btn-done" onclick="stopScanner()">FINISH & SAVE</button>
     </div>
 </div>
 
 <div id="logModal" class="modal">
     <div class="modal-content">
-        <h3 style="margin:0 0 20px 0; color:#fff">Update Entry</h3>
+        <h3 style="margin:0 0 20px 0; color:#fff">Daily Log</h3>
         <input type="date" id="logDate">
         <div id="logInputs"></div>
-        <button class="btn-add" style="margin-top:20px" onclick="saveData()">Sync Changes</button>
+        <button class="btn-add" style="margin-top:20px" onclick="saveData()">Save Changes</button>
         <button onclick="document.getElementById('logModal').style.display='none'" style="width:100%; border:none; background:none; margin-top:15px; color:var(--dim);">Cancel</button>
     </div>
 </div>
@@ -122,7 +122,7 @@
 let config = JSON.parse(localStorage.getItem('gh_config'));
 const types = ["Delivery", "PickUp", "SameDay", "Khazenly"];
 const colors = { Delivery: '#818cf8', PickUp: '#34d399', SameDay: '#fbbf24', Khazenly: '#fb7185' };
-let storage = JSON.parse(localStorage.getItem("logistics_v60_data")) || {};
+let storage = JSON.parse(localStorage.getItem("logistics_v70_data")) || {};
 types.forEach(t => { if(!storage[t]) storage[t] = []; });
 
 let chart, viewDate = new Date(), scannerObj = null, activeT, activeC;
@@ -141,7 +141,7 @@ async function pullData() {
         if(r.ok) {
             const j = await r.json();
             storage = JSON.parse(decodeURIComponent(escape(atob(j.content))));
-            localStorage.setItem("logistics_v60_data", JSON.stringify(storage));
+            localStorage.setItem("logistics_v70_data", JSON.stringify(storage));
             document.getElementById('sync').innerText = "☁️ Synced";
         }
     } catch(e) {}
@@ -151,7 +151,6 @@ async function pullData() {
 function render() {
     const m = viewDate.getMonth(), y = viewDate.getFullYear();
     document.getElementById('monthLab').innerText = viewDate.toLocaleString('en-US',{month:'long', year:'numeric'});
-    
     document.getElementById('metricsPanel').innerHTML = types.map(t => {
         const mData = storage[t].filter(d => { const dt = new Date(d.date); return dt.getMonth() === m && dt.getFullYear() === y; });
         const s = mData.reduce((a,b) => a + (parseInt(b.s)||0), 0);
@@ -200,7 +199,7 @@ function openLogModal() {
                 <span style="font-weight:800; color:${colors[t]}">${t}</span>
                 <div style="display:flex; gap:5px">
                     <select id="cat_${t}" style="width:60px; padding:4px; margin:0; font-size:0.7rem"><option value="s">S</option><option value="p">P</option><option value="c">C</option></select>
-                    <button onclick="launchScanner('${t}')" style="background:var(--brand); border:none; color:#fff; border-radius:8px; padding:4px 10px; font-size:0.7rem">SCAN</button>
+                    <button onclick="launchScanner('${t}')" style="background:var(--brand); border:none; color:#fff; border-radius:8px; padding:4px 10px; font-size:0.7rem">📷 SCAN</button>
                 </div>
             </div>
             <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px">
@@ -216,8 +215,12 @@ function launchScanner(type) {
     activeT = type; activeC = document.getElementById(`cat_${type}`).value;
     document.getElementById('scannerOverlay').style.display = 'flex';
     document.getElementById('livePreview').innerHTML = '';
+    
+    // إعدادات احترافية: حصر الأنواع بـ QR و CODE_128 فقط لسرعة خارقة
     scannerObj = new Html5Qrcode("reader");
-    scannerObj.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 }, (txt) => {
+    const formats = [ Html5QrcodeSupportedFormats.QR_CODE, Html5QrcodeSupportedFormats.CODE_128 ];
+    
+    scannerObj.start({ facingMode: "environment" }, { fps: 25, qrbox: {width: 280, height: 180}, formatsToSupport: formats }, (txt) => {
         const h = document.getElementById(`h_${activeC}_${activeT}`);
         let curr = h.value ? h.value.split(',') : [];
         if(!curr.includes(txt)) {
@@ -238,22 +241,22 @@ async function saveData() {
     const d = document.getElementById('logDate').value;
     types.forEach(t => {
         const idx = storage[t].findIndex(x => x.date === d);
-        const inputS = document.getElementById(`s_${t}`).value, inputP = document.getElementById(`p_${t}`).value, inputC = document.getElementById(`c_${t}`).value;
-        const newCs = document.getElementById(`h_s_${t}`).value, newCp = document.getElementById(`h_p_${t}`).value, newCc = document.getElementById(`h_c_${t}`).value;
+        const inS = document.getElementById(`s_${t}`).value, inP = document.getElementById(`p_${t}`).value, inC = document.getElementById(`c_${t}`).value;
+        const nS = document.getElementById(`h_s_${t}`).value, nP = document.getElementById(`h_p_${t}`).value, nC = document.getElementById(`h_c_${t}`).value;
 
         if (idx >= 0) {
-            if(inputS !== "") storage[t][idx].s = parseInt(inputS);
-            if(inputP !== "") storage[t][idx].p = parseInt(inputP);
-            if(inputC !== "") storage[t][idx].c = parseInt(inputC);
+            if(inS !== "") storage[t][idx].s = parseInt(inS);
+            if(inP !== "") storage[t][idx].p = parseInt(inP);
+            if(inC !== "") storage[t][idx].c = parseInt(inC);
             const merge = (old, n) => [...new Set(((old||"").split(',').concat((n||"").split(','))).filter(x=>x))].join(',');
-            storage[t][idx].codes_s = merge(storage[t][idx].codes_s, newCs);
-            storage[t][idx].codes_p = merge(storage[t][idx].codes_p, newCp);
-            storage[t][idx].codes_c = merge(storage[t][idx].codes_c, newCc);
+            storage[t][idx].codes_s = merge(storage[t][idx].codes_s, nS);
+            storage[t][idx].codes_p = merge(storage[t][idx].codes_p, nP);
+            storage[t][idx].codes_c = merge(storage[t][idx].codes_c, nC);
         } else {
-            storage[t].push({date:d, s:parseInt(inputS)||0, p:parseInt(inputP)||0, c:parseInt(inputC)||0, codes_s:newCs, codes_p:newCp, codes_c:newCc});
+            storage[t].push({date:d, s:parseInt(inS)||0, p:parseInt(inP)||0, c:parseInt(inC)||0, codes_s:nS, codes_p:nP, codes_c:nC});
         }
     });
-    localStorage.setItem("logistics_v60_data", JSON.stringify(storage));
+    localStorage.setItem("logistics_v70_data", JSON.stringify(storage));
     document.getElementById('logModal').style.display = 'none'; render(); await pushData();
 }
 
@@ -262,7 +265,7 @@ async function pushData() {
     try {
         const r = await fetch(url, { headers: {'Authorization': `token ${config.token}`} });
         const sha = r.ok ? (await r.json()).sha : "";
-        await fetch(url, { method: 'PUT', headers: {'Authorization': `token ${config.token}`}, body: JSON.stringify({ message:"Full Sync", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage, null, 2)))), sha }) });
+        await fetch(url, { method: 'PUT', headers: {'Authorization': `token ${config.token}`}, body: JSON.stringify({ message:"Pro Update", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage, null, 2)))), sha }) });
         document.getElementById('sync').innerText = "☁️ Synced";
     } catch(e) {}
 }
