@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Insight Pro - V49 Smart Focus</title>
+    <title>Insight Pro - V50 Master Full</title>
     <script src="https://unpkg.com/@zxing/library@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -15,13 +15,13 @@
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
         .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
         .online { background: var(--success); }
-        .danger-zone { background: rgba(251, 113, 133, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 5px 10px; border-radius: 10px; font-size: 0.65rem; font-weight: 800; }
+        .danger-zone { background: rgba(251, 113, 133, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 5px 10px; border-radius: 10px; font-size: 0.65rem; font-weight: 800; cursor: pointer; }
 
         .month-ctrl { background: var(--card); border: 1px solid var(--border); padding: 8px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .nav-btn { background: var(--bg); border: none; width: 40px; height: 40px; border-radius: 12px; color: var(--brand); cursor: pointer; }
 
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-        .stat-card { background: linear-gradient(145deg, #1e293b, #111827); padding: 18px; border-radius: 24px; border: 1px solid var(--border); }
+        .stat-card { background: linear-gradient(145deg, #1e293b, #111827); padding: 18px; border-radius: 24px; border: 1px solid var(--border); cursor: pointer; }
         .stat-val { font-size: 1.6rem; font-weight: 900; color: #fff; display: block; margin: 5px 0; }
         
         .chart-card { background: var(--card); border-radius: 24px; padding: 15px; margin-bottom: 20px; border: 1px solid var(--border); }
@@ -33,27 +33,28 @@
         td, th { padding: 12px; text-align: center; border-bottom: 1px solid #334155; font-size: 0.75rem; }
         
         .code-badge { background: var(--bg); color: var(--text); padding: 10px 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); margin-bottom: 8px; }
-        .del-btn { background: rgba(251, 113, 133, 0.2); color: var(--danger); border: none; padding: 6px 10px; border-radius: 8px; font-weight: 800; }
+        .del-btn { background: rgba(251, 113, 133, 0.2); color: var(--danger); border: none; padding: 6px 10px; border-radius: 8px; font-weight: 800; cursor: pointer; }
 
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; align-items: flex-end; backdrop-filter: blur(8px); }
         .modal-content { background: var(--card); width: 100%; padding: 25px; border-radius: 32px 32px 0 0; max-height: 85vh; overflow-y: auto; }
         
-        input, select { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid var(--border); border-radius: 14px; background: var(--bg); color: #fff; }
+        input, select { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid var(--border); border-radius: 14px; background: var(--bg); color: #fff; outline: none; }
         .btn-main { background: var(--brand); color: #fff; border: none; padding: 16px; border-radius: 20px; font-weight: 800; width: 100%; cursor: pointer; }
         
         #scannerOverlay { display: none; position: fixed; inset: 0; background: #000; z-index: 2000; flex-direction: column; }
         #videoContainer { position: relative; flex: 1; background: #000; overflow: hidden; display: flex; align-items: center; justify-content: center; }
         #video { width: 100%; height: 100%; object-fit: cover; }
-        .scan-region { position: absolute; width: 280px; height: 180px; border: 2px solid rgba(255,255,255,0.3); border-radius: 20px; box-shadow: 0 0 0 1000px rgba(0,0,0,0.6); }
-        .scan-region.success { border-color: var(--success); box-shadow: 0 0 0 1000px rgba(52, 211, 153, 0.2); }
-        .scan-line { position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: var(--brand); box-shadow: 0 0 15px var(--brand); animation: scanAnim 2s infinite linear; }
-        @keyframes scanAnim { 0% { top: 0; } 100% { top: 100%; } }
+        .scan-region { position: absolute; width: 260px; height: 160px; border: 2px solid rgba(255,255,255,0.2); border-radius: 20px; box-shadow: 0 0 0 2000px rgba(0,0,0,0.7); }
+        .scan-region.success { border-color: var(--success); box-shadow: 0 0 0 2000px rgba(52, 211, 153, 0.2); }
+        
+        .flash-btn { position: absolute; bottom: 30px; left: 30px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; backdrop-filter: blur(10px); z-index: 2005; }
+        .flash-btn.active { background: #fbbf24; color: #000; box-shadow: 0 0 20px #fbbf24; }
     </style>
 </head>
 <body>
 
 <header>
-    <h1 style="font-size:1.1rem; margin:0;">Insight <span style="color:var(--brand)">V49</span></h1>
+    <h1 style="font-size:1.1rem; margin:0;">Insight <span style="color:var(--brand)">V50 Full</span></h1>
     <div style="display:flex; align-items:center; gap:10px;">
         <button class="danger-zone" onclick="wipeAllData()">Wipe All</button>
         <span id="dot" class="status-dot online"></span>
@@ -97,11 +98,12 @@
             <input type="text" id="manualInput" placeholder="Type code manually..." style="margin:0; flex:1;">
             <button onclick="addManualCode()" style="background:var(--brand); border:none; border-radius:12px; color:#fff; padding:0 15px; font-weight:bold;">Add</button>
         </div>
-        <div id="scannedListDisplay" style="margin-top:15px; max-height:80px; overflow-y:auto; font-size: 0.75rem;"></div>
+        <div id="scannedListDisplay" style="margin-top:10px; max-height:80px; overflow-y:auto; font-size: 0.7rem; color:var(--dim)"></div>
     </div>
     <div id="videoContainer">
         <video id="video"></video>
-        <div class="scan-region" id="scanRegion"><div class="scan-line"></div></div>
+        <div class="scan-region" id="scanRegion"></div>
+        <button class="flash-btn" id="flashToggle" onclick="toggleFlash()">🔦</button>
     </div>
     <button class="btn-main" style="border-radius:0" onclick="stopScanner()">Save & Close</button>
 </div>
@@ -123,38 +125,46 @@
 let config = JSON.parse(localStorage.getItem('gh_config'));
 const types = ["Delivery", "PickUp", "SameDay", "Khazenly"];
 const colors = { Delivery: '#818cf8', PickUp: '#34d399', SameDay: '#fbbf24', Khazenly: '#fb7185' };
-let storage = JSON.parse(localStorage.getItem("logistics_v49")) || {};
+let storage = JSON.parse(localStorage.getItem("logistics_v50")) || {};
 types.forEach(t => { if(!storage[t]) storage[t] = []; });
 
-let chart, viewDate = new Date();
+let chart, viewDate = new Date(), videoStream = null, isFlashOn = false;
 const codeReader = new ZXing.BrowserMultiFormatReader();
 
-// --- ميزة التنظيف الذكي للخانات ---
+// --- ميزة تنظيف الصفر (موجودة) ---
 function setupSmartInputs() {
     document.querySelectorAll('input[type="number"]').forEach(input => {
-        input.addEventListener('focus', function() {
-            if (this.value === "0") this.value = "";
-        });
-        input.addEventListener('blur', function() {
-            if (this.value === "") this.value = "0";
-        });
+        input.onclick = function() { if(this.value === "0") this.value = ""; };
+        input.onblur = function() { if(this.value === "") this.value = "0"; };
     });
 }
 
-// --- بقية الوظائف الأساسية ---
+// --- ميزة الفلاش (موجودة) ---
+async function toggleFlash() {
+    const track = videoStream?.getVideoTracks()[0];
+    try {
+        isFlashOn = !isFlashOn;
+        await track.applyConstraints({ advanced: [{ torch: isFlashOn }] });
+        document.getElementById('flashToggle').classList.toggle('active', isFlashOn);
+    } catch (e) { alert("Flash not available"); }
+}
+
 async function launchScanner(type) {
     document.getElementById('scanTypeSelect').value = type;
     document.getElementById('scannerOverlay').style.display = 'flex';
     updateScanUI();
     const constraints = { video: { facingMode: "environment", focusMode: "continuous" } };
-    codeReader.decodeFromConstraints(constraints, 'video', (result) => {
-        if (result) registerCode(result.text);
-    });
+    try {
+        videoStream = await navigator.mediaDevices.getUserMedia(constraints);
+        codeReader.decodeFromConstraints(constraints, 'video', (result) => { if (result) registerCode(result.text); });
+    } catch (e) { console.error(e); }
 }
 
-function addManualCode() {
-    const input = document.getElementById('manualInput');
-    if (input.value.trim()) { registerCode(input.value.trim()); input.value = ""; }
+function stopScanner() { 
+    if(videoStream) videoStream.getTracks().forEach(t => t.stop());
+    codeReader.reset(); isFlashOn = false;
+    document.getElementById('flashToggle').classList.remove('active');
+    document.getElementById('scannerOverlay').style.display = 'none'; 
 }
 
 function registerCode(code) {
@@ -171,23 +181,19 @@ function registerCode(code) {
     }
 }
 
+function addManualCode() {
+    const input = document.getElementById('manualInput');
+    if (input.value.trim()) { registerCode(input.value.trim()); input.value = ""; }
+}
+
 function updateScanUI() {
     const t = document.getElementById('scanTypeSelect').value;
     const m = document.getElementById('scanModeSelect').value;
     const codes = document.getElementById(`c_${m}_${t}`).value.split(',').filter(x => x);
-    document.getElementById('scannedListDisplay').innerHTML = codes.reverse().map((c, i) => `
-        <div class="code-badge" style="padding:5px; margin:2px; font-size:0.7rem"><span>${c}</span><button class="del-btn" onclick="removeFromScannerUI('${t}','${m}',${codes.length-1-i})">✕</button></div>
-    `).join('');
+    document.getElementById('scannedListDisplay').innerHTML = "Last: " + (codes[codes.length-1] || "None") + " | Total: " + codes.length;
 }
 
-function removeFromScannerUI(type, mode, index) {
-    const h = document.getElementById(`c_${mode}_${type}`);
-    let codes = h.value.split(',').filter(x => x);
-    codes.splice(index, 1);
-    h.value = codes.join(',');
-    updateScanUI();
-}
-
+// --- عرض الجدول الذكي (موجودة) ---
 function showTable(type) {
     const m = viewDate.getMonth(), y = viewDate.getFullYear();
     document.getElementById("detailsTable").style.display = "block";
@@ -208,9 +214,10 @@ function showTable(type) {
             <td onclick="manageCodes('${type}','${r.date}','c')">${r.c}</td>
             <td>${tot>0?((r.s/tot)*100).toFixed(0):0}%</td>
         </tr>`;
-    }).join('') || '<tr><td colspan="5">No logs found</td></tr>';
+    }).join('') || '<tr><td colspan="5">No data for this month</td></tr>';
 }
 
+// --- مزامنة ورفع البيانات ---
 async function start() {
     if (!config) { config = {token: prompt("Token:"), user: prompt("User:"), repo: prompt("Repo:")}; localStorage.setItem('gh_config', JSON.stringify(config)); }
     await pullData();
@@ -222,7 +229,7 @@ async function pullData() {
         if(r.ok) {
             const j = await r.json();
             storage = JSON.parse(decodeURIComponent(escape(atob(j.content))));
-            localStorage.setItem("logistics_v49", JSON.stringify(storage));
+            localStorage.setItem("logistics_v50", JSON.stringify(storage));
         }
     } catch(e) {}
     render();
@@ -234,14 +241,15 @@ async function pushData() {
         const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
         const r = await fetch(url, { headers: {'Authorization': `token ${config.token}`} });
         const sha = r.ok ? (await r.json()).sha : "";
-        await fetch(url, { method:'PUT', headers:{'Authorization':`token ${config.token}`}, body:JSON.stringify({message:"V49 Master Sync", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage)))), sha}) });
+        await fetch(url, { method:'PUT', headers:{'Authorization':`token ${config.token}`}, body:JSON.stringify({message:"V50 Sync", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage)))), sha}) });
     } catch(e) {}
 }
 
 function saveData() {
     const d = document.getElementById('logDate').value;
     types.forEach(t => {
-        const entry = {
+        storage[t] = storage[t].filter(x => x.date !== d);
+        storage[t].push({
             date: d,
             s: parseInt(document.getElementById(`q_s_${t}`).value)||0,
             p: parseInt(document.getElementById(`q_p_${t}`).value)||0,
@@ -249,11 +257,9 @@ function saveData() {
             codes_s: document.getElementById(`c_s_${t}`).value,
             codes_p: document.getElementById(`c_p_${t}`).value,
             codes_c: document.getElementById(`c_c_${t}`).value
-        };
-        const idx = storage[t].findIndex(x => x.date === d);
-        if(idx >= 0) storage[t][idx] = entry; else storage[t].push(entry);
+        });
     });
-    localStorage.setItem("logistics_v49", JSON.stringify(storage));
+    localStorage.setItem("logistics_v50", JSON.stringify(storage));
     document.getElementById('logModal').style.display = 'none'; 
     render(); pushData();
 }
@@ -263,14 +269,14 @@ function openLogModal() {
     document.getElementById('logDate').value = d;
     document.getElementById('logInputs').innerHTML = types.map(t => {
         const old = storage[t].find(x => x.date === d) || {s:0, p:0, c:0, codes_s:'', codes_p:'', codes_c:''};
-        return `<div style="background:var(--bg); padding:15px; border-radius:18px; margin-bottom:10px;">
-            <div style="display:flex; justify-content:space-between; margin-bottom:5px"><span style="color:${colors[t]}; font-weight:800;">${t}</span><button onclick="launchScanner('${t}')" style="background:var(--card); color:#fff; border:none; padding:5px 12px; border-radius:10px; font-size:0.75rem;">📷 Scan</button></div>
+        return `<div style="background:var(--bg); padding:15px; border-radius:18px; margin-bottom:10px; border:1px solid var(--border)">
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px"><span style="color:${colors[t]}; font-weight:800;">${t}</span><button onclick="launchScanner('${t}')" style="background:var(--brand); color:#fff; border:none; padding:4px 10px; border-radius:8px; font-size:0.7rem;">📷 Scan</button></div>
             <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
                 <input type="number" id="q_s_${t}" value="${old.s}"><input type="number" id="q_p_${t}" value="${old.p}"><input type="number" id="q_c_${t}" value="${old.c}">
                 <input type="hidden" id="c_s_${t}" value="${old.codes_s}"><input type="hidden" id="c_p_${t}" value="${old.codes_p}"><input type="hidden" id="c_c_${t}" value="${old.codes_c}">
             </div></div>`;
     }).join('');
-    setupSmartInputs(); // تفعيل الميزة بعد رسم الخانات
+    setupSmartInputs();
     document.getElementById('logModal').style.display = 'flex';
 }
 
@@ -279,19 +285,17 @@ function manageCodes(type, date, mode) {
     const codes = (entry[`codes_${mode}`] || "").split(',').filter(x => x);
     document.getElementById('codeModal').style.display = 'flex';
     document.getElementById('codeList').innerHTML = codes.map((c, i) => `
-        <div class="code-badge"><span>${c}</span><button class="del-btn" onclick="deleteCodePermanently('${type}','${date}','${mode}',${i})">Delete</button></div>
+        <div class="code-badge"><span>${c}</span><button class="del-btn" onclick="deleteCode('${type}','${date}','${mode}',${i})">✕</button></div>
     `).join('') || '<p>No codes</p>';
 }
 
-function deleteCodePermanently(type, date, mode, index) {
+function deleteCode(type, date, mode, idx) {
     const entry = storage[type].find(x => x.date === date);
-    if(entry) {
-        let codes = entry[`codes_${mode}`].split(',').filter(x => x);
-        codes.splice(index, 1);
-        entry[`codes_${mode}`] = codes.join(',');
-        localStorage.setItem("logistics_v49", JSON.stringify(storage));
-        manageCodes(type, date, mode); render(); pushData();
-    }
+    let codes = entry[`codes_${mode}`].split(',').filter(x => x);
+    codes.splice(idx, 1);
+    entry[`codes_${mode}`] = codes.join(',');
+    localStorage.setItem("logistics_v50", JSON.stringify(storage));
+    manageCodes(type, date, mode); render(); pushData();
 }
 
 function updateChart(y, m) {
@@ -322,7 +326,7 @@ function render() {
         const s = mData.reduce((a,b) => a + (parseInt(b.s)||0), 0);
         const tot = mData.reduce((a,b) => a + (parseInt(b.s)+parseInt(b.p)+parseInt(b.c)||0), 0);
         return `<div class="stat-card" onclick="showTable('${t}')">
-            <span style="font-size:0.7rem; color:${colors[t]};">${t}</span>
+            <span style="font-size:0.7rem; color:${colors[t]}; font-weight:bold;">${t}</span>
             <span class="stat-val">${s}</span>
             <div style="font-size:0.65rem; color:var(--dim);">${tot > 0 ? ((s/tot)*100).toFixed(0) : 0}% Succ.</div>
         </div>`;
@@ -330,15 +334,7 @@ function render() {
     updateChart(y, m);
 }
 
-async function wipeAllData() {
-    if(confirm("DANGER: Wipe all records?")) {
-        types.forEach(t => storage[t] = []);
-        localStorage.setItem("logistics_v49", JSON.stringify(storage));
-        render(); await pushData();
-    }
-}
-
-function stopScanner() { codeReader.reset(); document.getElementById('scannerOverlay').style.display = 'none'; }
+function wipeAllData() { if(confirm("Clear all data permanently?")) { types.forEach(t => storage[t] = []); localStorage.setItem("logistics_v50", JSON.stringify(storage)); render(); pushData(); } }
 function moveMonth(dir) { viewDate.setMonth(viewDate.getMonth()+dir); render(); }
 start();
 </script>
