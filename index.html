@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>Insight Pro - V55.5 Pure Engine Swap</title>
+    <title>Insight Pro - V55.8 Reset fix</title>
     
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -19,13 +19,11 @@
         .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; background: #475569; }
         .online { background: var(--success); box-shadow: 0 0 10px var(--success); }
 
-        .month-ctrl { background: var(--card); border: 1px solid var(--border); padding: 10px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .nav-btn { background: var(--bg); border: 1px solid var(--border); width: 45px; height: 45px; border-radius: 15px; color: var(--brand); cursor: pointer; display: flex; align-items: center; justify-content: center; }
-
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
         .stat-card { background: linear-gradient(145deg, #1e293b, #111827); padding: 18px; border-radius: 24px; border: 1px solid var(--border); cursor: pointer; }
-        .stat-val { font-size: 1.6rem; font-weight: 900; color: #fff; display: block; margin: 5px 0; }
-        
+        .stat-val { font-size: 1.6rem; font-weight: 900; color: #fff; display: block; margin: 5px 0; min-height: 2rem; }
+        .stat-pct { font-size: 0.7rem; color: var(--dim); font-weight: 600; }
+
         .table-container { background: var(--card); border-radius: 24px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; }
         td, th { padding: 14px; text-align: center; border-bottom: 1px solid #334155; font-size: 0.8rem; }
@@ -35,33 +33,32 @@
         #reader { width: 100% !important; background: #000; position: relative; }
         .scan-frame { position: absolute; width: 260px; height: 120px; border: 2px solid var(--brand); border-radius: 20px; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2005; pointer-events: none; box-shadow: 0 0 0 4000px rgba(0,0,0,0.5); }
 
+        .manual-entry { display: flex; gap: 8px; padding: 10px; background: rgba(255,255,255,0.05); }
+        .manual-entry input { flex: 1; background: #000; border: 1px solid var(--border); color: #fff; padding: 10px; border-radius: 10px; }
+
         #scannedCardsContainer { flex: 1; background: var(--bg); padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
         .package-card { background: var(--card); border-radius: 16px; padding: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); }
 
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; align-items: flex-end; backdrop-filter: blur(8px); }
         .modal-content { background: var(--card); width: 100%; padding: 25px; border-radius: 32px 32px 0 0; max-height: 85vh; overflow-y: auto; }
-        input { width: 100%; padding: 14px; margin: 8px 0; border: 1px solid var(--border); border-radius: 14px; background: var(--bg); color: #fff; text-align: center; font-weight: 700; }
+        input { width: 100%; padding: 14px; margin: 8px 0; border: 1px solid var(--border); border-radius: 14px; background: var(--bg); color: #fff; text-align: center; font-weight: 700; font-size: 1.1rem; }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        
         .btn-main { background: var(--brand); color: #fff; border: none; padding: 18px; border-radius: 22px; font-weight: 800; width: 100%; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <header>
-    <h1 style="font-size:1.1rem; margin:0; font-weight: 800;">Insight <span style="color:var(--brand)">Pro V55.5</span></h1>
+    <h1 style="font-size:1.1rem; margin:0; font-weight: 800;">Insight <span style="color:var(--brand)">Pro V55.8</span></h1>
     <span id="dot" class="status-dot"></span>
 </header>
-
-<div class="month-ctrl">
-    <button class="nav-btn" onclick="moveMonth(-1)">‹</button>
-    <span id="monthLab" style="font-weight:800;">---</span>
-    <button class="nav-btn" onclick="moveMonth(1)">›</button>
-</div>
 
 <div class="grid" id="metricsPanel"></div>
 
 <div id="detailsTable" style="display:none;">
     <div class="table-container">
-        <div style="padding:15px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border);">
+        <div style="padding:15px; display:flex; justify-content:space-between; align-items:center;">
             <span id="activeTitle" style="font-weight:800; color:var(--brand)">Details</span>
             <button onclick="document.getElementById('detailsTable').style.display='none'" style="background:none; border:none; color:var(--dim);">✕</button>
         </div>
@@ -81,23 +78,30 @@
 <div id="scannerOverlay">
     <div class="scanner-header">
         <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span id="pkgCount" style="color:#fff; font-weight:800;">Scan Barcodes</span>
+            <span style="color:#fff; font-weight:800;">Barcode Scanner</span>
             <button onclick="toggleFlash()" style="background:none; border:none; color:white; font-size:1.5rem;">🔦</button>
         </div>
         <div style="display:flex; gap:8px; margin-top:10px;">
-            <button class="nav-btn" id="btn_s" onclick="setScanMode('s')" style="flex:1; font-size:0.7rem; background:var(--success); color:#000; border:none;">SUCCESS</button>
-            <button class="nav-btn" id="btn_p" onclick="setScanMode('p')" style="flex:1; font-size:0.7rem; background:var(--bg); color:var(--warning);">PENDING</button>
-            <button class="nav-btn" id="btn_c" onclick="setScanMode('c')" style="flex:1; font-size:0.7rem; background:var(--bg); color:var(--danger);">CANCEL</button>
+            <button id="btn_s" onclick="setScanMode('s')" style="flex:1; padding:12px; border-radius:12px; background:var(--success); color:#000; border:none; font-weight:800;">SUCCESS</button>
+            <button id="btn_p" onclick="setScanMode('p')" style="flex:1; padding:12px; border-radius:12px; background:var(--card); color:var(--warning); border:none; font-weight:800;">PENDING</button>
+            <button id="btn_c" onclick="setScanMode('c')" style="flex:1; padding:12px; border-radius:12px; background:var(--card); color:var(--danger); border:none; font-weight:800;">CANCEL</button>
         </div>
     </div>
+    
     <div id="reader" style="flex:1;"><div class="scan-frame"></div></div>
+
+    <div class="manual-entry">
+        <input type="text" id="manualCodeInput" placeholder="Enter code manually...">
+        <button onclick="addManualCode()" style="background:var(--brand); border:none; color:white; padding:10px 15px; border-radius:10px; font-weight:bold;">ADD</button>
+    </div>
+
     <div id="scannedCardsContainer"></div>
-    <div style="padding:20px; background:var(--card);"><button class="btn-main" onclick="stopScanner()">BACK TO FORM</button></div>
+    <div style="padding:20px; background:var(--card);"><button class="btn-main" onclick="stopScanner()">DONE SCANNING</button></div>
 </div>
 
 <div id="logModal" class="modal">
     <div class="modal-content">
-        <h3>Log Data</h3>
+        <h3 style="margin-top:0;">Update Record</h3>
         <input type="date" id="logDate">
         <div id="logInputs"></div>
         <button class="btn-main" style="margin-top:15px;" onclick="saveData()">Confirm & Sync</button>
@@ -107,9 +111,8 @@
 
 <div id="codeModal" class="modal" style="align-items: center; justify-content: center;">
     <div class="modal-content" style="width: 90%; border-radius: 28px;">
-        <h4 id="codeModalTitle" style="margin-top:0;">Codes List</h4>
-        <div id="codeList" style="max-height: 50vh; overflow-y: auto; margin-bottom:15px;"></div>
-        <button onclick="document.getElementById('codeModal').style.display='none'" class="btn-main">Close</button>
+        <div id="codeList" style="max-height: 50vh; overflow-y: auto;"></div>
+        <button onclick="document.getElementById('codeModal').style.display='none'" class="btn-main" style="margin-top:15px;">Close</button>
     </div>
 </div>
 
@@ -120,8 +123,9 @@ const colors = { Delivery: '#818cf8', PickUp: '#34d399', SameDay: '#fbbf24', Kha
 let storage = JSON.parse(localStorage.getItem("logistics_v52")) || {};
 types.forEach(t => { if(!storage[t]) storage[t] = []; });
 
-let chart, viewDate = new Date(), isFlashOn = false, html5QrCode = null;
-let currentScanMode = 's', activeScanType = '';
+let chart, viewDate = new Date(), isFlashOn = false, html5QrCode = null, currentScanMode = 's', activeScanType = '';
+
+const fmt = (v) => (v == 0 || !v) ? "" : v;
 
 function updateOnlineStatus() {
     const dot = document.getElementById('dot');
@@ -135,9 +139,13 @@ async function launchScanner(type) {
     updateReviewList();
     if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
     html5QrCode.start({ facingMode: "environment" }, { fps: 20, qrbox: { width: 260, height: 120 } }, (text) => {
-        if(navigator.vibrate) navigator.vibrate(50);
         registerCode(text);
     });
+}
+
+function addManualCode() {
+    const input = document.getElementById('manualCodeInput');
+    if(input.value.trim()) { registerCode(input.value.trim()); input.value = ''; }
 }
 
 function registerCode(code) {
@@ -147,6 +155,7 @@ function registerCode(code) {
         codes.push(code);
         h.value = codes.join(',');
         updateReviewList();
+        if(navigator.vibrate) navigator.vibrate(50);
     }
 }
 
@@ -154,9 +163,11 @@ function updateReviewList() {
     const container = document.getElementById('scannedCardsContainer');
     container.innerHTML = '';
     ['s','p','c'].forEach(m => {
-        const codes = document.getElementById(`c_${m}_${activeScanType}`).value.split(',').filter(x => x);
+        const input = document.getElementById(`c_${m}_${activeScanType}`);
+        if(!input) return;
+        const codes = input.value.split(',').filter(x => x);
         codes.forEach((c, i) => {
-            container.innerHTML += `<div class="package-card"><span>${c} (${m.toUpperCase()})</span><span onclick="removeCode('${m}',${i})" style="color:var(--danger); font-weight:bold;">✕</span></div>`;
+            container.innerHTML += `<div class="package-card"><span>${c} (${m.toUpperCase()})</span><span onclick="removeCode('${m}',${i})" style="color:var(--danger); font-weight:bold; padding:5px;">✕</span></div>`;
         });
     });
 }
@@ -167,16 +178,6 @@ function removeCode(m, i) {
     codes.splice(i, 1);
     h.value = codes.join(',');
     updateReviewList();
-}
-
-async function pushData() {
-    if(!navigator.onLine || !config) return;
-    try {
-        const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
-        const r = await fetch(url, { headers: {'Authorization': `token ${config.token}`} });
-        const sha = r.ok ? (await r.json()).sha : "";
-        await fetch(url, { method:'PUT', headers:{'Authorization':`token ${config.token}`}, body:JSON.stringify({message:"V55.5", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage)))), sha}) });
-    } catch(e) {}
 }
 
 function saveData() {
@@ -192,6 +193,10 @@ function saveData() {
             codes_p: document.getElementById(`c_p_${t}`).value,
             codes_c: document.getElementById(`c_c_${t}`).value
         });
+        // تصفير الحقول المخفية بعد الحفظ لضمان عدم بقائها عند الفتح القادم
+        document.getElementById(`c_s_${t}`).value = '';
+        document.getElementById(`c_p_${t}`).value = '';
+        document.getElementById(`c_c_${t}`).value = '';
     });
     localStorage.setItem("logistics_v52", JSON.stringify(storage));
     document.getElementById('logModal').style.display = 'none'; 
@@ -204,10 +209,14 @@ function openLogModal() {
     document.getElementById('logInputs').innerHTML = types.map(t => {
         const old = storage[t].find(x => x.date === d) || {s:0, p:0, c:0, codes_s:'', codes_p:'', codes_c:''};
         return `<div style="background:var(--bg); padding:15px; border-radius:18px; margin-bottom:12px; border:1px solid var(--border)">
-            <div style="display:flex; justify-content:space-between; margin-bottom:10px;"><span style="color:${colors[t]}; font-weight:800;">${t}</span><button onclick="launchScanner('${t}')" style="background:var(--brand); color:#fff; border:none; padding:8px 15px; border-radius:12px; font-size:0.7rem;">📷 SCAN</button></div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;"><span style="color:${colors[t]}; font-weight:800;">${t}</span><button onclick="launchScanner('${t}')" style="background:var(--brand); color:#fff; border:none; padding:8px 15px; border-radius:12px; font-size:0.7rem; font-weight:bold;">📷 SCAN</button></div>
             <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
-                <input type="number" id="q_s_${t}" value="${old.s}"><input type="number" id="q_p_${t}" value="${old.p}"><input type="number" id="q_c_${t}" value="${old.c}">
-                <input type="hidden" id="c_s_${t}" value="${old.codes_s}"><input type="hidden" id="c_p_${t}" value="${old.codes_p}"><input type="hidden" id="c_c_${t}" value="${old.codes_c}">
+                <input type="number" id="q_s_${t}" value="${fmt(old.s)}" placeholder="S">
+                <input type="number" id="q_p_${t}" value="${fmt(old.p)}" placeholder="P">
+                <input type="number" id="q_c_${t}" value="${fmt(old.c)}" placeholder="C">
+                <input type="hidden" id="c_s_${t}" value="${old.codes_s}">
+                <input type="hidden" id="c_p_${t}" value="${old.codes_p}">
+                <input type="hidden" id="c_c_${t}" value="${old.codes_c}">
             </div></div>`;
     }).join('');
     document.getElementById('logModal').style.display = 'flex';
@@ -216,28 +225,28 @@ function openLogModal() {
 function showTable(type) {
     const m = viewDate.getMonth(), y = viewDate.getFullYear();
     document.getElementById("detailsTable").style.display = "block";
-    document.getElementById("activeTitle").innerText = type;
     const active = storage[type].filter(d => { const dt = new Date(d.date); return dt.getMonth() === m && dt.getFullYear() === y; }).sort((a,b) => new Date(a.date) - new Date(b.date));
     document.getElementById("tableBody").innerHTML = active.map(r => {
         const tot = (parseInt(r.s)||0) + (parseInt(r.p)||0) + (parseInt(r.c)||0);
-        return `<tr><td>${new Date(r.date).getDate()}</td><td onclick="manageCodes('${type}','${r.date}','s')" style="color:var(--success)">${r.s}</td><td onclick="manageCodes('${type}','${r.date}','p')" style="color:var(--warning)">${r.p}</td><td onclick="manageCodes('${type}','${r.date}','c')" style="color:var(--danger)">${r.c}</td><td>${tot>0?((r.s/tot)*100).toFixed(0):0}%</td></tr>`;
-    }).join('') || '<tr><td colspan="5">No data</td></tr>';
+        const pct = tot > 0 ? ((r.s / tot) * 100).toFixed(0) : 0;
+        return `<tr><td>${new Date(r.date).getDate()}</td><td onclick="manageCodes('${type}','${r.date}','s')">${fmt(r.s)}</td><td onclick="manageCodes('${type}','${r.date}','p')">${fmt(r.p)}</td><td onclick="manageCodes('${type}','${r.date}','c')">${fmt(r.c)}</td><td style="font-weight:800; color:var(--brand)">${pct}%</td></tr>`;
+    }).join('') || '<tr><td colspan="5">No data for this month</td></tr>';
 }
 
-function manageCodes(type, date, mode) {
-    const entry = storage[type].find(x => x.date === date);
-    const codes = (entry[`codes_${mode}`] || "").split(',').filter(x => x);
-    document.getElementById('codeModal').style.display = 'flex';
-    document.getElementById('codeList').innerHTML = codes.map((c, i) => `<div class="package-card" style="margin-bottom:8px;"><span>${c}</span><button onclick="deleteCode('${type}','${date}','${mode}',${i})" style="background:none; border:none; color:var(--danger); font-weight:bold;">✕</button></div>`).join('') || '<p>Empty</p>';
-}
-
-function deleteCode(type, date, mode, idx) {
-    const entry = storage[type].find(x => x.date === date);
-    let codes = entry[`codes_${mode}`].split(',').filter(x => x);
-    codes.splice(idx, 1);
-    entry[`codes_${mode}`] = codes.join(',');
-    localStorage.setItem("logistics_v52", JSON.stringify(storage));
-    manageCodes(type, date, mode); render(); pushData();
+function render() {
+    const m = viewDate.getMonth(), y = viewDate.getFullYear();
+    document.getElementById('metricsPanel').innerHTML = types.map(t => {
+        const mData = storage[t].filter(d => { const dt = new Date(d.date); return dt.getMonth() === m && dt.getFullYear() === y; });
+        const s = mData.reduce((a,b) => a + (parseInt(b.s)||0), 0);
+        const tot = mData.reduce((a,b) => a + (parseInt(b.s)+parseInt(b.p)+parseInt(b.c)||0), 0);
+        const pct = tot > 0 ? ((s / tot) * 100).toFixed(0) : 0;
+        return `<div class="stat-card" onclick="showTable('${t}')">
+            <span style="color:${colors[t]}; font-weight:800; font-size:0.7rem;">${t.toUpperCase()}</span>
+            <span class="stat-val">${fmt(s)}</span>
+            <span class="stat-pct">${pct}% Success</span>
+        </div>`;
+    }).join('');
+    updateChart(y, m);
 }
 
 function updateChart(y, m) {
@@ -252,30 +261,46 @@ function updateChart(y, m) {
     chart = new Chart(ctx, { type:'bar', data: { labels, datasets: ds }, options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{stacked:true, grid:{display:false}}, y:{stacked:true, beginAtZero:true, grid:{color:'rgba(255,255,255,0.05)'}}} }});
 }
 
-function render() {
-    const m = viewDate.getMonth(), y = viewDate.getFullYear();
-    document.getElementById('monthLab').innerText = viewDate.toLocaleString('en-US',{month:'long', year:'numeric'});
-    document.getElementById('metricsPanel').innerHTML = types.map(t => {
-        const s = storage[t].filter(d => { const dt = new Date(d.date); return dt.getMonth() === m && dt.getFullYear() === y; }).reduce((a,b) => a + (parseInt(b.s)||0), 0);
-        return `<div class="stat-card" onclick="showTable('${t}')"><span style="color:${colors[t]}; font-weight:800;">${t}</span><span class="stat-val">${s}</span></div>`;
-    }).join('');
-    updateChart(y, m);
-}
-
 function setScanMode(m) { 
     currentScanMode = m; 
-    document.querySelectorAll('.scanner-header .nav-btn').forEach(b => {
-        b.style.background = 'var(--bg)';
-        b.style.color = b.id === 'btn_s' ? 'var(--success)' : (b.id === 'btn_p' ? 'var(--warning)' : 'var(--danger)');
+    ['s','p','c'].forEach(mode => {
+        const b = document.getElementById(`btn_${mode}`);
+        b.style.background = 'var(--card)';
+        b.style.color = mode === 's' ? 'var(--success)' : (mode === 'p' ? 'var(--warning)' : 'var(--danger)');
     });
-    const activeBtn = document.getElementById(`btn_${m}`);
-    activeBtn.style.background = m === 's' ? 'var(--success)' : (m === 'p' ? 'var(--warning)' : 'var(--danger)');
-    activeBtn.style.color = '#000';
+    const active = document.getElementById(`btn_${m}`);
+    active.style.background = m === 's' ? 'var(--success)' : (m === 'p' ? 'var(--warning)' : 'var(--danger)');
+    active.style.color = '#000';
 }
 
 function stopScanner() { if(html5QrCode) html5QrCode.stop().then(() => { document.getElementById('scannerOverlay').style.display = 'none'; }); }
 async function toggleFlash() { if(html5QrCode?.isScanning) { isFlashOn = !isFlashOn; const track = html5QrCode.getRunningTrack(); if(track.getCapabilities().torch) await track.applyConstraints({ advanced: [{ torch: isFlashOn }] }); } }
-function moveMonth(dir) { viewDate.setMonth(viewDate.getMonth()+dir); render(); }
+
+async function pushData() {
+    if(!navigator.onLine || !config) return;
+    try {
+        const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
+        const r = await fetch(url, { headers: {'Authorization': `token ${config.token}`} });
+        const sha = r.ok ? (await r.json()).sha : "";
+        await fetch(url, { method:'PUT', headers:{'Authorization':`token ${config.token}`}, body:JSON.stringify({message:"V55.8 Sync", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage)))), sha}) });
+    } catch(e) {}
+}
+
+function manageCodes(t,d,m) {
+    const entry = storage[t].find(x => x.date === d);
+    const codes = (entry[`codes_${m}`] || "").split(',').filter(x => x);
+    document.getElementById('codeModal').style.display = 'flex';
+    document.getElementById('codeList').innerHTML = codes.map((c, i) => `<div class="package-card"><span>${c}</span><button onclick="deleteCode('${t}','${d}','${m}',${i})" style="background:none; border:none; color:var(--danger); font-weight:bold;">✕</button></div>`).join('') || '<p style="text-align:center; opacity:0.5;">No barcodes stored.</p>';
+}
+
+function deleteCode(t,d,m,i) {
+    const entry = storage[t].find(x => x.date === d);
+    let codes = entry[`codes_${m}`].split(',').filter(x => x);
+    codes.splice(i, 1);
+    entry[`codes_${m}`] = codes.join(',');
+    localStorage.setItem("logistics_v52", JSON.stringify(storage));
+    manageCodes(t,d,m); render(); pushData();
+}
 
 async function start() {
     if (!config) { config = {token: prompt("Token:"), user: prompt("User:"), repo: prompt("Repo:")}; localStorage.setItem('gh_config', JSON.stringify(config)); }
