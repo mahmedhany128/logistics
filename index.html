@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Insight Pro - V38 Auto-Sync</title>
+    <title>Insight Pro - V39 Final Fix</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#818cf8">
     <script src="https://unpkg.com/@zxing/library@latest"></script>
@@ -19,167 +19,143 @@
         .online { background: var(--success); box-shadow: 0 0 10px var(--success); }
         .offline { background: var(--danger); }
 
-        .month-ctrl { background: var(--card); border: 1px solid var(--border); padding: 8px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .nav-btn { background: var(--bg); border: none; width: 40px; height: 40px; border-radius: 12px; color: var(--brand); cursor: pointer; }
-
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-        .stat-card { background: linear-gradient(145deg, #1e293b, #111827); padding: 18px; border-radius: 24px; border: 1px solid var(--border); position: relative; }
+        .stat-card { background: linear-gradient(145deg, #1e293b, #111827); padding: 18px; border-radius: 24px; border: 1px solid var(--border); }
         .stat-val { font-size: 1.6rem; font-weight: 900; color: #fff; display: block; margin: 5px 0; }
         
-        .stat-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
-        .stat-perc-pill { font-size: 0.65rem; font-weight: 800; padding: 4px 8px; border-radius: 8px; background: rgba(255,255,255,0.05); }
-
         .table-container { background: var(--card); border-radius: 24px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; }
-        th { background: #ffffff05; padding: 12px; font-size: 0.6rem; color: var(--dim); text-transform: uppercase; }
-        td { padding: 14px; text-align: center; border-bottom: 1px solid #334155; font-size: 0.8rem; font-weight: 600; }
+        td, th { padding: 14px; text-align: center; border-bottom: 1px solid #334155; font-size: 0.8rem; }
         
-        .code-badge { background: var(--bg); color: var(--text); padding: 10px 14px; border-radius: 12px; font-size: 0.8rem; display: flex; align-items: center; justify-content: space-between; border: 1px solid var(--border); width: 100%; margin-bottom: 8px; }
-        .del-code-btn { color: var(--danger); font-weight: 900; cursor: pointer; padding: 5px 10px; background: rgba(251, 113, 133, 0.1); border-radius: 8px; border: none; }
+        .code-badge { background: var(--bg); color: var(--text); padding: 12px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); margin-bottom: 8px; width: 100%; }
+        .del-btn { background: rgba(251, 113, 133, 0.15); color: var(--danger); border: none; padding: 6px 12px; border-radius: 8px; font-weight: 800; cursor: pointer; }
 
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; align-items: flex-end; backdrop-filter: blur(8px); }
-        .modal-content { background: var(--card); width: 100%; padding: 25px; border-radius: 32px 32px 0 0; max-height: 90vh; overflow-y: auto; }
+        .modal-content { background: var(--card); width: 100%; padding: 25px; border-radius: 32px 32px 0 0; max-height: 85vh; overflow-y: auto; }
         
-        input, select { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid var(--border); border-radius: 14px; background: var(--bg); color: #fff; font-size: 0.9rem; }
+        input, select { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid var(--border); border-radius: 14px; background: var(--bg); color: #fff; }
         .btn-add { background: var(--brand); color: #fff; border: none; padding: 16px; border-radius: 20px; font-weight: 800; width: 100%; cursor: pointer; }
         
         #scannerOverlay { display: none; position: fixed; inset: 0; background: #000; z-index: 2000; flex-direction: column; }
-        .scan-header { background: #1e293b; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
     </style>
 </head>
 <body>
 
 <header>
-    <h1 style="font-size:1.2rem; margin:0;">Insight Pro <span style="color:var(--brand); font-size:0.7rem;">V38</span></h1>
-    <div id="netStatus" style="font-size: 0.7rem; font-weight: 800;">
+    <h1 style="font-size:1.1rem; margin:0;">Insight Pro V39</h1>
+    <div style="font-size: 0.7rem;">
         <span id="dot" class="status-dot online"></span>
         <span id="syncText">Sync Ready</span>
     </div>
 </header>
 
-<div class="month-ctrl">
-    <button class="nav-btn" onclick="moveMonth(-1)">‹</button>
-    <span id="monthLab" style="font-weight:800; font-size:0.9rem;">---</span>
-    <button class="nav-btn" onclick="moveMonth(1)">›</button>
-</div>
-
 <div class="grid" id="metricsPanel"></div>
 
 <div id="detailsTable" style="display:none;">
     <div class="table-container">
-        <div style="padding:15px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border)">
+        <div style="padding:15px; display:flex; justify-content:space-between; align-items:center;">
             <span id="activeTitle" style="font-weight:800; color:var(--brand)">Details</span>
             <button onclick="document.getElementById('detailsTable').style.display='none'" style="background:none; border:none; color:var(--dim);">✕</button>
         </div>
         <table>
-            <thead><tr><th>Day</th><th>S</th><th>P</th><th>C</th><th>Rate</th></tr></thead>
+            <thead><tr><th>Day</th><th>S</th><th>P</th><th>C</th><th>%</th></tr></thead>
             <tbody id="tableBody"></tbody>
         </table>
     </div>
 </div>
 
 <div style="background:var(--card); border-radius:24px; padding:15px; margin-bottom:20px;">
-    <div style="height:200px;"><canvas id="mainChart"></canvas></div>
+    <div style="height:180px;"><canvas id="mainChart"></canvas></div>
 </div>
 
-<button class="btn-add" style="position:fixed; bottom:20px; left:15px; width:calc(100% - 30px); z-index:100;" onclick="openLogModal()">+ Update Data</button>
+<button class="btn-add" style="position:fixed; bottom:20px; left:15px; width:calc(100% - 30px); z-index:100;" onclick="openLogModal()">+ Update Logistics</button>
+
+<div id="codeModal" class="modal" style="align-items: center; justify-content: center;">
+    <div class="modal-content" style="width: 90%; border-radius: 24px;">
+        <h3 id="codeTitle" style="margin-top:0">Manage Codes</h3>
+        <div id="codeList" style="max-height: 350px; overflow-y: auto;"></div>
+        <button onclick="document.getElementById('codeModal').style.display='none'" class="btn-add" style="margin-top:15px;">Close</button>
+    </div>
+</div>
 
 <div id="logModal" class="modal">
     <div class="modal-content">
-        <input type="date" id="logDate" style="margin-bottom:15px;">
+        <input type="date" id="logDate">
         <div id="logInputs"></div>
-        <button class="btn-add" style="margin-top:15px;" onclick="saveData()">Save Changes</button>
+        <button class="btn-add" style="margin-top:15px;" onclick="saveData()">Save All Changes</button>
         <button onclick="document.getElementById('logModal').style.display='none'" style="width:100%; background:none; border:none; color:var(--dim); padding:15px;">Cancel</button>
     </div>
 </div>
 
 <div id="scannerOverlay">
-    <div class="scan-header">
-        <div style="display:flex; gap:8px;">
-            <select id="scanTypeSelect"><option>Delivery</option><option>PickUp</option><option>SameDay</option><option>Khazenly</option></select>
-            <select id="scanModeSelect"><option value="s">Success</option><option value="p">Pending</option><option value="c">Cancel</option></select>
+    <div style="padding: 20px; background: #1e293b;">
+        <select id="scanTypeSelect"><option>Delivery</option><option>PickUp</option><option>SameDay</option><option>Khazenly</option></select>
+        <select id="scanModeSelect"><option value="s">Success</option><option value="p">Pending</option><option value="c">Cancel</option></select>
+        <div style="display:flex; gap:8px; margin-top:10px;">
+            <input type="text" id="manualInput" placeholder="Enter manual code...">
+            <button onclick="addManualCode()" style="background:var(--brand); border:none; border-radius:12px; color:#fff; padding:0 15px;">Add</button>
         </div>
-        <div style="display:flex; gap:8px;">
-            <input type="text" id="manualInput" placeholder="Manual entry...">
-            <button onclick="addManualCode()" style="background:var(--brand); border:none; border-radius:12px; padding:0 15px; color:#fff;">Add</button>
-        </div>
-        <div id="scannedListDisplay" style="display:flex; flex-direction:column; gap:5px; max-height:120px; overflow-y:auto;"></div>
+        <div id="scannedListDisplay" style="margin-top:10px; max-height:100px; overflow-y:auto;"></div>
     </div>
     <video id="video" style="width:100%; flex:1; object-fit:cover;"></video>
-    <div style="padding:20px; background:#1e293b;"><button class="btn-add" onclick="stopScanner()">Done</button></div>
-</div>
-
-<div id="codeModal" class="modal">
-    <div class="modal-content">
-        <h3 id="codeTitle">Manage Codes</h3>
-        <div id="codeList"></div>
-        <button onclick="document.getElementById('codeModal').style.display='none'" class="btn-add" style="margin-top:20px; background:var(--bg);">Close</button>
-    </div>
+    <button class="btn-add" onclick="stopScanner()">Finish Session</button>
 </div>
 
 <script>
 let config = JSON.parse(localStorage.getItem('gh_config'));
 const types = ["Delivery", "PickUp", "SameDay", "Khazenly"];
 const colors = { Delivery: '#818cf8', PickUp: '#34d399', SameDay: '#fbbf24', Khazenly: '#fb7185' };
-let storage = JSON.parse(localStorage.getItem("logistics_v38")) || {};
+let storage = JSON.parse(localStorage.getItem("logistics_v39")) || {};
 types.forEach(t => { if(!storage[t]) storage[t] = []; });
 
 let chart, viewDate = new Date();
 const codeReader = new ZXing.BrowserMultiFormatReader();
 
-// --- نظام مراقبة الإنترنت والمزامنة التلقائية ---
-window.addEventListener('online', () => {
-    updateNetStatus(true);
-    pushData(); // مزامنة تلقائية عند عودة الإنترنت
-});
-window.addEventListener('offline', () => updateNetStatus(false));
-
-function updateNetStatus(isOnline) {
-    const dot = document.getElementById('dot');
-    const txt = document.getElementById('syncText');
-    if(isOnline) {
-        dot.className = "status-dot online";
-        txt.innerText = "Back Online - Syncing...";
-        setTimeout(() => { if(txt.innerText.includes("Back")) txt.innerText = "Synced"; }, 3000);
-    } else {
-        dot.className = "status-dot offline";
-        txt.innerText = "Offline - Local Mode";
+// --- Core Fix: Absolute Delete Logic ---
+function deleteCodePermanently(type, date, mode, index) {
+    const entry = storage[type].find(x => x.date === date);
+    if(entry) {
+        const key = `codes_${mode}`;
+        let codes = entry[key].split(',').filter(x => x);
+        codes.splice(index, 1); // حذف من المصفوفة
+        entry[key] = codes.join(','); // تحديث الكود المخزن
+        
+        // حفظ فوري في التخزين المحلي لضمان عدم العودة
+        localStorage.setItem("logistics_v39", JSON.stringify(storage));
+        
+        // تحديث الواجهة
+        manageCodes(type, date, mode);
+        render();
+        
+        // محاولة المزامنة السحابية فوراً
+        pushData();
     }
 }
 
-async function start() {
-    if (!config) {
-        config = {token: prompt("Token:"), user: prompt("User:"), repo: prompt("Repo:")};
-        localStorage.setItem('gh_config', JSON.stringify(config));
-    }
-    updateNetStatus(navigator.onLine);
-    await pullData();
-}
-
-async function pullData() {
-    if(!navigator.onLine) return render();
-    try {
-        const r = await fetch(`https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`, { headers: {'Authorization': `token ${config.token}`} });
-        if(r.ok) {
-            const j = await r.json();
-            storage = JSON.parse(decodeURIComponent(escape(atob(j.content))));
-            localStorage.setItem("logistics_v38", JSON.stringify(storage));
-        }
-    } catch(e) {}
-    render();
+function manageCodes(type, date, mode) {
+    const entry = storage[type].find(x => x.date === date);
+    if(!entry) return;
+    const codes = (entry[`codes_${mode}`] || "").split(',').filter(x => x);
+    document.getElementById('codeModal').style.display = 'flex';
+    document.getElementById('codeList').innerHTML = codes.map((c, i) => `
+        <div class="code-badge">
+            <span>${c}</span>
+            <button class="del-btn" onclick="deleteCodePermanently('${type}','${date}','${mode}',${i})">Delete</button>
+        </div>
+    `).join('') || '<p style="color:var(--dim); text-align:center;">Empty</p>';
 }
 
 function render() {
     const m = viewDate.getMonth(), y = viewDate.getFullYear();
-    document.getElementById('monthLab').innerText = viewDate.toLocaleString('en-US',{month:'long', year:'numeric'});
     document.getElementById('metricsPanel').innerHTML = types.map(t => {
         const mData = storage[t].filter(d => { const dt = new Date(d.date); return dt.getMonth() === m && dt.getFullYear() === y; });
         const s = mData.reduce((a,b) => a + (parseInt(b.s)||0), 0);
         const tot = mData.reduce((a,b) => a + (parseInt(b.s)+parseInt(b.p)+parseInt(b.c)||0), 0);
         const perc = tot > 0 ? ((s/tot)*100).toFixed(0) : 0;
         return `<div class="stat-card" onclick="showTable('${t}')">
-            <span class="stat-label" style="color:${colors[t]}">${t}</span><span class="stat-val">${s}</span>
-            <div class="stat-footer"><span class="stat-perc-pill">${perc}% Success</span></div>
+            <span style="font-size:0.7rem; color:${colors[t]}; font-weight:800;">${t}</span>
+            <span class="stat-val">${s}</span>
+            <div style="font-size:0.65rem; color:var(--dim);">${perc}% Success</div>
         </div>`;
     }).join('');
     updateChart(y, m);
@@ -196,8 +172,35 @@ function showTable(type) {
 
     document.getElementById("tableBody").innerHTML = filtered.map(r => {
         const tot = (parseInt(r.s)||0) + (parseInt(r.p)||0) + (parseInt(r.c)||0);
-        return `<tr><td>${new Date(r.date).getDate()}</td><td>${r.s}</td><td>${r.p}</td><td>${r.c}</td><td>${tot>0?((r.s/tot)*100).toFixed(0):0}%</td></tr>`;
+        return `<tr>
+            <td>${new Date(r.date).getDate()}</td>
+            <td onclick="manageCodes('${type}','${r.date}','s')">${r.s}</td>
+            <td onclick="manageCodes('${type}','${r.date}','p')">${r.p}</td>
+            <td onclick="manageCodes('${type}','${r.date}','c')">${r.c}</td>
+            <td>${tot>0?((r.s/tot)*100).toFixed(0):0}%</td>
+        </tr>`;
     }).join('');
+}
+
+async function start() {
+    if (!config) {
+        config = {token: prompt("Token:"), user: prompt("User:"), repo: prompt("Repo:")};
+        localStorage.setItem('gh_config', JSON.stringify(config));
+    }
+    await pullData();
+}
+
+async function pullData() {
+    if(!navigator.onLine) return render();
+    try {
+        const r = await fetch(`https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`, { headers: {'Authorization': `token ${config.token}`} });
+        if(r.ok) {
+            const j = await r.json();
+            storage = JSON.parse(decodeURIComponent(escape(atob(j.content))));
+            localStorage.setItem("logistics_v39", JSON.stringify(storage));
+        }
+    } catch(e) {}
+    render();
 }
 
 async function saveData() {
@@ -215,25 +218,21 @@ async function saveData() {
         const idx = storage[t].findIndex(x => x.date === d);
         if(idx >= 0) storage[t][idx] = entry; else storage[t].push(entry);
     });
-    localStorage.setItem("logistics_v38", JSON.stringify(storage));
+    localStorage.setItem("logistics_v39", JSON.stringify(storage));
     document.getElementById('logModal').style.display = 'none'; 
-    render(); 
-    await pushData();
+    render(); await pushData();
 }
 
 async function pushData() {
-    if(!navigator.onLine) {
-        document.getElementById('syncText').innerText = "Saved Locally (Offline)";
-        return;
-    }
+    if(!navigator.onLine) return document.getElementById('syncText').innerText = "Offline (Saved Local)";
     document.getElementById('syncText').innerText = "Syncing...";
     try {
         const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
         const r = await fetch(url, { headers: {'Authorization': `token ${config.token}`} });
         const sha = r.ok ? (await r.json()).sha : "";
-        const res = await fetch(url, { method:'PUT', headers:{'Authorization':`token ${config.token}`}, body:JSON.stringify({message:"V38 Auto-Sync", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage)))), sha}) });
-        if(res.ok) document.getElementById('syncText').innerText = "Synced to Cloud";
-    } catch(e) { document.getElementById('syncText').innerText = "Sync Failed"; }
+        await fetch(url, { method:'PUT', headers:{'Authorization':`token ${config.token}`}, body:JSON.stringify({message:"V39 Update", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage)))), sha}) });
+        document.getElementById('syncText').innerText = "Synced";
+    } catch(e) { document.getElementById('syncText').innerText = "Sync Error"; }
 }
 
 function updateChart(y, m) {
@@ -257,14 +256,11 @@ function openLogModal() {
     document.getElementById('logInputs').innerHTML = types.map(t => {
         const old = storage[t].find(x => x.date === d) || {s:0, p:0, c:0, codes_s:'', codes_p:'', codes_c:''};
         return `<div style="background:var(--bg); padding:15px; border-radius:18px; margin-bottom:10px;">
-            <div style="display:flex; justify-content:space-between; margin-bottom:10px">
-                <span style="font-weight:800; color:${colors[t]}">${t}</span>
-                <button onclick="launchScanner('${t}')" style="font-size:0.7rem; padding:5px 10px; background:var(--card); color:#fff; border-radius:8px; border:none;">📷 Scan</button>
-            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:5px"><span style="color:${colors[t]}; font-weight:800;">${t}</span><button onclick="launchScanner('${t}')" style="background:var(--card); color:#fff; border:none; padding:5px 10px; border-radius:8px; font-size:0.7rem;">📷 Scan</button></div>
             <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
-                <input type="number" id="q_s_${t}" value="${old.s}" placeholder="S">
-                <input type="number" id="q_p_${t}" value="${old.p}" placeholder="P">
-                <input type="number" id="q_c_${t}" value="${old.c}" placeholder="C">
+                <input type="number" id="q_s_${t}" value="${old.s}">
+                <input type="number" id="q_p_${t}" value="${old.p}">
+                <input type="number" id="q_c_${t}" value="${old.c}">
                 <input type="hidden" id="c_s_${t}" value="${old.codes_s}"><input type="hidden" id="c_p_${t}" value="${old.codes_p}"><input type="hidden" id="c_c_${t}" value="${old.codes_c}">
             </div></div>`;
     }).join('');
@@ -281,8 +277,7 @@ function launchScanner(type) {
             let codes = h.value ? h.value.split(',') : [];
             if(!codes.includes(result.text)) {
                 codes.push(result.text); h.value = codes.join(',');
-                navigator.vibrate(100); 
-                updateScanUI();
+                navigator.vibrate(100); updateScanUI();
             }
         }
     });
@@ -291,37 +286,21 @@ function launchScanner(type) {
 function updateScanUI() {
     const t = document.getElementById('scanTypeSelect').value;
     const m = document.getElementById('scanModeSelect').value;
-    const codes = document.getElementById(`c_${m}_${t}`).value.split(',').filter(x=>x);
-    document.getElementById('scannedListDisplay').innerHTML = codes.map((c, i) => `
-        <div class="code-badge" style="background:var(--card)"><span>${c}</span><button class="del-code-btn" onclick="removeFromScannerUI('${t}','${m}',${i})">✕</button></div>
-    `).join('');
+    const codes = document.getElementById(`c_${m}_${t}`).value.split(',').filter(x => x);
+    document.getElementById('scannedListDisplay').innerHTML = codes.map((c, i) => `<div class="code-badge" style="padding:5px"><span>${c}</span><button class="del-btn" onclick="removeFromScannerUI('${t}','${m}',${i})">✕</button></div>`).join('');
 }
 
 function removeFromScannerUI(type, mode, index) {
     const h = document.getElementById(`c_${mode}_${type}`);
-    let codes = h.value.split(',').filter(x=>x);
+    let codes = h.value.split(',').filter(x => x);
     codes.splice(index, 1);
     h.value = codes.join(',');
     updateScanUI();
 }
 
-function addManualCode() {
-    const code = document.getElementById('manualInput').value.trim();
-    if(!code) return;
-    const t = document.getElementById('scanTypeSelect').value;
-    const m = document.getElementById('scanModeSelect').value;
-    const h = document.getElementById(`c_${m}_${t}`);
-    let codes = h.value ? h.value.split(',') : [];
-    if(!codes.includes(code)) {
-        codes.push(code); h.value = codes.join(',');
-        document.getElementById('manualInput').value = "";
-        updateScanUI();
-    }
-}
-
 function stopScanner() { codeReader.reset(); document.getElementById('scannerOverlay').style.display = 'none'; }
-function moveMonth(dir) { viewDate.setMonth(viewDate.getMonth()+dir); render(); }
-function masterReset() { if(confirm("Clear local data?")) { localStorage.clear(); location.reload(); }}
+function masterReset() { if(confirm("Clear data?")) { localStorage.clear(); location.reload(); }}
+window.addEventListener('online', pushData);
 start();
 </script>
 </body>
