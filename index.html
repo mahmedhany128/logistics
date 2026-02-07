@@ -3,68 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Insight Pro - V70.0 Stable</title>
-    
-    <script src="https://unpkg.com/@zxing/library@latest"></script>
+    <title>Insight Pro - V72.0 Final</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-
     <style>
         :root { --bg: #0f172a; --card: #1e293b; --brand: #818cf8; --text: #f1f5f9; --dim: #94a3b8; --border: rgba(255,255,255,0.08); --success: #34d399; --warning: #fbbf24; --danger: #fb7185; }
         * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--text); margin: 0; padding: 15px; padding-bottom: 120px; }
-        
-        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; background: #475569; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #475569; }
         .online { background: var(--success); box-shadow: 0 0 10px var(--success); }
+        
+        .month-nav { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 12px 20px; border-radius: 20px; margin-bottom: 20px; border: 1px solid var(--border); }
+        .month-nav button { background: none; border: none; color: var(--brand); font-size: 1.5rem; cursor: pointer; padding: 0 15px; }
+        #monthLab { font-weight: 800; font-size: 1rem; letter-spacing: 0.5px; }
 
-        /* ستايل الكروت الأصلية */
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-        .stat-card { background: linear-gradient(145deg, #1e293b, #111827); padding: 18px; border-radius: 24px; border: 1px solid var(--border); cursor: pointer; position: relative; overflow: hidden; }
-        .stat-card::after { content: ''; position: absolute; top: 0; right: 0; width: 40px; height: 40px; background: rgba(255,255,255,0.02); border-radius: 0 0 0 40px; }
+        .stat-card { background: linear-gradient(145deg, #1e293b, #111827); padding: 18px; border-radius: 24px; border: 1px solid var(--border); cursor: pointer; }
         .stat-val { font-size: 1.6rem; font-weight: 900; color: #fff; display: block; margin: 5px 0; }
-        
-        /* ستايل الجدول الأصلي */
-        .table-container { background: var(--card); border-radius: 24px; border: 1px solid var(--border); overflow: hidden; margin-top: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-        table { width: 100%; border-collapse: collapse; }
-        th { background: rgba(255,255,255,0.03); color: var(--dim); font-size: 0.7rem; text-transform: uppercase; padding: 15px 10px; letter-spacing: 1px; }
-        td { padding: 14px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.85rem; color: #fff; }
-        
-        .clickable-num { cursor: pointer; text-decoration: underline; text-underline-offset: 4px; font-weight: 700; }
-        
-        /* ستايل المودال (النافذة المنبثقة) */
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; align-items: flex-end; backdrop-filter: blur(8px); }
-        .modal-content { background: var(--card); width: 100%; padding: 25px; border-radius: 32px 32px 0 0; max-height: 85vh; overflow-y: auto; position: relative; border-top: 1px solid var(--border); }
-        
-        input { width: 100%; padding: 14px; margin: 8px 0; border: 1px solid var(--border); border-radius: 14px; background: var(--bg); color: #fff; text-align: center; font-weight: 700; font-size: 1.1rem; transition: 0.3s; }
-        input:focus { border-color: var(--brand); outline: none; }
-        
-        .btn-main { background: var(--brand); color: #fff; border: none; padding: 18px; border-radius: 22px; font-weight: 800; width: 100%; cursor: pointer; box-shadow: 0 10px 20px rgba(129, 140, 248, 0.2); }
-        
-        #scannerOverlay { display: none; position: fixed; inset: 0; background: #000; z-index: 2000; flex-direction: column; }
-        #video { width: 100% !important; height: auto; background: #000; }
 
-        .code-item { background: var(--bg); padding: 12px; border-radius: 12px; margin-bottom: 8px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .del-btn { color: var(--danger); background: none; border: none; font-size: 1.2rem; cursor: pointer; padding: 5px 10px; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; align-items: flex-end; backdrop-filter: blur(8px); }
+        .modal-content { background: var(--card); width: 100%; padding: 25px; border-radius: 32px 32px 0 0; max-height: 85vh; overflow-y: auto; position: relative; }
+        
+        input { width: 100%; padding: 14px; margin: 8px 0; border: 1px solid var(--border); border-radius: 14px; background: var(--bg); color: #fff; text-align: center; font-weight: 700; font-size: 1.1rem; }
+        .btn-main { background: var(--brand); color: #fff; border: none; padding: 18px; border-radius: 22px; font-weight: 800; width: 100%; cursor: pointer; }
+        
+        /* شاشة الإسكانر الجديدة */
+        #scannerModal { display: none; position: fixed; inset: 0; background: #000; z-index: 2000; flex-direction: column; }
+        #reader { width: 100% !important; flex: 1; background: #000; }
+        .scanned-list { height: 30vh; padding: 15px; overflow-y: auto; background: var(--bg); border-top: 2px solid var(--brand); }
+        .code-item { background: var(--card); padding: 12px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; animation: slideIn 0.3s ease; }
+        
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .table-container { background: var(--card); border-radius: 24px; border: 1px solid var(--border); overflow: hidden; margin-top: 15px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: rgba(255,255,255,0.03); color: var(--dim); font-size: 0.7rem; padding: 15px 10px; }
+        td { padding: 14px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.85rem; color: #fff; }
+        .clickable-num { cursor: pointer; text-decoration: underline; font-weight: 800; }
     </style>
 </head>
 <body>
 
 <header>
-    <div>
-        <h1 style="font-size:1.1rem; margin:0; font-weight: 800;">Insight <span style="color:var(--brand)">Pro</span></h1>
-        <div id="monthLab" style="font-size: 0.7rem; color: var(--dim); font-weight: 600; margin-top: 2px;"></div>
-    </div>
+    <h1 style="font-size:1.1rem; margin:0; font-weight: 800;">Insight <span style="color:var(--brand)">Pro</span></h1>
     <span id="dot" class="status-dot"></span>
 </header>
+
+<div class="month-nav">
+    <button onclick="changeMonth(-1)">❮</button>
+    <span id="monthLab"></span>
+    <button onclick="changeMonth(1)">❯</button>
+</div>
 
 <div class="grid" id="metricsPanel"></div>
 
 <div id="detailsTable" style="display:none;">
     <div class="table-container">
-        <div style="padding:18px; display:flex; justify-content:space-between; align-items:center;">
-            <span id="activeTitle" style="font-weight:800; color:var(--brand); text-transform: uppercase;">Details</span>
-            <button onclick="document.getElementById('detailsTable').style.display='none'" style="background:none; border:none; color:var(--dim); font-size: 1.5rem;">✕</button>
+        <div style="padding:15px; display:flex; justify-content:space-between; align-items:center;">
+            <span id="activeTitle" style="font-weight:800; color:var(--brand);">DETAILS</span>
+            <button onclick="document.getElementById('detailsTable').style.display='none'" style="background:none; border:none; color:var(--dim); font-size:1.5rem;">✕</button>
         </div>
         <table>
             <thead><tr><th>Day</th><th>S</th><th>P</th><th>C</th><th>%</th></tr></thead>
@@ -73,20 +72,23 @@
     </div>
 </div>
 
-<div style="height: 220px; padding:15px; background:var(--card); border-radius:24px; border:1px solid var(--border); margin-top: 20px;">
+<div style="height: 200px; padding:10px; background:var(--card); border-radius:24px; border:1px solid var(--border); margin-top:10px;">
     <canvas id="mainChart"></canvas>
 </div>
 
 <button class="btn-main" style="position:fixed; bottom:20px; left:15px; width:calc(100% - 30px); z-index:100;" onclick="openLogModal()">+ UPDATE SHIPMENTS</button>
 
-<div id="scannerOverlay">
-    <div style="padding:15px; background:rgba(0,0,0,0.8); display:flex; gap:8px;">
-        <button onclick="setScanMode('s')" id="sm_s" style="flex:1; padding:12px; border-radius:12px; background:var(--success); border:none; font-weight:800;">SUCCESS</button>
-        <button onclick="setScanMode('p')" id="sm_p" style="flex:1; padding:12px; border-radius:12px; background:var(--card); color:var(--warning); border:none; font-weight:800;">PENDING</button>
-        <button onclick="setScanMode('c')" id="sm_c" style="flex:1; padding:12px; border-radius:12px; background:var(--card); color:var(--danger); border:none; font-weight:800;">CANCEL</button>
+<div id="scannerModal">
+    <div style="padding:15px; background:rgba(0,0,0,0.8); display:flex; justify-content: space-between; align-items: center;">
+        <div style="display:flex; gap:10px; flex: 1;">
+            <button onclick="setScanMode('s')" id="sm_s" style="flex:1; padding:12px; border-radius:10px; background:var(--success); font-weight:bold; border:none;">S</button>
+            <button onclick="setScanMode('p')" id="sm_p" style="flex:1; padding:12px; border-radius:10px; background:var(--card); color:var(--warning); font-weight:bold; border:none;">P</button>
+            <button onclick="setScanMode('c')" id="sm_c" style="flex:1; padding:12px; border-radius:10px; background:var(--card); color:var(--danger); font-weight:bold; border:none;">C</button>
+        </div>
     </div>
-    <video id="video"></video>
-    <div style="padding:15px; background:var(--card);"><button class="btn-main" onclick="stopScanner()">CLOSE SCANNER</button></div>
+    <div id="reader"></div>
+    <div class="scanned-list" id="scannedList"></div>
+    <div style="padding:15px; background:var(--card);"><button class="btn-main" onclick="stopScanner()">FINISH SCANNING</button></div>
 </div>
 
 <div id="codesModal" class="modal">
@@ -101,11 +103,9 @@
 
 <div id="logModal" class="modal">
     <div class="modal-content">
-        <h3 style="margin:0 0 15px 0;">New Shipment Data</h3>
         <input type="date" id="logDate">
         <div id="logInputs"></div>
-        <button class="btn-main" style="margin-top:15px;" onclick="saveData()">CONFIRM & SYNC</button>
-        <button onclick="document.getElementById('logModal').style.display='none'" style="width:100%; background:none; border:none; color:var(--dim); padding:15px;">CANCEL</button>
+        <button class="btn-main" onclick="saveData()">SAVE ALL DATA</button>
     </div>
 </div>
 
@@ -116,12 +116,17 @@ const colors = { Delivery: '#818cf8', PickUp: '#34d399', SameDay: '#fbbf24', Kha
 let storage = JSON.parse(localStorage.getItem("logistics_v52")) || {};
 types.forEach(t => { if(!storage[t]) storage[t] = []; });
 
-let chart, viewDate = new Date(), codeReader = new ZXing.BrowserMultiFormatReader(), currentScanMode = 's', activeScanType = '';
+let chart, viewDate = new Date(), html5QrCode = null, currentScanMode = 's', activeScanType = '';
+
+function changeMonth(step) {
+    viewDate.setMonth(viewDate.getMonth() + step);
+    render();
+}
 
 function openLogModal() {
     document.getElementById('logDate').value = new Date().toISOString().split('T')[0];
     document.getElementById('logInputs').innerHTML = types.map(t => `
-        <div style="background:var(--bg); padding:15px; border-radius:18px; margin-bottom:12px; border:1px solid var(--border)">
+        <div style="background:var(--bg); padding:12px; border-radius:18px; margin-bottom:10px; border:1px solid var(--border)">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                 <span style="color:${colors[t]}; font-weight:800;">${t}</span>
                 <button onclick="launchScanner('${t}')" style="background:var(--brand); color:#fff; border:none; padding:8px 15px; border-radius:10px; font-size:0.7rem; font-weight:bold;">📷 SCAN</button>
@@ -138,23 +143,44 @@ function openLogModal() {
 
 function launchScanner(type) {
     activeScanType = type;
-    document.getElementById('scannerOverlay').style.display = 'flex';
-    codeReader.decodeFromVideoDevice(null, 'video', (result) => {
-        if (result) {
-            const h = document.getElementById(`c_${currentScanMode}_${activeScanType}`);
-            let codes = h.value ? h.value.split(',').filter(x => x) : [];
-            if(!codes.includes(result.text)) {
-                codes.push(result.text);
-                h.value = codes.join(',');
-                if(navigator.vibrate) navigator.vibrate(50);
-            }
+    document.getElementById('scannerModal').style.display = 'flex';
+    syncScannerUI();
+    if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+    html5QrCode.start({ facingMode: "environment" }, { fps: 20, qrbox: { width: 250, height: 150 } }, (text) => {
+        const h = document.getElementById(`c_${currentScanMode}_${activeScanType}`);
+        let codes = h.value ? h.value.split(',').filter(x => x) : [];
+        if(!codes.includes(text)) {
+            codes.push(text);
+            h.value = codes.join(',');
+            syncScannerUI();
+            if(navigator.vibrate) navigator.vibrate(50);
         }
-    });
+    }).catch(() => alert("Camera Error"));
 }
 
-function stopScanner() { 
-    codeReader.reset(); 
-    document.getElementById('scannerOverlay').style.display = 'none'; 
+function syncScannerUI() {
+    const h = document.getElementById(`c_${currentScanMode}_${activeScanType}`);
+    let codes = h.value ? h.value.split(',').filter(x => x) : [];
+    document.getElementById('scannedList').innerHTML = codes.map(c => `
+        <div class="code-item">
+            <span style="font-family:monospace; font-weight:bold;">${c}</span>
+            <button style="background:none; border:none; color:var(--danger); font-size:1.2rem;" onclick="removeScanCode('${c}')">✕</button>
+        </div>`).join('') || '<p style="text-align:center; color:var(--dim);">Ready to scan...</p>';
+}
+
+function removeScanCode(code) {
+    const h = document.getElementById(`c_${currentScanMode}_${activeScanType}`);
+    let codes = h.value.split(',').filter(x => x && x !== code);
+    h.value = codes.join(',');
+    syncScannerUI();
+}
+
+function stopScanner() {
+    if(html5QrCode) {
+        html5QrCode.stop().then(() => {
+            document.getElementById('scannerModal').style.display = 'none';
+        });
+    }
 }
 
 function setScanMode(m) {
@@ -164,33 +190,30 @@ function setScanMode(m) {
         b.style.background = (mode === m) ? (mode === 's' ? 'var(--success)' : (mode === 'p' ? 'var(--warning)' : 'var(--danger)')) : 'var(--card)';
         b.style.color = (mode === m) ? '#000' : (mode === 's' ? 'var(--success)' : (mode === 'p' ? 'var(--warning)' : 'var(--danger)'));
     });
+    syncScannerUI();
 }
 
-// الوظيفة الأساسية: عرض وحذف الكود من القائمة بدون لمس العدد
 function showCodesInTable(type, date, mode) {
     const entry = storage[type].find(r => r.date === date);
     if(!entry) return;
     const codeKey = `codes_${mode}`;
     let codes = entry[codeKey] ? entry[codeKey].split(',').filter(x => x) : [];
-    
     document.getElementById('codesModalTitle').innerText = `${type} - ${mode.toUpperCase()}`;
     document.getElementById('codesList').innerHTML = codes.map(c => `
         <div class="code-item">
             <span>${c}</span>
-            <button class="del-btn" onclick="deleteCodeOnly('${type}', '${date}', '${codeKey}', '${c}')">✕</button>
-        </div>
-    `).join('') || '<p style="text-align:center;">No barcodes stored.</p>';
+            <button style="background:none; border:none; color:var(--danger);" onclick="deleteCodePermanent('${type}', '${date}', '${codeKey}', '${c}')">✕</button>
+        </div>`).join('');
     document.getElementById('codesModal').style.display = 'flex';
 }
 
-function deleteCodeOnly(type, date, codeKey, codeToDelete) {
+function deleteCodePermanent(type, date, codeKey, code) {
     const entry = storage[type].find(r => r.date === date);
-    let codes = entry[codeKey].split(',').filter(x => x && x !== codeToDelete);
+    let codes = entry[codeKey].split(',').filter(x => x && x !== code);
     entry[codeKey] = codes.join(',');
-    
     localStorage.setItem("logistics_v52", JSON.stringify(storage));
-    showCodesInTable(type, date, codeKey.split('_')[1]); 
-    pushData(); 
+    showCodesInTable(type, date, codeKey.split('_')[1]);
+    pushData();
 }
 
 function saveData() {
@@ -214,15 +237,13 @@ function saveData() {
 
 function render() {
     const m = viewDate.getMonth(), y = viewDate.getFullYear();
-    document.getElementById('monthLab').innerText = viewDate.toLocaleString('en-US',{month:'long', year:'numeric'});
+    document.getElementById('monthLab').innerText = viewDate.toLocaleString('en-US',{month:'long', year:'numeric'}).toUpperCase();
     document.getElementById('metricsPanel').innerHTML = types.map(t => {
         const mData = storage[t].filter(d => { const dt = new Date(d.date); return dt.getMonth() === m && dt.getFullYear() === y; });
         const s = mData.reduce((a,b) => a + (parseInt(b.s)||0), 0);
-        const tot = mData.reduce((a,b) => a + (parseInt(b.s)+parseInt(b.p)+parseInt(b.c)||0), 0);
         return `<div class="stat-card" onclick="showTable('${t}')">
-            <span style="font-size:0.7rem; color:${colors[t]}; font-weight:bold;">${t}</span>
+            <span style="font-size:0.75rem; color:${colors[t]}; font-weight:800;">${t}</span>
             <span class="stat-val">${s}</span>
-            <div style="font-size:0.65rem; color:var(--dim);">${tot > 0 ? ((s/tot)*100).toFixed(0) : 0}% Success</div>
         </div>`;
     }).join('');
     updateChart(y, m);
@@ -233,16 +254,14 @@ function showTable(type) {
     document.getElementById("detailsTable").style.display = "block";
     document.getElementById("activeTitle").innerText = type;
     const active = storage[type].filter(d => { const dt = new Date(d.date); return dt.getMonth() === m && dt.getFullYear() === y; }).sort((a,b) => new Date(a.date) - new Date(b.date));
-    document.getElementById("tableBody").innerHTML = active.map(r => {
-        const tot = (parseInt(r.s)||0) + (parseInt(r.p)||0) + (parseInt(r.c)||0);
-        return `<tr>
+    document.getElementById("tableBody").innerHTML = active.map(r => `
+        <tr>
             <td style="font-weight:bold;">${new Date(r.date).getDate()}</td>
             <td class="clickable-num" style="color:var(--success)" onclick="showCodesInTable('${type}', '${r.date}', 's')">${r.s}</td>
             <td class="clickable-num" style="color:var(--warning)" onclick="showCodesInTable('${type}', '${r.date}', 'p')">${r.p}</td>
             <td class="clickable-num" style="color:var(--danger)" onclick="showCodesInTable('${type}', '${r.date}', 'c')">${r.c}</td>
-            <td style="font-weight:bold; color:var(--brand)">${tot>0?((r.s/tot)*100).toFixed(0):0}%</td>
-        </tr>`;
-    }).join('');
+            <td style="color:var(--brand); font-weight:800;">${((r.s/((r.s+r.p+r.c)||1))*100).toFixed(0)}%</td>
+        </tr>`).join('');
 }
 
 function updateChart(y, m) {
@@ -263,7 +282,7 @@ async function pushData() {
         const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
         const r = await fetch(url, { headers: {'Authorization': `token ${config.token}`} });
         const sha = r.ok ? (await r.json()).sha : "";
-        await fetch(url, { method:'PUT', headers:{'Authorization':`token ${config.token}`}, body:JSON.stringify({message:"V70 Stable Sync", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage)))), sha}) });
+        await fetch(url, { method:'PUT', headers:{'Authorization':`token ${config.token}`}, body:JSON.stringify({message:"V72 Final Sync", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage)))), sha}) });
         document.getElementById('dot').classList.add('online');
     } catch(e) {}
 }
