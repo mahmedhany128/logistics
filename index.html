@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Insight Pro - V80.0 Final Master</title>
+    <title>Insight Pro - V81.0 Master</title>
     
     <link rel="manifest" href="manifest.json">
     
@@ -34,7 +34,7 @@
         table { width: 100%; border-collapse: collapse; }
         td, th { padding: 14px; text-align: center; border-bottom: 1px solid #334155; font-size: 0.8rem; color: var(--text); }
 
-        /* سكنر Amazon Flex المتطور - مع إخفاء علامات المكتبة */
+        /* تنسيق السكنر المعتمد في مرجعك */
         #scannerOverlay { display: none; position: fixed; inset: 0; background: #000; z-index: 2000; flex-direction: column; }
         .scanner-header { position: absolute; top: 0; width: 100%; padding: 15px; background: rgba(0,0,0,0.7); z-index: 2010; }
         
@@ -46,10 +46,8 @@
 
         #videoContainer { height: 35vh; position: relative; background: #000; overflow: hidden; flex: none; }
         #video { width: 100% !important; height: 100% !important; object-fit: cover; }
-        /* إخفاء الزوائد الرمادية للمكتبة */
-        #video b, #video span, #video br { display: none !important; }
-        #video video { border: none !important; }
-
+        #video b, #video span { display: none !important; } /* إخفاء زوائد المكتبة */
+        
         .scan-frame { position: absolute; width: 260px; height: 110px; border: 1px solid rgba(255,255,255,0.4); border-radius: 15px; top: 50%; left: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 0 2000px rgba(0,0,0,0.6); z-index: 5; pointer-events: none; }
         
         #scannedCardsContainer { flex: 1; background: var(--bg); padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
@@ -68,7 +66,7 @@
 <body>
 
 <header>
-    <h1 style="font-size:1.1rem; margin:0; font-weight: 800;">Insight <span style="color:var(--brand)">Pro Master</span></h1>
+    <h1 style="font-size:1.1rem; margin:0; font-weight: 800;">Insight <span style="color:var(--brand)">Pro V81.0</span></h1>
     <span id="dot" class="status-dot"></span>
 </header>
 
@@ -114,7 +112,7 @@
     <div id="videoContainer">
         <div id="video"></div>
         <div class="scan-frame"></div>
-        <div id="lookupText" style="display:none; position:absolute; top:20%; width:100%; z-index:10; text-align:center; color:#fff; font-size:0.6rem; background:rgba(0,0,0,0.7); padding:4px;">PROCESSED...</div>
+        <div id="lookupText" style="display:none; position:absolute; top:20%; width:100%; text-align:center; color:#fff; font-size:0.6rem; background:rgba(0,0,0,0.7); padding:4px;">PROCESSED...</div>
     </div>
     <div id="scannedCardsContainer"></div>
     <div style="padding:15px; background:var(--card);">
@@ -167,11 +165,8 @@ async function launchScanner(type) {
     document.getElementById('scannerOverlay').style.display = 'flex';
     document.getElementById('scannedCardsContainer').innerHTML = '';
     setScanMode('s');
-    
     if(!html5QrCode) html5QrCode = new Html5Qrcode("video");
-    
     const configScanner = { fps: 20, qrbox: { width: 260, height: 110 }, aspectRatio: 1.0 };
-    
     try {
         await html5QrCode.start({ facingMode: "environment" }, configScanner, (text) => registerCode(text));
     } catch (e) { console.error(e); }
@@ -212,21 +207,32 @@ async function pushData() {
         const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
         const r = await fetch(url, { headers: {'Authorization': `token ${config.token}`} });
         const sha = r.ok ? (await r.json()).sha : "";
-        await fetch(url, { method:'PUT', headers:{'Authorization':`token ${config.token}`}, body:JSON.stringify({message:"V80 Sync", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage)))), sha}) });
+        await fetch(url, { method:'PUT', headers:{'Authorization':`token ${config.token}`}, body:JSON.stringify({message:"V81 Sync", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage)))), sha}) });
     } catch(e) {}
 }
 
+// منطق الحفظ الجديد: الاستبدال الذكي (Replace)
 function saveData() {
     const d = document.getElementById('logDate').value;
     types.forEach(t => {
         let entry = storage[t].find(x => x.date === d);
-        const sVal = document.getElementById(`q_s_${t}`).value, pVal = document.getElementById(`q_p_${t}`).value, cVal = document.getElementById(`q_c_${t}`).value;
-        const codesS = document.getElementById(`c_s_${t}`).value, codesP = document.getElementById(`c_p_${t}`).value, codesC = document.getElementById(`c_c_${t}`).value;
+        const sIn = document.getElementById(`q_s_${t}`).value;
+        const pIn = document.getElementById(`q_p_${t}`).value;
+        const cIn = document.getElementById(`q_c_${t}`).value;
+        const codesS = document.getElementById(`c_s_${t}`).value;
+        const codesP = document.getElementById(`c_p_${t}`).value;
+        const codesC = document.getElementById(`c_c_${t}`).value;
+
         if(!entry) {
-            storage[t].push({ date: d, s: parseInt(sVal)||0, p: parseInt(pVal)||0, c: parseInt(cVal)||0, codes_s: codesS, codes_p: codesP, codes_c: codesC });
+            storage[t].push({ date: d, s: parseInt(sIn)||0, p: parseInt(pIn)||0, c: parseInt(cIn)||0, codes_s: codesS, codes_p: codesP, codes_c: codesC });
         } else {
-            if(sVal !== "") entry.s = parseInt(sVal); if(pVal !== "") entry.p = parseInt(pVal); if(cVal !== "") entry.c = parseInt(cVal);
-            if(codesS) entry.codes_s = codesS; if(codesP) entry.codes_p = codesP; if(codesC) entry.codes_c = codesC;
+            // استبدال فقط إذا كانت الخانة غير فارغة
+            if(sIn !== "") entry.s = parseInt(sIn);
+            if(pIn !== "") entry.p = parseInt(pIn);
+            if(cIn !== "") entry.c = parseInt(cIn);
+            if(codesS) entry.codes_s = entry.codes_s ? entry.codes_s + "," + codesS : codesS;
+            if(codesP) entry.codes_p = entry.codes_p ? entry.codes_p + "," + codesP : codesP;
+            if(codesC) entry.codes_c = entry.codes_c ? entry.codes_c + "," + codesC : codesC;
         }
     });
     localStorage.setItem("logistics_v52", JSON.stringify(storage));
@@ -234,16 +240,16 @@ function saveData() {
     render(); pushData();
 }
 
+// منطق فتح النافذة: خانات فارغة تماماً
 function openLogModal() {
     const d = new Date().toISOString().split('T')[0];
     document.getElementById('logDate').value = d;
     document.getElementById('logInputs').innerHTML = types.map(t => {
-        const old = storage[t].find(x => x.date === d) || {s:0, p:0, c:0, codes_s:'', codes_p:'', codes_c:''};
         return `<div style="background:var(--bg); padding:15px; border-radius:18px; margin-bottom:12px; border:1px solid var(--border)">
             <div style="display:flex; justify-content:space-between; margin-bottom:10px"><span style="color:${colors[t]}; font-weight:800;">${t}</span><button onclick="launchScanner('${t}')" style="background:var(--brand); color:#fff; border:none; padding:6px 12px; border-radius:10px; font-size:0.75rem; font-weight:bold;">📷 SCAN</button></div>
             <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
-                <input type="number" id="q_s_${t}" value="${old.s}"><input type="number" id="q_p_${t}" value="${old.p}"><input type="number" id="q_c_${t}" value="${old.c}">
-                <input type="hidden" id="c_s_${t}" value="${old.codes_s}"><input type="hidden" id="c_p_${t}" value="${old.codes_p}"><input type="hidden" id="c_c_${t}" value="${old.codes_c}">
+                <input type="number" id="q_s_${t}" placeholder="S" value=""><input type="number" id="q_p_${t}" placeholder="P" value=""><input type="number" id="q_c_${t}" placeholder="C" value="">
+                <input type="hidden" id="c_s_${t}" value=""><input type="hidden" id="c_p_${t}" value=""><input type="hidden" id="c_c_${t}" value="">
             </div></div>`;
     }).join('');
     document.getElementById('logModal').style.display = 'flex';
