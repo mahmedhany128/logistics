@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Insight Pro - V55.3 Restored Features</title>
+    <title>Insight Pro - V55.5 Pure Engine Swap</title>
     
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -15,14 +13,14 @@
     <style>
         :root { --bg: #0f172a; --card: #1e293b; --brand: #818cf8; --text: #f1f5f9; --dim: #94a3b8; --border: rgba(255,255,255,0.08); --success: #34d399; --warning: #fbbf24; --danger: #fb7185; }
         * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: var(--text); margin: 0; padding: 15px; padding-bottom: 120px; -webkit-user-select: none; }
+        body { background: var(--bg); color: var(--text); margin: 0; padding: 15px; padding-bottom: 120px; }
         
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; background: #475569; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; background: #475569; }
         .online { background: var(--success); box-shadow: 0 0 10px var(--success); }
 
         .month-ctrl { background: var(--card); border: 1px solid var(--border); padding: 10px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .nav-btn { background: var(--bg); border: 1px solid var(--border); width: 45px; height: 45px; border-radius: 15px; color: var(--brand); cursor: pointer; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; }
+        .nav-btn { background: var(--bg); border: 1px solid var(--border); width: 45px; height: 45px; border-radius: 15px; color: var(--brand); cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
         .stat-card { background: linear-gradient(145deg, #1e293b, #111827); padding: 18px; border-radius: 24px; border: 1px solid var(--border); cursor: pointer; }
@@ -30,42 +28,26 @@
         
         .table-container { background: var(--card); border-radius: 24px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; }
-        td, th { padding: 14px; text-align: center; border-bottom: 1px solid #334155; font-size: 0.8rem; color: var(--text); }
+        td, th { padding: 14px; text-align: center; border-bottom: 1px solid #334155; font-size: 0.8rem; }
 
-        /* استعادة سكنر Amazon Flex المتطور */
         #scannerOverlay { display: none; position: fixed; inset: 0; background: #000; z-index: 2000; flex-direction: column; }
-        .scanner-header { position: absolute; top: 0; width: 100%; padding: 15px; background: rgba(0,0,0,0.7); z-index: 2010; }
-        
-        .mode-selector { display: flex; gap: 8px; margin-top: 10px; }
-        .mode-btn { flex: 1; padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #fff; font-size: 0.7rem; font-weight: 800; cursor: pointer; }
-        .mode-btn.active.s { background: var(--success); color: #000; border: none; }
-        .mode-btn.active.p { background: var(--warning); color: #000; border: none; }
-        .mode-btn.active.c { background: var(--danger); color: #000; border: none; }
+        .scanner-header { padding: 15px; background: rgba(0,0,0,0.8); z-index: 2010; }
+        #reader { width: 100% !important; background: #000; position: relative; }
+        .scan-frame { position: absolute; width: 260px; height: 120px; border: 2px solid var(--brand); border-radius: 20px; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2005; pointer-events: none; box-shadow: 0 0 0 4000px rgba(0,0,0,0.5); }
 
-        #videoContainer { height: 35vh; position: relative; background: #000; overflow: hidden; flex: none; }
-        #reader { width: 100% !important; height: 100% !important; }
-        #reader video { object-fit: cover !important; width: 100% !important; height: 100% !important; }
-        
-        /* استعادة الإطار الأصلي */
-        .scan-frame { position: absolute; width: 260px; height: 110px; border: 1px solid rgba(255,255,255,0.4); border-radius: 15px; top: 50%; left: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 0 2000px rgba(0,0,0,0.6); z-index: 2005; pointer-events: none; }
-        
         #scannedCardsContainer { flex: 1; background: var(--bg); padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .package-card { background: var(--card); border-radius: 16px; padding: 12px; display: flex; align-items: center; gap: 12px; border: 1px solid var(--border); animation: slideUp 0.3s ease; }
-        .status-badge { width: 8px; height: 35px; border-radius: 4px; }
+        .package-card { background: var(--card); border-radius: 16px; padding: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); }
 
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; align-items: flex-end; backdrop-filter: blur(8px); }
         .modal-content { background: var(--card); width: 100%; padding: 25px; border-radius: 32px 32px 0 0; max-height: 85vh; overflow-y: auto; }
-        
-        input { width: 100%; padding: 14px; margin: 8px 0; border: 1px solid var(--border); border-radius: 14px; background: var(--bg); color: #fff; outline: none; }
+        input { width: 100%; padding: 14px; margin: 8px 0; border: 1px solid var(--border); border-radius: 14px; background: var(--bg); color: #fff; text-align: center; font-weight: 700; }
         .btn-main { background: var(--brand); color: #fff; border: none; padding: 18px; border-radius: 22px; font-weight: 800; width: 100%; cursor: pointer; }
-        
-        @keyframes slideUp { from { transform: translateY(15px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 </head>
 <body>
 
 <header>
-    <h1 style="font-size:1.1rem; margin:0; font-weight: 800;">Insight <span style="color:var(--brand)">Pro V55.3</span></h1>
+    <h1 style="font-size:1.1rem; margin:0; font-weight: 800;">Insight <span style="color:var(--brand)">Pro V55.5</span></h1>
     <span id="dot" class="status-dot"></span>
 </header>
 
@@ -81,7 +63,7 @@
     <div class="table-container">
         <div style="padding:15px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border);">
             <span id="activeTitle" style="font-weight:800; color:var(--brand)">Details</span>
-            <button onclick="document.getElementById('detailsTable').style.display='none'" style="background:none; border:none; color:var(--dim); font-size:1.2rem;">✕</button>
+            <button onclick="document.getElementById('detailsTable').style.display='none'" style="background:none; border:none; color:var(--dim);">✕</button>
         </div>
         <table>
             <thead><tr><th>Day</th><th>S</th><th>P</th><th>C</th><th>%</th></tr></thead>
@@ -90,7 +72,7 @@
     </div>
 </div>
 
-<div style="height: 230px; padding:10px; background:var(--card); border-radius:24px; border:1px solid var(--border);">
+<div style="height: 220px; padding:10px; background:var(--card); border-radius:24px; border:1px solid var(--border); margin-bottom: 20px;">
     <canvas id="mainChart"></canvas>
 </div>
 
@@ -98,27 +80,19 @@
 
 <div id="scannerOverlay">
     <div class="scanner-header">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <span class="pkg-count" id="pkgCount" style="color:#fff; font-size:0.8rem; font-weight:600;">Scan to begin...</span>
-            <button style="background:none; border:none; font-size:1.3rem;" onclick="toggleFlash()" id="flashBtn">🔦</button>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span id="pkgCount" style="color:#fff; font-weight:800;">Scan Barcodes</span>
+            <button onclick="toggleFlash()" style="background:none; border:none; color:white; font-size:1.5rem;">🔦</button>
         </div>
-        <div class="mode-selector">
-            <button class="mode-btn active s" id="btn_s" onclick="setScanMode('s')">SUCCESS</button>
-            <button class="mode-btn p" id="btn_p" onclick="setScanMode('p')">PENDING</button>
-            <button class="mode-btn c" id="btn_c" onclick="setScanMode('c')">CANCEL</button>
+        <div style="display:flex; gap:8px; margin-top:10px;">
+            <button class="nav-btn" id="btn_s" onclick="setScanMode('s')" style="flex:1; font-size:0.7rem; background:var(--success); color:#000; border:none;">SUCCESS</button>
+            <button class="nav-btn" id="btn_p" onclick="setScanMode('p')" style="flex:1; font-size:0.7rem; background:var(--bg); color:var(--warning);">PENDING</button>
+            <button class="nav-btn" id="btn_c" onclick="setScanMode('c')" style="flex:1; font-size:0.7rem; background:var(--bg); color:var(--danger);">CANCEL</button>
         </div>
     </div>
-    
-    <div id="videoContainer">
-        <div id="reader"></div>
-        <div class="scan-frame"></div>
-        <div id="lookupText" style="display:none; position:absolute; top:20%; width:100%; text-align:center; color:#fff; font-size:0.6rem; background:rgba(0,0,0,0.7); padding:4px; z-index:2010;">PROCESSED...</div>
-    </div>
-
+    <div id="reader" style="flex:1;"><div class="scan-frame"></div></div>
     <div id="scannedCardsContainer"></div>
-    <div style="padding:15px; background:var(--card);">
-        <button class="btn-main" onclick="stopScanner()">REVIEW & SAVE</button>
-    </div>
+    <div style="padding:20px; background:var(--card);"><button class="btn-main" onclick="stopScanner()">BACK TO FORM</button></div>
 </div>
 
 <div id="logModal" class="modal">
@@ -133,8 +107,9 @@
 
 <div id="codeModal" class="modal" style="align-items: center; justify-content: center;">
     <div class="modal-content" style="width: 90%; border-radius: 28px;">
-        <div id="codeList"></div>
-        <button onclick="document.getElementById('codeModal').style.display='none'" class="btn-main" style="margin-top:15px; background:var(--bg);">Close</button>
+        <h4 id="codeModalTitle" style="margin-top:0;">Codes List</h4>
+        <div id="codeList" style="max-height: 50vh; overflow-y: auto; margin-bottom:15px;"></div>
+        <button onclick="document.getElementById('codeModal').style.display='none'" class="btn-main">Close</button>
     </div>
 </div>
 
@@ -154,57 +129,44 @@ function updateOnlineStatus() {
 }
 window.addEventListener('online', updateOnlineStatus);
 
-function setScanMode(mode) {
-    currentScanMode = mode;
-    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById(`btn_${mode}`).classList.add('active');
-}
-
 async function launchScanner(type) {
     activeScanType = type;
     document.getElementById('scannerOverlay').style.display = 'flex';
-    document.getElementById('scannedCardsContainer').innerHTML = '';
-    setScanMode('s');
-    
+    updateReviewList();
     if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
-
-    const scanConfig = { fps: 20, qrbox: { width: 260, height: 110 } };
-
-    html5QrCode.start({ facingMode: "environment" }, scanConfig, (text) => {
+    html5QrCode.start({ facingMode: "environment" }, { fps: 20, qrbox: { width: 260, height: 120 } }, (text) => {
+        if(navigator.vibrate) navigator.vibrate(50);
         registerCode(text);
-    }).catch(e => console.error(e));
+    });
 }
 
 function registerCode(code) {
     const h = document.getElementById(`c_${currentScanMode}_${activeScanType}`);
-    let codes = h.value ? h.value.split(',') : [];
-    
+    let codes = h.value ? h.value.split(',').filter(x => x) : [];
     if(!codes.includes(code)) {
-        codes.push(code); h.value = codes.join(',');
-        
-        document.getElementById('lookupText').style.display = 'block';
-        setTimeout(() => document.getElementById('lookupText').style.display = 'none', 500);
-
-        const cardColor = currentScanMode === 's' ? 'var(--success)' : (currentScanMode === 'p' ? 'var(--warning)' : 'var(--danger)');
-        const card = document.createElement('div');
-        card.className = 'package-card';
-        card.innerHTML = `<div class="status-badge" style="background:${cardColor}"></div><div><div style="font-size:0.85rem; font-weight:800;">${code}</div><div style="font-size:0.6rem; color:var(--dim);">${activeScanType} - ${currentScanMode.toUpperCase()}</div></div>`;
-        document.getElementById('scannedCardsContainer').prepend(card);
-        document.getElementById('pkgCount').innerText = `${codes.length} scanned in ${activeScanType}`;
-        if(navigator.vibrate) navigator.vibrate(80);
+        codes.push(code);
+        h.value = codes.join(',');
+        updateReviewList();
     }
 }
 
-async function pullData() {
-    try {
-        const r = await fetch(`https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`, { headers: {'Authorization': `token ${config.token}`} });
-        if(r.ok) {
-            const j = await r.json();
-            storage = JSON.parse(decodeURIComponent(escape(atob(j.content))));
-            localStorage.setItem("logistics_v52", JSON.stringify(storage));
-        }
-    } catch(e) {}
-    render();
+function updateReviewList() {
+    const container = document.getElementById('scannedCardsContainer');
+    container.innerHTML = '';
+    ['s','p','c'].forEach(m => {
+        const codes = document.getElementById(`c_${m}_${activeScanType}`).value.split(',').filter(x => x);
+        codes.forEach((c, i) => {
+            container.innerHTML += `<div class="package-card"><span>${c} (${m.toUpperCase()})</span><span onclick="removeCode('${m}',${i})" style="color:var(--danger); font-weight:bold;">✕</span></div>`;
+        });
+    });
+}
+
+function removeCode(m, i) {
+    const h = document.getElementById(`c_${m}_${activeScanType}`);
+    let codes = h.value.split(',').filter(x => x);
+    codes.splice(i, 1);
+    h.value = codes.join(',');
+    updateReviewList();
 }
 
 async function pushData() {
@@ -213,7 +175,7 @@ async function pushData() {
         const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
         const r = await fetch(url, { headers: {'Authorization': `token ${config.token}`} });
         const sha = r.ok ? (await r.json()).sha : "";
-        await fetch(url, { method:'PUT', headers:{'Authorization':`token ${config.token}`}, body:JSON.stringify({message:"Sync V55.3", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage)))), sha}) });
+        await fetch(url, { method:'PUT', headers:{'Authorization':`token ${config.token}`}, body:JSON.stringify({message:"V55.5", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage)))), sha}) });
     } catch(e) {}
 }
 
@@ -242,7 +204,7 @@ function openLogModal() {
     document.getElementById('logInputs').innerHTML = types.map(t => {
         const old = storage[t].find(x => x.date === d) || {s:0, p:0, c:0, codes_s:'', codes_p:'', codes_c:''};
         return `<div style="background:var(--bg); padding:15px; border-radius:18px; margin-bottom:12px; border:1px solid var(--border)">
-            <div style="display:flex; justify-content:space-between; margin-bottom:10px"><span style="color:${colors[t]}; font-weight:800;">${t}</span><button onclick="launchScanner('${t}')" style="background:var(--brand); color:#fff; border:none; padding:6px 12px; border-radius:10px; font-size:0.75rem; font-weight:bold;">📷 SCAN</button></div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;"><span style="color:${colors[t]}; font-weight:800;">${t}</span><button onclick="launchScanner('${t}')" style="background:var(--brand); color:#fff; border:none; padding:8px 15px; border-radius:12px; font-size:0.7rem;">📷 SCAN</button></div>
             <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
                 <input type="number" id="q_s_${t}" value="${old.s}"><input type="number" id="q_p_${t}" value="${old.p}"><input type="number" id="q_c_${t}" value="${old.c}">
                 <input type="hidden" id="c_s_${t}" value="${old.codes_s}"><input type="hidden" id="c_p_${t}" value="${old.codes_p}"><input type="hidden" id="c_c_${t}" value="${old.codes_c}">
@@ -255,14 +217,10 @@ function showTable(type) {
     const m = viewDate.getMonth(), y = viewDate.getFullYear();
     document.getElementById("detailsTable").style.display = "block";
     document.getElementById("activeTitle").innerText = type;
-    const active = storage[type].filter(d => {
-        const dt = new Date(d.date);
-        return dt.getMonth() === m && dt.getFullYear() === y;
-    }).sort((a,b) => new Date(a.date) - new Date(b.date));
-
+    const active = storage[type].filter(d => { const dt = new Date(d.date); return dt.getMonth() === m && dt.getFullYear() === y; }).sort((a,b) => new Date(a.date) - new Date(b.date));
     document.getElementById("tableBody").innerHTML = active.map(r => {
         const tot = (parseInt(r.s)||0) + (parseInt(r.p)||0) + (parseInt(r.c)||0);
-        return `<tr><td>${new Date(r.date).getDate()}</td><td onclick="manageCodes('${type}','${r.date}','s')">${r.s}</td><td onclick="manageCodes('${type}','${r.date}','p')">${r.p}</td><td onclick="manageCodes('${type}','${r.date}','c')">${r.c}</td><td>${tot>0?((r.s/tot)*100).toFixed(0):0}%</td></tr>`;
+        return `<tr><td>${new Date(r.date).getDate()}</td><td onclick="manageCodes('${type}','${r.date}','s')" style="color:var(--success)">${r.s}</td><td onclick="manageCodes('${type}','${r.date}','p')" style="color:var(--warning)">${r.p}</td><td onclick="manageCodes('${type}','${r.date}','c')" style="color:var(--danger)">${r.c}</td><td>${tot>0?((r.s/tot)*100).toFixed(0):0}%</td></tr>`;
     }).join('') || '<tr><td colspan="5">No data</td></tr>';
 }
 
@@ -270,7 +228,16 @@ function manageCodes(type, date, mode) {
     const entry = storage[type].find(x => x.date === date);
     const codes = (entry[`codes_${mode}`] || "").split(',').filter(x => x);
     document.getElementById('codeModal').style.display = 'flex';
-    document.getElementById('codeList').innerHTML = codes.map((c, i) => `<div class="package-card" style="margin-bottom:8px;"><span>${c}</span></div>`).join('') || '<p>No codes</p>';
+    document.getElementById('codeList').innerHTML = codes.map((c, i) => `<div class="package-card" style="margin-bottom:8px;"><span>${c}</span><button onclick="deleteCode('${type}','${date}','${mode}',${i})" style="background:none; border:none; color:var(--danger); font-weight:bold;">✕</button></div>`).join('') || '<p>Empty</p>';
+}
+
+function deleteCode(type, date, mode, idx) {
+    const entry = storage[type].find(x => x.date === date);
+    let codes = entry[`codes_${mode}`].split(',').filter(x => x);
+    codes.splice(idx, 1);
+    entry[`codes_${mode}`] = codes.join(',');
+    localStorage.setItem("logistics_v52", JSON.stringify(storage));
+    manageCodes(type, date, mode); render(); pushData();
 }
 
 function updateChart(y, m) {
@@ -279,11 +246,10 @@ function updateChart(y, m) {
     const labels = Array.from({length: days}, (_, i) => i + 1);
     const ds = types.map(t => ({ label: t, backgroundColor: colors[t], borderRadius: 4, data: labels.map(d => {
         const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        const f = storage[t].find(x => x.date === dateStr);
-        return f ? f.s : 0;
+        const f = storage[t].find(x => x.date === dateStr); return f ? f.s : 0;
     })}));
     if(chart) chart.destroy();
-    chart = new Chart(ctx, { type:'bar', data: { labels, datasets: ds }, options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{stacked:true, grid:{display:false}}, y:{stacked:true, beginAtZero:true}} }});
+    chart = new Chart(ctx, { type:'bar', data: { labels, datasets: ds }, options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{stacked:true, grid:{display:false}}, y:{stacked:true, beginAtZero:true, grid:{color:'rgba(255,255,255,0.05)'}}} }});
 }
 
 function render() {
@@ -296,23 +262,24 @@ function render() {
     updateChart(y, m);
 }
 
-function stopScanner() { 
-    if(html5QrCode) html5QrCode.stop().then(() => { document.getElementById('scannerOverlay').style.display = 'none'; });
+function setScanMode(m) { 
+    currentScanMode = m; 
+    document.querySelectorAll('.scanner-header .nav-btn').forEach(b => {
+        b.style.background = 'var(--bg)';
+        b.style.color = b.id === 'btn_s' ? 'var(--success)' : (b.id === 'btn_p' ? 'var(--warning)' : 'var(--danger)');
+    });
+    const activeBtn = document.getElementById(`btn_${m}`);
+    activeBtn.style.background = m === 's' ? 'var(--success)' : (m === 'p' ? 'var(--warning)' : 'var(--danger)');
+    activeBtn.style.color = '#000';
 }
 
-async function toggleFlash() {
-    if(html5QrCode && html5QrCode.isScanning) {
-        isFlashOn = !isFlashOn;
-        const track = html5QrCode.getRunningTrack();
-        if(track.getCapabilities().torch) await track.applyConstraints({ advanced: [{ torch: isFlashOn }] });
-    }
-}
-
+function stopScanner() { if(html5QrCode) html5QrCode.stop().then(() => { document.getElementById('scannerOverlay').style.display = 'none'; }); }
+async function toggleFlash() { if(html5QrCode?.isScanning) { isFlashOn = !isFlashOn; const track = html5QrCode.getRunningTrack(); if(track.getCapabilities().torch) await track.applyConstraints({ advanced: [{ torch: isFlashOn }] }); } }
 function moveMonth(dir) { viewDate.setMonth(viewDate.getMonth()+dir); render(); }
 
 async function start() {
     if (!config) { config = {token: prompt("Token:"), user: prompt("User:"), repo: prompt("Repo:")}; localStorage.setItem('gh_config', JSON.stringify(config)); }
-    updateOnlineStatus(); await pullData();
+    updateOnlineStatus(); render();
 }
 start();
 </script>
