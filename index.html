@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Insight Pro - V43 Smart View</title>
+    <title>Insight Pro - V44 Legend</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#818cf8">
     <script src="https://unpkg.com/@zxing/library@latest"></script>
@@ -34,7 +34,7 @@
         table { width: 100%; border-collapse: collapse; }
         td, th { padding: 12px; text-align: center; border-bottom: 1px solid #334155; font-size: 0.75rem; }
         
-        .code-badge { background: var(--bg); color: var(--text); padding: 12px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); margin-bottom: 8px; width: 100%; }
+        .code-badge { background: var(--bg); color: var(--text); padding: 10px 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); margin-bottom: 8px; width: 100%; }
         .del-btn { background: rgba(251, 113, 133, 0.15); color: var(--danger); border: none; padding: 6px 12px; border-radius: 8px; font-weight: 800; cursor: pointer; }
 
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; align-items: flex-end; backdrop-filter: blur(8px); }
@@ -49,11 +49,8 @@
 <body>
 
 <header>
-    <h1 style="font-size:1.1rem; margin:0;">Insight Pro <span style="color:var(--brand)">V43</span></h1>
-    <div style="font-size: 0.7rem;">
-        <span id="dot" class="status-dot online"></span>
-        <span id="syncText">Sync Ready</span>
-    </div>
+    <h1 style="font-size:1.1rem; margin:0;">Insight Pro <span style="color:var(--brand)">V44</span></h1>
+    <div><span id="dot" class="status-dot online"></span><span id="syncText" style="font-size:0.7rem">Ready</span></div>
 </header>
 
 <div class="month-ctrl">
@@ -67,7 +64,7 @@
 <div id="detailsTable" style="display:none;">
     <div class="table-container">
         <div style="padding:15px; display:flex; justify-content:space-between; align-items:center;">
-            <span id="activeTitle" style="font-weight:800; color:var(--brand)">Active Days Only</span>
+            <span id="activeTitle" style="font-weight:800; color:var(--brand)">History</span>
             <button onclick="document.getElementById('detailsTable').style.display='none'" style="background:none; border:none; color:var(--dim); font-size:1.2rem;">✕</button>
         </div>
         <table>
@@ -78,10 +75,7 @@
 </div>
 
 <div class="chart-card">
-    <div style="font-size:0.65rem; color:var(--dim); margin-bottom:10px; font-weight:800;">PERFORMANCE TRACKER (Full Month)</div>
-    <div class="chart-wrapper">
-        <div class="chart-container"><canvas id="mainChart"></canvas></div>
-    </div>
+    <div class="chart-wrapper"><div class="chart-container"><canvas id="mainChart"></canvas></div></div>
 </div>
 
 <button class="btn-main" style="position:fixed; bottom:20px; left:15px; width:calc(100% - 30px); z-index:100;" onclick="openLogModal()">+ Update Data</button>
@@ -89,7 +83,7 @@
 <div id="codeModal" class="modal" style="align-items: center; justify-content: center;">
     <div class="modal-content" style="width: 90%; border-radius: 24px;">
         <h3 id="codeTitle" style="margin-top:0">Manage Codes</h3>
-        <div id="codeList" style="max-height: 350px; overflow-y: auto;"></div>
+        <div id="codeList"></div>
         <button onclick="document.getElementById('codeModal').style.display='none'" class="btn-main" style="margin-top:15px; background:var(--bg);">Close</button>
     </div>
 </div>
@@ -107,7 +101,11 @@
     <div style="padding: 20px; background: #1e293b;">
         <select id="scanTypeSelect"><option>Delivery</option><option>PickUp</option><option>SameDay</option><option>Khazenly</option></select>
         <select id="scanModeSelect"><option value="s">Success</option><option value="p">Pending</option><option value="c">Cancel</option></select>
-        <div id="scannedListDisplay" style="margin-top:10px; max-height:100px; overflow-y:auto;"></div>
+        <div style="display:flex; gap:8px; margin-top:10px;">
+            <input type="text" id="manualInput" placeholder="Manual code...">
+            <button onclick="addManualCode()" style="background:var(--brand); border:none; border-radius:12px; color:#fff; padding:0 15px;">Add</button>
+        </div>
+        <div id="scannedListDisplay" style="margin-top:15px; max-height:120px; overflow-y:auto; background:rgba(0,0,0,0.2); border-radius:10px;"></div>
     </div>
     <video id="video" style="width:100%; flex:1; object-fit:cover;"></video>
     <button class="btn-main" style="border-radius:0" onclick="stopScanner()">Finish Session</button>
@@ -117,13 +115,13 @@
 let config = JSON.parse(localStorage.getItem('gh_config'));
 const types = ["Delivery", "PickUp", "SameDay", "Khazenly"];
 const colors = { Delivery: '#818cf8', PickUp: '#34d399', SameDay: '#fbbf24', Khazenly: '#fb7185' };
-let storage = JSON.parse(localStorage.getItem("logistics_v43")) || {};
+let storage = JSON.parse(localStorage.getItem("logistics_v44")) || {};
 types.forEach(t => { if(!storage[t]) storage[t] = []; });
 
 let chart, viewDate = new Date();
 const codeReader = new ZXing.BrowserMultiFormatReader();
 
-// --- نظام الحذف المطور ---
+// --- 1. الحذف الجذري ---
 function deleteCodePermanently(type, date, mode, index) {
     const entry = storage[type].find(x => x.date === date);
     if(entry) {
@@ -131,7 +129,7 @@ function deleteCodePermanently(type, date, mode, index) {
         let codes = entry[key].split(',').filter(x => x);
         codes.splice(index, 1);
         entry[key] = codes.join(',');
-        localStorage.setItem("logistics_v43", JSON.stringify(storage));
+        localStorage.setItem("logistics_v44", JSON.stringify(storage));
         manageCodes(type, date, mode);
         render(); pushData();
     }
@@ -147,20 +145,68 @@ function manageCodes(type, date, mode) {
     `).join('') || '<p style="text-align:center;">Empty</p>';
 }
 
-// --- العرض الذكي للجدول (الأيام النشطة فقط) ---
+// --- 2. السكنر مع منع التكرار والاهتزاز ---
+function launchScanner(type) {
+    document.getElementById('scanTypeSelect').value = type;
+    document.getElementById('scannerOverlay').style.display = 'flex';
+    updateScanUI();
+    codeReader.decodeFromVideoDevice(undefined, 'video', (result) => {
+        if (result) {
+            const m = document.getElementById('scanModeSelect').value;
+            const h = document.getElementById(`c_${m}_${type}`);
+            let codes = h.value ? h.value.split(',') : [];
+            if(!codes.includes(result.text)) {
+                codes.push(result.text); 
+                h.value = codes.join(',');
+                if(navigator.vibrate) navigator.vibrate(100);
+                updateScanUI();
+            }
+        }
+    });
+}
+
+function updateScanUI() {
+    const t = document.getElementById('scanTypeSelect').value;
+    const m = document.getElementById('scanModeSelect').value;
+    const codes = document.getElementById(`c_${m}_${t}`).value.split(',').filter(x => x);
+    document.getElementById('scannedListDisplay').innerHTML = codes.map((c, i) => `
+        <div class="code-badge" style="margin:5px; padding:8px"><span>${c}</span><button class="del-btn" onclick="removeFromScannerUI('${t}','${m}',${i})">✕</button></div>
+    `).join('');
+}
+
+function removeFromScannerUI(type, mode, index) {
+    const h = document.getElementById(`c_${mode}_${type}`);
+    let codes = h.value.split(',').filter(x => x);
+    codes.splice(index, 1);
+    h.value = codes.join(',');
+    updateScanUI();
+}
+
+function addManualCode() {
+    const code = document.getElementById('manualInput').value.trim();
+    if(!code) return;
+    const t = document.getElementById('scanTypeSelect').value;
+    const m = document.getElementById('scanModeSelect').value;
+    const h = document.getElementById(`c_${m}_${t}`);
+    let codes = h.value ? h.value.split(',') : [];
+    if(!codes.includes(code)) {
+        codes.push(code); h.value = codes.join(',');
+        document.getElementById('manualInput').value = "";
+        updateScanUI();
+    }
+}
+
+// --- 3. عرض الجدول والشارت (الأيام النشطة فقط في الجدول) ---
 function showTable(type) {
     const m = viewDate.getMonth(), y = viewDate.getFullYear();
     document.getElementById("detailsTable").style.display = "block";
-    document.getElementById("activeTitle").innerText = `${type} History`;
-    
-    // فلترة الأيام التي سجلت فيها بيانات فقط لهذا النوع وهذا الشهر
-    const activeDays = storage[type].filter(d => {
+    document.getElementById("activeTitle").innerText = type;
+    const filtered = storage[type].filter(d => {
         const dt = new Date(d.date);
-        const hasData = (parseInt(d.s)||0) + (parseInt(d.p)||0) + (parseInt(d.c)||0) > 0;
-        return dt.getMonth() === m && dt.getFullYear() === y && hasData;
+        return dt.getMonth() === m && dt.getFullYear() === y && ((parseInt(d.s)||0)+(parseInt(d.p)||0)+(parseInt(d.c)||0) > 0);
     }).sort((a,b) => new Date(a.date) - new Date(b.date));
 
-    document.getElementById("tableBody").innerHTML = activeDays.map(r => {
+    document.getElementById("tableBody").innerHTML = filtered.map(r => {
         const tot = (parseInt(r.s)||0) + (parseInt(r.p)||0) + (parseInt(r.c)||0);
         return `<tr>
             <td style="font-weight:800">${new Date(r.date).getDate()}</td>
@@ -169,10 +215,9 @@ function showTable(type) {
             <td onclick="manageCodes('${type}','${r.date}','c')">${r.c}</td>
             <td>${tot>0?((r.s/tot)*100).toFixed(0):0}%</td>
         </tr>`;
-    }).join('') || '<tr><td colspan="5" style="padding:40px; color:var(--dim);">No data recorded for this month.</td></tr>';
+    }).join('') || '<tr><td colspan="5">No data for this month</td></tr>';
 }
 
-// --- الشارت (يظل يعرض كامل الشهر للتسلسل) ---
 function updateChart(y, m) {
     const ctx = document.getElementById('mainChart').getContext('2d');
     const days = new Date(y, m + 1, 0).getDate();
@@ -189,14 +234,11 @@ function updateChart(y, m) {
     chart = new Chart(ctx, { type:'bar', data: { labels, datasets: ds }, options: { 
         responsive:true, maintainAspectRatio:false, 
         plugins:{legend:{display:false}}, 
-        scales:{ 
-            x:{ stacked:true, ticks:{autoSkip:false, font:{size:9}}}, 
-            y:{ stacked:true, beginAtZero:true }
-        } 
+        scales:{ x:{stacked:true, ticks:{autoSkip:false, font:{size:9}}}, y:{stacked:true, beginAtZero:true}} 
     }});
 }
 
-// --- بقية العمليات (Save, Sync, Scanner) ---
+// --- المزامنة والحفظ ---
 async function start() {
     if (!config) {
         config = {token: prompt("Token:"), user: prompt("User:"), repo: prompt("Repo:")};
@@ -212,26 +254,10 @@ async function pullData() {
         if(r.ok) {
             const j = await r.json();
             storage = JSON.parse(decodeURIComponent(escape(atob(j.content))));
-            localStorage.setItem("logistics_v43", JSON.stringify(storage));
+            localStorage.setItem("logistics_v44", JSON.stringify(storage));
         }
     } catch(e) {}
     render();
-}
-
-function render() {
-    const m = viewDate.getMonth(), y = viewDate.getFullYear();
-    document.getElementById('monthLab').innerText = viewDate.toLocaleString('en-US',{month:'long', year:'numeric'});
-    document.getElementById('metricsPanel').innerHTML = types.map(t => {
-        const mData = storage[t].filter(d => { const dt = new Date(d.date); return dt.getMonth() === m && dt.getFullYear() === y; });
-        const s = mData.reduce((a,b) => a + (parseInt(b.s)||0), 0);
-        const tot = mData.reduce((a,b) => a + (parseInt(b.s)+parseInt(b.p)+parseInt(b.c)||0), 0);
-        return `<div class="stat-card" onclick="showTable('${t}')">
-            <span style="font-size:0.7rem; color:${colors[t]}; font-weight:800;">${t}</span>
-            <span class="stat-val">${s}</span>
-            <div style="font-size:0.65rem; color:var(--dim);">${tot > 0 ? ((s/tot)*100).toFixed(0) : 0}% Success</div>
-        </div>`;
-    }).join('');
-    updateChart(y, m);
 }
 
 async function saveData() {
@@ -249,7 +275,7 @@ async function saveData() {
         const idx = storage[t].findIndex(x => x.date === d);
         if(idx >= 0) storage[t][idx] = entry; else storage[t].push(entry);
     });
-    localStorage.setItem("logistics_v43", JSON.stringify(storage));
+    localStorage.setItem("logistics_v44", JSON.stringify(storage));
     document.getElementById('logModal').style.display = 'none'; 
     render(); await pushData();
 }
@@ -260,7 +286,7 @@ async function pushData() {
         const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
         const r = await fetch(url, { headers: {'Authorization': `token ${config.token}`} });
         const sha = r.ok ? (await r.json()).sha : "";
-        await fetch(url, { method:'PUT', headers:{'Authorization':`token ${config.token}`}, body:JSON.stringify({message:"V43 Sync", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage)))), sha}) });
+        await fetch(url, { method:'PUT', headers:{'Authorization':`token ${config.token}`}, body:JSON.stringify({message:"V44 Final", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage)))), sha}) });
     } catch(e) {}
 }
 
@@ -281,40 +307,24 @@ function openLogModal() {
     document.getElementById('logModal').style.display = 'flex';
 }
 
-function launchScanner(type) {
-    document.getElementById('scanTypeSelect').value = type;
-    document.getElementById('scannerOverlay').style.display = 'flex';
-    codeReader.decodeFromVideoDevice(undefined, 'video', (result) => {
-        if (result) {
-            const m = document.getElementById('scanModeSelect').value;
-            const h = document.getElementById(`c_${m}_${type}`);
-            let codes = h.value ? h.value.split(',') : [];
-            if(!codes.includes(result.text)) {
-                codes.push(result.text); h.value = codes.join(',');
-                navigator.vibrate(100); updateScanUI();
-            }
-        }
-    });
-}
-
-function updateScanUI() {
-    const t = document.getElementById('scanTypeSelect').value;
-    const m = document.getElementById('scanModeSelect').value;
-    const codes = document.getElementById(`c_${m}_${t}`).value.split(',').filter(x => x);
-    document.getElementById('scannedListDisplay').innerHTML = codes.map((c, i) => `<div class="code-badge" style="padding:5px"><span>${c}</span><button class="del-btn" onclick="removeFromScannerUI('${t}','${m}',${i})">✕</button></div>`).join('');
-}
-
-function removeFromScannerUI(type, mode, index) {
-    const h = document.getElementById(`c_${mode}_${type}`);
-    let codes = h.value.split(',').filter(x => x);
-    codes.splice(index, 1);
-    h.value = codes.join(',');
-    updateScanUI();
+function render() {
+    const m = viewDate.getMonth(), y = viewDate.getFullYear();
+    document.getElementById('monthLab').innerText = viewDate.toLocaleString('en-US',{month:'long', year:'numeric'});
+    document.getElementById('metricsPanel').innerHTML = types.map(t => {
+        const mData = storage[t].filter(d => { const dt = new Date(d.date); return dt.getMonth() === m && dt.getFullYear() === y; });
+        const s = mData.reduce((a,b) => a + (parseInt(b.s)||0), 0);
+        const tot = mData.reduce((a,b) => a + (parseInt(b.s)+parseInt(b.p)+parseInt(b.c)||0), 0);
+        return `<div class="stat-card" onclick="showTable('${t}')">
+            <span style="font-size:0.7rem; color:${colors[t]}; font-weight:800;">${t}</span>
+            <span class="stat-val">${s}</span>
+            <div style="font-size:0.65rem; color:var(--dim);">${tot > 0 ? ((s/tot)*100).toFixed(0) : 0}% Success</div>
+        </div>`;
+    }).join('');
+    updateChart(y, m);
 }
 
 function stopScanner() { codeReader.reset(); document.getElementById('scannerOverlay').style.display = 'none'; }
 function moveMonth(dir) { viewDate.setMonth(viewDate.getMonth()+dir); render(); }
-window.addEventListener('online', pushData);
 start();
 </script>
 </body>
