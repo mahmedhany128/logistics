@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Insight Pro - Universal Scanner</title>
+    <title>Insight Pro - Full Tools</title>
 
     <script src="https://unpkg.com/@zxing/library@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -15,48 +15,50 @@
             --dim: #94a3b8; --border: #334155; --success: #34d399; --danger: #fb7185; --warning: #fbbf24;
         }
         * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: var(--text); margin: 0; padding: 15px; padding-bottom: 120px; }
+        body { background: var(--bg); color: var(--text); margin: 0; padding: 15px; padding-bottom: 140px; }
         
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .sync-badge { font-size: 0.65rem; font-weight: 800; color: var(--brand); background: #818cf820; padding: 6px 12px; border-radius: 20px; }
+        .header-btns { display: flex; gap: 8px; }
+        .btn-mini { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 5px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 700; cursor: pointer; }
 
         .month-ctrl { background: var(--card); border: 1px solid var(--border); padding: 12px 20px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .nav-btn { background: var(--bg); border: none; width: 42px; height: 42px; border-radius: 14px; color: var(--brand); font-weight: 800; cursor: pointer; }
+        .nav-btn { background: var(--bg); border: none; width: 42px; height: 42px; border-radius: 14px; color: var(--brand); font-weight: 800; }
 
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-        .stat-card { background: var(--card); padding: 18px; border-radius: 24px; border: 1px solid var(--border); position: relative; cursor: pointer; }
+        .stat-card { background: var(--card); padding: 18px; border-radius: 24px; border: 1px solid var(--border); position: relative; }
         .stat-perc { font-size: 0.65rem; font-weight: 800; color: var(--success); position: absolute; top: 18px; right: 18px; background: #34d39915; padding: 2px 6px; border-radius: 6px; }
-        .stat-label { font-size: 0.65rem; font-weight: 700; color: var(--dim); text-transform: uppercase; }
-        .stat-val { font-size: 1.5rem; font-weight: 800; display: block; margin-top: 5px; color: #fff; }
+        .stat-val { font-size: 1.5rem; font-weight: 800; display: block; margin-top: 5px; }
 
         #detailsTable { display: none; margin-bottom: 25px; }
         .table-container { background: var(--card); border-radius: 24px; border: 1px solid var(--border); overflow: hidden; }
         table { width: 100%; border-collapse: collapse; }
-        th { font-size: 0.6rem; color: var(--dim); padding: 12px; background: #1e293b; text-transform: uppercase; }
-        td { padding: 12px 8px; text-align: center; border-bottom: 1px solid #334155; font-size: 0.85rem; font-weight: 600; color: #fff; }
-        .clickable { color: var(--brand); text-decoration: underline; cursor: pointer; }
+        td { padding: 12px 8px; text-align: center; border-bottom: 1px solid #334155; font-size: 0.85rem; color: #fff; }
+        .clickable { color: var(--brand); text-decoration: underline; }
 
-        /* Scanner */
+        /* الشارت المصلح */
+        .chart-wrapper { background: var(--card); padding: 15px; border-radius: 25px; border: 1px solid var(--border); height: 320px; margin-bottom: 30px; position: relative; }
+
         #scannerOverlay { display: none; position: fixed; inset: 0; background: #000; z-index: 9999; flex-direction: column; }
         #video { width: 100%; height: 100%; object-fit: cover; }
-        .scan-frame { position: absolute; inset: 0; border: 2px solid rgba(255,255,255,0.3); margin: auto; width: 300px; height: 180px; border-radius: 20px; box-shadow: 0 0 0 1000px rgba(0,0,0,0.6); pointer-events: none; }
         
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000; align-items: flex-end; justify-content: center; backdrop-filter: blur(8px); }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000; align-items: flex-end; backdrop-filter: blur(8px); }
         .modal-content { background: var(--card); width: 100%; padding: 25px; border-radius: 35px 35px 0 0; max-height: 90vh; overflow-y: auto; }
         
-        input, select { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); color: #fff; font-weight: 700; font-size: 0.85rem; }
-        .btn-add { background: var(--brand); color: #fff; border: none; padding: 16px; border-radius: 18px; font-weight: 800; width: 100%; cursor: pointer; }
-        .chip { background: #818cf820; color: var(--brand); padding: 4px 10px; border-radius: 8px; font-size: 0.7rem; border: 1px solid #818cf840; margin: 2px; display: inline-block; }
+        input { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); color: #fff; }
+        .btn-add { background: var(--brand); color: #fff; border: none; padding: 18px; border-radius: 20px; font-weight: 800; width: 100%; }
+        .btn-danger { background: #fb718520; color: #fb7185; border: 1px solid #fb718540; padding: 10px; border-radius: 12px; font-size: 0.75rem; width: 100%; margin-top: 20px; font-weight: 700; }
         
-        .row-input { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 5px; }
-        .input-group label { font-size: 0.55rem; color: var(--dim); font-weight: 800; margin-left: 2px; }
+        .row-input { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
     </style>
 </head>
 <body>
 
 <header>
-    <h1 style="margin:0; font-size:1.4rem; font-weight:800;">Insight Pro</h1>
-    <div id="sync" class="sync-badge">☁️ Syncing...</div>
+    <h1 style="margin:0; font-size:1.2rem; font-weight:800;">Insight Pro</h1>
+    <div class="header-btns">
+        <button class="btn-mini" onclick="exportData()">📤 Export</button>
+        <div id="sync" class="sync-badge" style="font-size: 0.6rem; padding: 5px;">☁️ OK</div>
+    </div>
 </header>
 
 <div class="month-ctrl">
@@ -69,18 +71,18 @@
 
 <div id="detailsTable">
     <div class="table-container">
-        <div style="padding:15px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center">
+        <div style="padding:15px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between;">
             <span id="activeTitle" style="font-weight:800; color:var(--brand)">Details</span>
             <button onclick="document.getElementById('detailsTable').style.display='none'" style="background:none; border:none; color:var(--dim)">Close</button>
         </div>
         <table>
-            <thead><tr><th>Day</th><th>S</th><th>P</th><th>C</th><th>%</th></tr></thead>
+            <thead><tr><th style="font-size:0.6rem; color:var(--dim)">DAY</th><th style="font-size:0.6rem; color:var(--dim)">S</th><th style="font-size:0.6rem; color:var(--dim)">P</th><th style="font-size:0.6rem; color:var(--dim)">C</th><th style="font-size:0.6rem; color:var(--dim)">%</th></tr></thead>
             <tbody id="tableBody"></tbody>
         </table>
     </div>
 </div>
 
-<div style="background: var(--card); padding: 15px; border-radius: 25px; border: 1px solid var(--border); height: 260px; margin-bottom: 20px;">
+<div class="chart-wrapper">
     <canvas id="mainChart"></canvas>
 </div>
 
@@ -90,9 +92,9 @@
 
 <div id="scannerOverlay">
     <video id="video"></video>
-    <div class="scan-frame"></div>
+    <div style="position:absolute; inset:0; border:2px solid #818cf8; margin:auto; width:280px; height:160px; border-radius:15px; box-shadow: 0 0 0 2000px rgba(0,0,0,0.7);"></div>
     <div style="position:absolute; bottom:30px; left:20px; right:20px; background:var(--card); padding:20px; border-radius:25px; text-align:center;">
-        <div id="scanMsg" style="margin-bottom:10px; font-weight:800; color:var(--brand)">Scanner Mode: <span id="currentScanMode">Success</span></div>
+        <div id="scanMsg" style="margin-bottom:10px; font-weight:800; color:var(--brand)">Mode: <span id="currentScanMode">S</span></div>
         <button class="btn-add" onclick="stopScanner()">FINISH SESSION</button>
     </div>
 </div>
@@ -103,14 +105,15 @@
         <input type="date" id="logDate">
         <div id="logInputs"></div>
         <button class="btn-add" style="margin-top:15px" onclick="saveData()">Save & Sync Data</button>
-        <button onclick="document.getElementById('logModal').style.display='none'" style="width:100%; border:none; background:none; margin-top:10px; color:var(--dim);">Cancel</button>
+        <button class="btn-danger" onclick="clearAllData()">⚠️ Clear All Data</button>
+        <button onclick="document.getElementById('logModal').style.display='none'" style="width:100%; border:none; background:none; margin-top:10px; color:var(--dim); font-size:0.8rem;">Close Window</button>
     </div>
 </div>
 
 <div id="codeModal" class="modal">
-    <div class="modal-content">
+    <div class="modal-content" style="border-radius:25px;">
         <h3 id="codeTitle" style="margin:0 0 15px 0;">Codes</h3>
-        <div id="codeList"></div>
+        <div id="codeList" style="display:flex; flex-wrap:wrap; gap:5px;"></div>
         <button onclick="document.getElementById('codeModal').style.display='none'" class="btn-add" style="margin-top:20px; background:var(--border)">Close</button>
     </div>
 </div>
@@ -120,7 +123,7 @@ const beep = new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-pr
 let config = JSON.parse(localStorage.getItem('gh_config'));
 const types = ["Delivery", "PickUp", "SameDay", "Khazenly"];
 const colors = { Delivery: '#818cf8', PickUp: '#34d399', SameDay: '#fbbf24', Khazenly: '#fb7185' };
-let storage = JSON.parse(localStorage.getItem("logistics_pro_v16")) || {};
+let storage = JSON.parse(localStorage.getItem("logistics_pro_final_v20")) || {};
 types.forEach(t => { if(!storage[t]) storage[t] = []; });
 
 let chart, viewDate = new Date();
@@ -141,8 +144,7 @@ async function pullData() {
         if(r.ok) {
             const j = await r.json();
             storage = JSON.parse(decodeURIComponent(escape(atob(j.content))));
-            localStorage.setItem("logistics_pro_v16", JSON.stringify(storage));
-            document.getElementById('sync').innerText = "☁️ Synced";
+            localStorage.setItem("logistics_pro_final_v20", JSON.stringify(storage));
         }
     } catch(e) {}
     render();
@@ -157,7 +159,7 @@ function render() {
         const tot = mData.reduce((a,b) => a + (parseInt(b.s)+parseInt(b.p)+parseInt(b.c)||0), 0);
         return `<div class="stat-card" onclick="showTable('${t}')">
             <span class="stat-perc">${tot>0 ? ((s/tot)*100).toFixed(0) : 0}%</span>
-            <span class="stat-label" style="color:${colors[t]}">${t}</span>
+            <span class="stat-label" style="color:${colors[t]}; font-size:0.6rem; font-weight:800;">${t}</span>
             <span class="stat-val">${s}</span>
         </div>`;
     }).join('');
@@ -174,8 +176,8 @@ function showTable(type) {
         return `<tr>
             <td>${new Date(r.date).getDate()}</td>
             <td class="clickable" onclick="viewCodes('${r.codes_s}', 'Success')">${r.s}</td>
-            <td class="clickable" onclick="viewCodes('${r.codes_p}', 'Pending')" style="color:var(--warning)">${r.p}</td>
-            <td class="clickable" onclick="viewCodes('${r.codes_c}', 'Canceled')" style="color:var(--danger)">${r.c}</td>
+            <td class="clickable" onclick="viewCodes('${r.codes_p}', 'Pending')">${r.p}</td>
+            <td class="clickable" onclick="viewCodes('${r.codes_c}', 'Canceled')">${r.c}</td>
             <td style="color:var(--success)">${tot>0?((r.s/tot)*100).toFixed(0):0}%</td>
         </tr>`;
     }).join('');
@@ -185,7 +187,7 @@ function viewCodes(c, title) {
     if(!c || c === "undefined") return;
     document.getElementById('codeModal').style.display = 'flex';
     document.getElementById('codeTitle').innerText = title + " Codes";
-    document.getElementById('codeList').innerHTML = c.split(',').map(x => `<span class="chip">${x}</span>`).join('');
+    document.getElementById('codeList').innerHTML = c.split(',').map(x => `<span style="background:#818cf820; color:#818cf8; padding:5px 10px; border-radius:8px; font-size:0.7rem;">${x}</span>`).join('');
 }
 
 function openLogModal() {
@@ -193,20 +195,17 @@ function openLogModal() {
     document.getElementById('logDate').value = new Date().toISOString().split('T')[0];
     document.getElementById('logInputs').innerHTML = types.map(t => `
         <div style="border-bottom:1px solid var(--border); padding-bottom:12px; margin-bottom:12px">
-            <div style="display:flex; justify-content:space-between; align-items:center">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
                 <span style="font-weight:800; color:${colors[t]}">${t}</span>
                 <div style="display:flex; gap:5px; align-items:center">
-                    <span style="font-size:0.6rem; color:var(--dim)">Scan:</span>
-                    <select id="mode_${t}" style="width:50px; padding:2px; margin:0; font-size:0.7rem">
-                        <option value="s">S</option><option value="p">P</option><option value="c">C</option>
-                    </select>
-                    <button onclick="launchScanner('${t}')" style="background:var(--brand); border:none; border-radius:5px; color:#fff; font-size:0.6rem; padding:4px 8px;">📷</button>
+                    <select id="mode_${t}" style="width:50px; padding:2px; font-size:0.7rem"><option value="s">S</option><option value="p">P</option><option value="c">C</option></select>
+                    <button onclick="launchScanner('${t}')" style="background:var(--brand); border:none; border-radius:5px; color:#fff; padding:4px 10px;">📷</button>
                 </div>
             </div>
             <div class="row-input">
-                <div class="input-group"><label>Success</label><input type="number" id="s_${t}" placeholder="0"></div>
-                <div class="input-group"><label>Pending</label><input type="number" id="p_${t}" placeholder="0"></div>
-                <div class="input-group"><label>Cancel</label><input type="number" id="c_${t}" placeholder="0"></div>
+                <div><label style="font-size:0.5rem; color:var(--dim)">S</label><input type="number" id="s_${t}" placeholder="0"></div>
+                <div><label style="font-size:0.5rem; color:var(--dim)">P</label><input type="number" id="p_${t}" placeholder="0"></div>
+                <div><label style="font-size:0.5rem; color:var(--dim)">C</label><input type="number" id="c_${t}" placeholder="0"></div>
             </div>
             <input type="hidden" id="h_s_${t}"><input type="hidden" id="h_p_${t}"><input type="hidden" id="h_c_${t}">
         </div>`).join('');
@@ -214,21 +213,17 @@ function openLogModal() {
 
 function launchScanner(type) {
     const mode = document.getElementById(`mode_${type}`).value;
-    const modeLabel = mode === 's' ? 'Success' : (mode === 'p' ? 'Pending' : 'Canceled');
-    document.getElementById('currentScanMode').innerText = modeLabel;
+    document.getElementById('currentScanMode').innerText = mode.toUpperCase();
     document.getElementById('scannerOverlay').style.display = 'flex';
-    
     codeReader.decodeFromVideoDevice(undefined, 'video', (result) => {
         if (result) {
             const h = document.getElementById(`h_${mode}_${type}`);
             const inputField = document.getElementById(`${mode}_${type}`);
             let curr = h.value ? h.value.split(',') : [];
-            
             if(!curr.includes(result.text)) {
                 curr.push(result.text); h.value = curr.join(',');
                 inputField.value = curr.length;
-                document.getElementById('scanMsg').innerText = "✓ " + result.text;
-                beep.play(); navigator.vibrate(100);
+                beep.play();
             }
         }
     });
@@ -242,36 +237,38 @@ async function saveData() {
         const idx = storage[t].findIndex(x => x.date === d);
         const sVal = document.getElementById(`s_${t}`).value, pVal = document.getElementById(`p_${t}`).value, cVal = document.getElementById(`c_${t}`).value;
         const sCodes = document.getElementById(`h_s_${t}`).value, pCodes = document.getElementById(`h_p_${t}`).value, cCodes = document.getElementById(`h_c_${t}`).value;
-
-        const entry = {
-            date: d, 
-            s: parseInt(sVal)||0, p: parseInt(pVal)||0, c: parseInt(cVal)||0,
-            codes_s: sCodes, codes_p: pCodes, codes_c: cCodes
-        };
-
-        if(idx >= 0) {
-            if(sVal!=="") storage[t][idx].s = entry.s;
-            if(pVal!=="") storage[t][idx].p = entry.p;
-            if(cVal!=="") storage[t][idx].c = entry.c;
-            if(sCodes) storage[t][idx].codes_s = combine(storage[t][idx].codes_s, sCodes);
-            if(pCodes) storage[t][idx].codes_p = combine(storage[t][idx].codes_p, pCodes);
-            if(cCodes) storage[t][idx].codes_c = combine(storage[t][idx].codes_c, cCodes);
-        } else { storage[t].push(entry); }
+        
+        const entry = { date:d, s:parseInt(sVal)||0, p:parseInt(pVal)||0, c:parseInt(cVal)||0, codes_s:sCodes, codes_p:pCodes, codes_c:cCodes };
+        if(idx >= 0) storage[t][idx] = entry; else storage[t].push(entry);
     });
-    localStorage.setItem("logistics_pro_v16", JSON.stringify(storage));
+    localStorage.setItem("logistics_pro_final_v20", JSON.stringify(storage));
     document.getElementById('logModal').style.display = 'none'; render(); await pushData();
 }
-
-function combine(old, nw) { return [...new Set(((old||"").split(',').concat(nw.split(','))).filter(x=>x))].join(','); }
 
 async function pushData() {
     const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
     try {
         const r = await fetch(url, { headers: {'Authorization': `token ${config.token}`} });
         const sha = r.ok ? (await r.json()).sha : "";
-        await fetch(url, { method: 'PUT', headers: {'Authorization': `token ${config.token}`}, body: JSON.stringify({ message:"Sync", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage, null, 2)))), sha }) });
-        document.getElementById('sync').innerText = "☁️ Synced";
+        await fetch(url, { method: 'PUT', headers: {'Authorization': `token ${config.token}`}, body: JSON.stringify({ message:"Update", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage, null, 2)))), sha }) });
+        document.getElementById('sync').innerText = "☁️ OK";
     } catch(e) {}
+}
+
+function exportData() {
+    let csv = "Type,Date,Success,Pending,Canceled\n";
+    types.forEach(t => storage[t].forEach(r => csv += `${t},${r.date},${r.s},${r.p},${r.c}\n`));
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'logistics_report.csv'; a.click();
+}
+
+function clearAllData() {
+    if(confirm("Are you sure? This will delete EVERYTHING!")) {
+        types.forEach(t => storage[t] = []);
+        localStorage.setItem("logistics_pro_final_v20", JSON.stringify(storage));
+        location.reload();
+    }
 }
 
 function updateChart(y, m) {
@@ -284,7 +281,7 @@ function updateChart(y, m) {
         }), backgroundColor: colors[t], borderRadius: 4
     }));
     if(chart) chart.destroy();
-    chart = new Chart(ctx, { type: 'bar', data: { labels: Array.from({length:days}, (_,i)=>i+1), datasets }, options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{stacked:true}, y:{stacked:true}} } });
+    chart = new Chart(ctx, { type: 'bar', data: { labels: Array.from({length:days}, (_,i)=>i+1), datasets }, options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{stacked:true, grid:{display:false}}, y:{stacked:true, grid:{color:'#334155'}}} } });
 }
 function moveMonth(dir) { viewDate.setMonth(viewDate.getMonth()+dir); render(); }
 start();
