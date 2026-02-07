@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Insight Pro - V44 Legend</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#818cf8">
+    <title>Insight Pro - V47 Smart Filter</title>
     <script src="https://unpkg.com/@zxing/library@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -16,26 +14,26 @@
         
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
         .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
-        .online { background: var(--success); box-shadow: 0 0 10px var(--success); }
-        .offline { background: var(--danger); }
+        .online { background: var(--success); }
+        .danger-zone { background: rgba(251, 113, 133, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 5px 10px; border-radius: 10px; font-size: 0.65rem; font-weight: 800; }
 
         .month-ctrl { background: var(--card); border: 1px solid var(--border); padding: 8px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .nav-btn { background: var(--bg); border: none; width: 40px; height: 40px; border-radius: 12px; color: var(--brand); cursor: pointer; font-weight: 800; }
+        .nav-btn { background: var(--bg); border: none; width: 40px; height: 40px; border-radius: 12px; color: var(--brand); cursor: pointer; }
 
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-        .stat-card { background: linear-gradient(145deg, #1e293b, #111827); padding: 18px; border-radius: 24px; border: 1px solid var(--border); }
+        .stat-card { background: linear-gradient(145deg, #1e293b, #111827); padding: 18px; border-radius: 24px; border: 1px solid var(--border); position: relative; }
         .stat-val { font-size: 1.6rem; font-weight: 900; color: #fff; display: block; margin: 5px 0; }
         
         .chart-card { background: var(--card); border-radius: 24px; padding: 15px; margin-bottom: 20px; border: 1px solid var(--border); }
-        .chart-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .chart-wrapper { width: 100%; overflow-x: auto; }
         .chart-container { width: 1000px; height: 220px; }
 
         .table-container { background: var(--card); border-radius: 24px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; }
         td, th { padding: 12px; text-align: center; border-bottom: 1px solid #334155; font-size: 0.75rem; }
         
-        .code-badge { background: var(--bg); color: var(--text); padding: 10px 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); margin-bottom: 8px; width: 100%; }
-        .del-btn { background: rgba(251, 113, 133, 0.15); color: var(--danger); border: none; padding: 6px 12px; border-radius: 8px; font-weight: 800; cursor: pointer; }
+        .code-badge { background: var(--bg); color: var(--text); padding: 10px 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); margin-bottom: 8px; }
+        .del-btn { background: rgba(251, 113, 133, 0.2); color: var(--danger); border: none; padding: 6px 10px; border-radius: 8px; font-weight: 800; }
 
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; align-items: flex-end; backdrop-filter: blur(8px); }
         .modal-content { background: var(--card); width: 100%; padding: 25px; border-radius: 32px 32px 0 0; max-height: 85vh; overflow-y: auto; }
@@ -44,18 +42,27 @@
         .btn-main { background: var(--brand); color: #fff; border: none; padding: 16px; border-radius: 20px; font-weight: 800; width: 100%; cursor: pointer; }
         
         #scannerOverlay { display: none; position: fixed; inset: 0; background: #000; z-index: 2000; flex-direction: column; }
+        #videoContainer { position: relative; flex: 1; background: #000; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        #video { width: 100%; height: 100%; object-fit: cover; }
+        .scan-region { position: absolute; width: 280px; height: 180px; border: 2px solid rgba(255,255,255,0.3); border-radius: 20px; box-shadow: 0 0 0 1000px rgba(0,0,0,0.6); }
+        .scan-region.success { border-color: var(--success); box-shadow: 0 0 0 1000px rgba(52, 211, 153, 0.2); }
+        .scan-line { position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: var(--brand); box-shadow: 0 0 15px var(--brand); animation: scanAnim 2s infinite linear; }
+        @keyframes scanAnim { 0% { top: 0; } 100% { top: 100%; } }
     </style>
 </head>
 <body>
 
 <header>
-    <h1 style="font-size:1.1rem; margin:0;">Insight Pro <span style="color:var(--brand)">V44</span></h1>
-    <div><span id="dot" class="status-dot online"></span><span id="syncText" style="font-size:0.7rem">Ready</span></div>
+    <h1 style="font-size:1.1rem; margin:0;">Insight <span style="color:var(--brand)">V47</span> Master</h1>
+    <div style="display:flex; align-items:center; gap:10px;">
+        <button class="danger-zone" onclick="wipeAllData()">Wipe All</button>
+        <span id="dot" class="status-dot online"></span>
+    </div>
 </header>
 
 <div class="month-ctrl">
     <button class="nav-btn" onclick="moveMonth(-1)">‹</button>
-    <span id="monthLab" style="font-weight:800; font-size:0.9rem;">---</span>
+    <span id="monthLab" style="font-weight:800;">---</span>
     <button class="nav-btn" onclick="moveMonth(1)">›</button>
 </div>
 
@@ -64,8 +71,8 @@
 <div id="detailsTable" style="display:none;">
     <div class="table-container">
         <div style="padding:15px; display:flex; justify-content:space-between; align-items:center;">
-            <span id="activeTitle" style="font-weight:800; color:var(--brand)">History</span>
-            <button onclick="document.getElementById('detailsTable').style.display='none'" style="background:none; border:none; color:var(--dim); font-size:1.2rem;">✕</button>
+            <span id="activeTitle" style="font-weight:800; color:var(--brand)">Details</span>
+            <button onclick="document.getElementById('detailsTable').style.display='none'" style="background:none; border:none; color:var(--dim);">✕</button>
         </div>
         <table>
             <thead><tr><th>Day</th><th>S</th><th>P</th><th>C</th><th>%</th></tr></thead>
@@ -80,84 +87,88 @@
 
 <button class="btn-main" style="position:fixed; bottom:20px; left:15px; width:calc(100% - 30px); z-index:100;" onclick="openLogModal()">+ Update Data</button>
 
-<div id="codeModal" class="modal" style="align-items: center; justify-content: center;">
-    <div class="modal-content" style="width: 90%; border-radius: 24px;">
-        <h3 id="codeTitle" style="margin-top:0">Manage Codes</h3>
-        <div id="codeList"></div>
-        <button onclick="document.getElementById('codeModal').style.display='none'" class="btn-main" style="margin-top:15px; background:var(--bg);">Close</button>
+<div id="scannerOverlay">
+    <div style="padding: 20px; background: #1e293b; z-index: 2001;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <select id="scanTypeSelect"><option>Delivery</option><option>PickUp</option><option>SameDay</option><option>Khazenly</option></select>
+            <select id="scanModeSelect"><option value="s">Success</option><option value="p">Pending</option><option value="c">Cancel</option></select>
+        </div>
+        <div id="scannedListDisplay" style="margin-top:15px; max-height:80px; overflow-y:auto; font-size: 0.8rem;"></div>
     </div>
+    <div id="videoContainer">
+        <video id="video"></video>
+        <div class="scan-region" id="scanRegion"><div class="scan-line"></div></div>
+    </div>
+    <button class="btn-main" style="border-radius:0" onclick="stopScanner()">Save & Close</button>
+</div>
+
+<div id="codeModal" class="modal" style="align-items: center; justify-content: center;">
+    <div class="modal-content" style="width: 90%; border-radius: 24px;"><div id="codeList"></div><button onclick="document.getElementById('codeModal').style.display='none'" class="btn-main" style="margin-top:15px; background:var(--bg);">Close</button></div>
 </div>
 
 <div id="logModal" class="modal">
     <div class="modal-content">
         <input type="date" id="logDate">
         <div id="logInputs"></div>
-        <button class="btn-main" style="margin-top:15px;" onclick="saveData()">Save Changes</button>
+        <button class="btn-main" style="margin-top:15px;" onclick="saveData()">Confirm & Sync</button>
         <button onclick="document.getElementById('logModal').style.display='none'" style="width:100%; background:none; border:none; color:var(--dim); padding:15px;">Cancel</button>
     </div>
-</div>
-
-<div id="scannerOverlay">
-    <div style="padding: 20px; background: #1e293b;">
-        <select id="scanTypeSelect"><option>Delivery</option><option>PickUp</option><option>SameDay</option><option>Khazenly</option></select>
-        <select id="scanModeSelect"><option value="s">Success</option><option value="p">Pending</option><option value="c">Cancel</option></select>
-        <div style="display:flex; gap:8px; margin-top:10px;">
-            <input type="text" id="manualInput" placeholder="Manual code...">
-            <button onclick="addManualCode()" style="background:var(--brand); border:none; border-radius:12px; color:#fff; padding:0 15px;">Add</button>
-        </div>
-        <div id="scannedListDisplay" style="margin-top:15px; max-height:120px; overflow-y:auto; background:rgba(0,0,0,0.2); border-radius:10px;"></div>
-    </div>
-    <video id="video" style="width:100%; flex:1; object-fit:cover;"></video>
-    <button class="btn-main" style="border-radius:0" onclick="stopScanner()">Finish Session</button>
 </div>
 
 <script>
 let config = JSON.parse(localStorage.getItem('gh_config'));
 const types = ["Delivery", "PickUp", "SameDay", "Khazenly"];
 const colors = { Delivery: '#818cf8', PickUp: '#34d399', SameDay: '#fbbf24', Khazenly: '#fb7185' };
-let storage = JSON.parse(localStorage.getItem("logistics_v44")) || {};
+let storage = JSON.parse(localStorage.getItem("logistics_v47")) || {};
 types.forEach(t => { if(!storage[t]) storage[t] = []; });
 
 let chart, viewDate = new Date();
 const codeReader = new ZXing.BrowserMultiFormatReader();
 
-// --- 1. الحذف الجذري ---
-function deleteCodePermanently(type, date, mode, index) {
-    const entry = storage[type].find(x => x.date === date);
-    if(entry) {
-        const key = `codes_${mode}`;
-        let codes = entry[key].split(',').filter(x => x);
-        codes.splice(index, 1);
-        entry[key] = codes.join(',');
-        localStorage.setItem("logistics_v44", JSON.stringify(storage));
-        manageCodes(type, date, mode);
-        render(); pushData();
-    }
+// --- نظام العرض الذكي المطور (أرقام أو باركودات) ---
+function showTable(type) {
+    const m = viewDate.getMonth(), y = viewDate.getFullYear();
+    document.getElementById("detailsTable").style.display = "block";
+    document.getElementById("activeTitle").innerText = type;
+
+    const active = storage[type].filter(d => {
+        const dt = new Date(d.date);
+        const hasNumbers = (parseInt(d.s)||0) + (parseInt(d.p)||0) + (parseInt(d.c)||0) > 0;
+        const hasCodes = (d.codes_s && d.codes_s.length > 2) || (d.codes_p && d.codes_p.length > 2) || (d.codes_c && d.codes_c.length > 2);
+        
+        return dt.getMonth() === m && dt.getFullYear() === y && (hasNumbers || hasCodes);
+    }).sort((a,b) => new Date(a.date) - new Date(b.date));
+
+    document.getElementById("tableBody").innerHTML = active.map(r => {
+        const tot = (parseInt(r.s)||0) + (parseInt(r.p)||0) + (parseInt(r.c)||0);
+        return `<tr>
+            <td style="font-weight:800">${new Date(r.date).getDate()}</td>
+            <td onclick="manageCodes('${type}','${r.date}','s')">${r.s}</td>
+            <td onclick="manageCodes('${type}','${r.date}','p')">${r.p}</td>
+            <td onclick="manageCodes('${type}','${r.date}','c')">${r.c}</td>
+            <td>${tot>0?((r.s/tot)*100).toFixed(0):0}%</td>
+        </tr>`;
+    }).join('') || '<tr><td colspan="5">No entries found</td></tr>';
 }
 
-function manageCodes(type, date, mode) {
-    const entry = storage[type].find(x => x.date === date);
-    if(!entry) return;
-    const codes = (entry[`codes_${mode}`] || "").split(',').filter(x => x);
-    document.getElementById('codeModal').style.display = 'flex';
-    document.getElementById('codeList').innerHTML = codes.map((c, i) => `
-        <div class="code-badge"><span>${c}</span><button class="del-btn" onclick="deleteCodePermanently('${type}','${date}','${mode}',${i})">Delete</button></div>
-    `).join('') || '<p style="text-align:center;">Empty</p>';
-}
-
-// --- 2. السكنر مع منع التكرار والاهتزاز ---
-function launchScanner(type) {
+// --- سكنر فائق الدقة ---
+async function launchScanner(type) {
     document.getElementById('scanTypeSelect').value = type;
     document.getElementById('scannerOverlay').style.display = 'flex';
     updateScanUI();
-    codeReader.decodeFromVideoDevice(undefined, 'video', (result) => {
+
+    const constraints = { video: { facingMode: "environment", focusMode: "continuous" } };
+
+    codeReader.decodeFromConstraints(constraints, 'video', (result) => {
         if (result) {
             const m = document.getElementById('scanModeSelect').value;
             const h = document.getElementById(`c_${m}_${type}`);
             let codes = h.value ? h.value.split(',') : [];
+            
             if(!codes.includes(result.text)) {
-                codes.push(result.text); 
-                h.value = codes.join(',');
+                codes.push(result.text); h.value = codes.join(',');
+                document.getElementById('scanRegion').classList.add('success');
+                setTimeout(() => document.getElementById('scanRegion').classList.remove('success'), 400);
                 if(navigator.vibrate) navigator.vibrate(100);
                 updateScanUI();
             }
@@ -169,8 +180,8 @@ function updateScanUI() {
     const t = document.getElementById('scanTypeSelect').value;
     const m = document.getElementById('scanModeSelect').value;
     const codes = document.getElementById(`c_${m}_${t}`).value.split(',').filter(x => x);
-    document.getElementById('scannedListDisplay').innerHTML = codes.map((c, i) => `
-        <div class="code-badge" style="margin:5px; padding:8px"><span>${c}</span><button class="del-btn" onclick="removeFromScannerUI('${t}','${m}',${i})">✕</button></div>
+    document.getElementById('scannedListDisplay').innerHTML = codes.reverse().map((c, i) => `
+        <div class="code-badge" style="padding:5px; margin:2px; font-size:0.7rem"><span>${c}</span><button class="del-btn" onclick="removeFromScannerUI('${t}','${m}',${codes.length-1-i})">✕</button></div>
     `).join('');
 }
 
@@ -182,40 +193,87 @@ function removeFromScannerUI(type, mode, index) {
     updateScanUI();
 }
 
-function addManualCode() {
-    const code = document.getElementById('manualInput').value.trim();
-    if(!code) return;
-    const t = document.getElementById('scanTypeSelect').value;
-    const m = document.getElementById('scanModeSelect').value;
-    const h = document.getElementById(`c_${m}_${t}`);
-    let codes = h.value ? h.value.split(',') : [];
-    if(!codes.includes(code)) {
-        codes.push(code); h.value = codes.join(',');
-        document.getElementById('manualInput').value = "";
-        updateScanUI();
-    }
+// --- المزامنة وبقية العمليات ---
+async function start() {
+    if (!config) { config = {token: prompt("Token:"), user: prompt("User:"), repo: prompt("Repo:")}; localStorage.setItem('gh_config', JSON.stringify(config)); }
+    await pullData();
 }
 
-// --- 3. عرض الجدول والشارت (الأيام النشطة فقط في الجدول) ---
-function showTable(type) {
-    const m = viewDate.getMonth(), y = viewDate.getFullYear();
-    document.getElementById("detailsTable").style.display = "block";
-    document.getElementById("activeTitle").innerText = type;
-    const filtered = storage[type].filter(d => {
-        const dt = new Date(d.date);
-        return dt.getMonth() === m && dt.getFullYear() === y && ((parseInt(d.s)||0)+(parseInt(d.p)||0)+(parseInt(d.c)||0) > 0);
-    }).sort((a,b) => new Date(a.date) - new Date(b.date));
+async function pullData() {
+    try {
+        const r = await fetch(`https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`, { headers: {'Authorization': `token ${config.token}`} });
+        if(r.ok) {
+            const j = await r.json();
+            storage = JSON.parse(decodeURIComponent(escape(atob(j.content))));
+            localStorage.setItem("logistics_v47", JSON.stringify(storage));
+        }
+    } catch(e) {}
+    render();
+}
 
-    document.getElementById("tableBody").innerHTML = filtered.map(r => {
-        const tot = (parseInt(r.s)||0) + (parseInt(r.p)||0) + (parseInt(r.c)||0);
-        return `<tr>
-            <td style="font-weight:800">${new Date(r.date).getDate()}</td>
-            <td onclick="manageCodes('${type}','${r.date}','s')">${r.s}</td>
-            <td onclick="manageCodes('${type}','${r.date}','p')">${r.p}</td>
-            <td onclick="manageCodes('${type}','${r.date}','c')">${r.c}</td>
-            <td>${tot>0?((r.s/tot)*100).toFixed(0):0}%</td>
-        </tr>`;
-    }).join('') || '<tr><td colspan="5">No data for this month</td></tr>';
+async function pushData() {
+    if(!navigator.onLine) return;
+    try {
+        const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
+        const r = await fetch(url, { headers: {'Authorization': `token ${config.token}`} });
+        const sha = r.ok ? (await r.json()).sha : "";
+        await fetch(url, { method:'PUT', headers:{'Authorization':`token ${config.token}`}, body:JSON.stringify({message:"V47 Master Sync", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage)))), sha}) });
+    } catch(e) {}
+}
+
+function saveData() {
+    const d = document.getElementById('logDate').value;
+    types.forEach(t => {
+        const entry = {
+            date: d,
+            s: parseInt(document.getElementById(`q_s_${t}`).value)||0,
+            p: parseInt(document.getElementById(`q_p_${t}`).value)||0,
+            c: parseInt(document.getElementById(`q_c_${t}`).value)||0,
+            codes_s: document.getElementById(`c_s_${t}`).value,
+            codes_p: document.getElementById(`c_p_${t}`).value,
+            codes_c: document.getElementById(`c_c_${t}`).value
+        };
+        const idx = storage[t].findIndex(x => x.date === d);
+        if(idx >= 0) storage[t][idx] = entry; else storage[t].push(entry);
+    });
+    localStorage.setItem("logistics_v47", JSON.stringify(storage));
+    document.getElementById('logModal').style.display = 'none'; 
+    render(); pushData();
+}
+
+function openLogModal() {
+    const d = new Date().toISOString().split('T')[0];
+    document.getElementById('logDate').value = d;
+    document.getElementById('logInputs').innerHTML = types.map(t => {
+        const old = storage[t].find(x => x.date === d) || {s:0, p:0, c:0, codes_s:'', codes_p:'', codes_c:''};
+        return `<div style="background:var(--bg); padding:15px; border-radius:18px; margin-bottom:10px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:5px"><span style="color:${colors[t]}; font-weight:800;">${t}</span><button onclick="launchScanner('${t}')" style="background:var(--card); color:#fff; border:none; padding:5px 12px; border-radius:10px; font-size:0.75rem;">📷 Scan</button></div>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
+                <input type="number" id="q_s_${t}" value="${old.s}"><input type="number" id="q_p_${t}" value="${old.p}"><input type="number" id="q_c_${t}" value="${old.c}">
+                <input type="hidden" id="c_s_${t}" value="${old.codes_s}"><input type="hidden" id="c_p_${t}" value="${old.codes_p}"><input type="hidden" id="c_c_${t}" value="${old.codes_c}">
+            </div></div>`;
+    }).join('');
+    document.getElementById('logModal').style.display = 'flex';
+}
+
+function manageCodes(type, date, mode) {
+    const entry = storage[type].find(x => x.date === date);
+    const codes = (entry[`codes_${mode}`] || "").split(',').filter(x => x);
+    document.getElementById('codeModal').style.display = 'flex';
+    document.getElementById('codeList').innerHTML = codes.map((c, i) => `
+        <div class="code-badge"><span>${c}</span><button class="del-btn" onclick="deleteCodePermanently('${type}','${date}','${mode}',${i})">Delete</button></div>
+    `).join('') || '<p>No codes</p>';
+}
+
+function deleteCodePermanently(type, date, mode, index) {
+    const entry = storage[type].find(x => x.date === date);
+    if(entry) {
+        let codes = entry[`codes_${mode}`].split(',').filter(x => x);
+        codes.splice(index, 1);
+        entry[`codes_${mode}`] = codes.join(',');
+        localStorage.setItem("logistics_v47", JSON.stringify(storage));
+        manageCodes(type, date, mode); render(); pushData();
+    }
 }
 
 function updateChart(y, m) {
@@ -238,75 +296,6 @@ function updateChart(y, m) {
     }});
 }
 
-// --- المزامنة والحفظ ---
-async function start() {
-    if (!config) {
-        config = {token: prompt("Token:"), user: prompt("User:"), repo: prompt("Repo:")};
-        localStorage.setItem('gh_config', JSON.stringify(config));
-    }
-    await pullData();
-}
-
-async function pullData() {
-    if(!navigator.onLine) return render();
-    try {
-        const r = await fetch(`https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`, { headers: {'Authorization': `token ${config.token}`} });
-        if(r.ok) {
-            const j = await r.json();
-            storage = JSON.parse(decodeURIComponent(escape(atob(j.content))));
-            localStorage.setItem("logistics_v44", JSON.stringify(storage));
-        }
-    } catch(e) {}
-    render();
-}
-
-async function saveData() {
-    const d = document.getElementById('logDate').value;
-    types.forEach(t => {
-        const entry = {
-            date: d,
-            s: parseInt(document.getElementById(`q_s_${t}`).value)||0,
-            p: parseInt(document.getElementById(`q_p_${t}`).value)||0,
-            c: parseInt(document.getElementById(`q_c_${t}`).value)||0,
-            codes_s: document.getElementById(`c_s_${t}`).value,
-            codes_p: document.getElementById(`c_p_${t}`).value,
-            codes_c: document.getElementById(`c_c_${t}`).value
-        };
-        const idx = storage[t].findIndex(x => x.date === d);
-        if(idx >= 0) storage[t][idx] = entry; else storage[t].push(entry);
-    });
-    localStorage.setItem("logistics_v44", JSON.stringify(storage));
-    document.getElementById('logModal').style.display = 'none'; 
-    render(); await pushData();
-}
-
-async function pushData() {
-    if(!navigator.onLine) return;
-    try {
-        const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
-        const r = await fetch(url, { headers: {'Authorization': `token ${config.token}`} });
-        const sha = r.ok ? (await r.json()).sha : "";
-        await fetch(url, { method:'PUT', headers:{'Authorization':`token ${config.token}`}, body:JSON.stringify({message:"V44 Final", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage)))), sha}) });
-    } catch(e) {}
-}
-
-function openLogModal() {
-    const d = new Date().toISOString().split('T')[0];
-    document.getElementById('logDate').value = d;
-    document.getElementById('logInputs').innerHTML = types.map(t => {
-        const old = storage[t].find(x => x.date === d) || {s:0, p:0, c:0, codes_s:'', codes_p:'', codes_c:''};
-        return `<div style="background:var(--bg); padding:15px; border-radius:18px; margin-bottom:10px;">
-            <div style="display:flex; justify-content:space-between; margin-bottom:5px"><span style="color:${colors[t]}; font-weight:800;">${t}</span><button onclick="launchScanner('${t}')" style="background:var(--card); color:#fff; border:none; padding:5px 10px; border-radius:8px; font-size:0.7rem;">📷 Scan</button></div>
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
-                <input type="number" id="q_s_${t}" value="${old.s}">
-                <input type="number" id="q_p_${t}" value="${old.p}">
-                <input type="number" id="q_c_${t}" value="${old.c}">
-                <input type="hidden" id="c_s_${t}" value="${old.codes_s}"><input type="hidden" id="c_p_${t}" value="${old.codes_p}"><input type="hidden" id="c_c_${t}" value="${old.codes_c}">
-            </div></div>`;
-    }).join('');
-    document.getElementById('logModal').style.display = 'flex';
-}
-
 function render() {
     const m = viewDate.getMonth(), y = viewDate.getFullYear();
     document.getElementById('monthLab').innerText = viewDate.toLocaleString('en-US',{month:'long', year:'numeric'});
@@ -315,12 +304,20 @@ function render() {
         const s = mData.reduce((a,b) => a + (parseInt(b.s)||0), 0);
         const tot = mData.reduce((a,b) => a + (parseInt(b.s)+parseInt(b.p)+parseInt(b.c)||0), 0);
         return `<div class="stat-card" onclick="showTable('${t}')">
-            <span style="font-size:0.7rem; color:${colors[t]}; font-weight:800;">${t}</span>
+            <span style="font-size:0.7rem; color:${colors[t]};">${t}</span>
             <span class="stat-val">${s}</span>
-            <div style="font-size:0.65rem; color:var(--dim);">${tot > 0 ? ((s/tot)*100).toFixed(0) : 0}% Success</div>
+            <div style="font-size:0.65rem; color:var(--dim);">${tot > 0 ? ((s/tot)*100).toFixed(0) : 0}% Succ.</div>
         </div>`;
     }).join('');
     updateChart(y, m);
+}
+
+async function wipeAllData() {
+    if(confirm("DANGER: Wipe all records?")) {
+        types.forEach(t => storage[t] = []);
+        localStorage.setItem("logistics_v47", JSON.stringify(storage));
+        render(); await pushData();
+    }
 }
 
 function stopScanner() { codeReader.reset(); document.getElementById('scannerOverlay').style.display = 'none'; }
