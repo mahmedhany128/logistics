@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>Insight Pro - V54.0 Turbo Scanner</title>
+    <title>Insight Pro - V54.1 Soft Touch</title>
     
     <script src="https://unpkg.com/@zxing/library@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -15,26 +15,21 @@
         * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--text); margin: 0; padding: 15px; padding-bottom: 120px; }
         
-        /* Header & Dots */
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
         .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; background: #475569; }
         .online { background: var(--success); box-shadow: 0 0 10px var(--success); }
 
-        /* Navigation */
         .month-ctrl { background: var(--card); border: 1px solid var(--border); padding: 10px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .nav-btn { background: var(--bg); border: 1px solid var(--border); width: 45px; height: 45px; border-radius: 15px; color: var(--brand); cursor: pointer; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; }
+        .nav-btn { background: var(--bg); border: 1px solid var(--border); width: 45px; height: 45px; border-radius: 15px; color: var(--brand); cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-        /* Stats Cards */
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
         .stat-card { background: linear-gradient(145deg, #1e293b, #111827); padding: 18px; border-radius: 24px; border: 1px solid var(--border); cursor: pointer; }
         .stat-val { font-size: 1.6rem; font-weight: 900; color: #fff; display: block; margin: 5px 0; }
         
-        /* Table Layout */
         .table-container { background: var(--card); border-radius: 24px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; }
-        td, th { padding: 14px; text-align: center; border-bottom: 1px solid #334155; font-size: 0.8rem; color: var(--text); }
+        td, th { padding: 14px; text-align: center; border-bottom: 1px solid #334155; font-size: 0.8rem; }
 
-        /* Turbo Scanner Overlay */
         #scannerOverlay { display: none; position: fixed; inset: 0; background: #000; z-index: 2000; flex-direction: column; }
         .scanner-header { padding: 15px; background: rgba(0,0,0,0.85); z-index: 2010; }
         .mode-selector { display: flex; gap: 8px; margin-top: 10px; }
@@ -51,21 +46,19 @@
         @keyframes scanAnim { 0% { top: 0; } 50% { top: 100%; } 100% { top: 0; } }
 
         #scannedCardsContainer { flex: 1; background: var(--bg); padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .package-card { background: var(--card); border-radius: 16px; padding: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); animation: slideUp 0.3s ease; }
+        .package-card { background: var(--card); border-radius: 16px; padding: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); }
 
-        /* Modals */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; align-items: flex-end; backdrop-filter: blur(8px); }
         .modal-content { background: var(--card); width: 100%; padding: 25px; border-radius: 32px 32px 0 0; max-height: 85vh; overflow-y: auto; }
         
         input { width: 100%; padding: 14px; margin: 8px 0; border: 1px solid var(--border); border-radius: 14px; background: var(--bg); color: #fff; text-align: center; font-weight: 700; }
-        .btn-main { background: var(--brand); color: #fff; border: none; padding: 18px; border-radius: 22px; font-weight: 800; width: 100%; cursor: pointer; transition: 0.2s; }
-        .btn-main:active { transform: scale(0.98); }
+        .btn-main { background: var(--brand); color: #fff; border: none; padding: 18px; border-radius: 22px; font-weight: 800; width: 100%; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <header>
-    <h1 style="font-size:1.1rem; margin:0; font-weight: 800;">Insight <span style="color:var(--brand)">Pro V54.0</span></h1>
+    <h1 style="font-size:1.1rem; margin:0; font-weight: 800;">Insight <span style="color:var(--brand)">Pro V54.1</span></h1>
     <span id="dot" class="status-dot"></span>
 </header>
 
@@ -135,7 +128,6 @@
 </div>
 
 <script>
-// --- Global Config ---
 let config = JSON.parse(localStorage.getItem('gh_config'));
 const types = ["Delivery", "PickUp", "SameDay", "Khazenly"];
 const colors = { Delivery: '#818cf8', PickUp: '#34d399', SameDay: '#fbbf24', Khazenly: '#fb7185' };
@@ -146,10 +138,10 @@ let chart, viewDate = new Date(), videoStream = null, isFlashOn = false;
 let currentScanMode = 's', activeScanType = '';
 const codeReader = new ZXing.BrowserMultiFormatReader();
 
-// Audio Context for Beep
-const beep = new Audio("https://www.soundjay.com/buttons/beep-07a.mp3");
+// --- الصوت الجديد (التكة الخفيفة) ---
+const clickSound = new Audio("https://actions.google.com/sounds/v1/foley/light_paper_flick.ogg");
+clickSound.volume = 0.2; // خفض الصوت ليكون مريحاً
 
-// --- Core Logic ---
 function updateOnlineStatus() {
     const dot = document.getElementById('dot');
     if(navigator.onLine) { dot.classList.add('online'); pushData(); } else { dot.classList.remove('online'); }
@@ -161,27 +153,17 @@ async function launchScanner(type) {
     activeScanType = type;
     document.getElementById('scannerOverlay').style.display = 'flex';
     updateReviewList();
-    
-    // Industrial constraints
-    const constraints = { 
-        video: { 
-            facingMode: "environment",
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
-            focusMode: "continuous"
-        } 
-    };
-
     try {
-        videoStream = await navigator.mediaDevices.getUserMedia(constraints);
+        videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
         codeReader.decodeFromVideoDevice(null, 'video', (res) => {
             if(res) {
-                if(navigator.vibrate) navigator.vibrate([100, 50, 100]);
-                beep.play();
+                // تكة ناعمة + اهتزاز خفيف جداً
+                clickSound.play();
+                if(navigator.vibrate) navigator.vibrate(40);
                 registerCode(res.text);
             }
         });
-    } catch (e) { alert("Camera Error: Check permissions"); }
+    } catch (e) { alert("Camera Error"); }
 }
 
 function registerCode(code) {
@@ -205,10 +187,8 @@ function updateReviewList() {
         codes.forEach((c, i) => {
             const color = m==='s'?'var(--success)':(m==='p'?'var(--warning)':'var(--danger)');
             container.innerHTML += `<div class="package-card">
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <div style="width:4px; height:20px; background:${color}"></div>
-                    <span style="font-size:0.85rem; font-weight:800;">${c}</span>
-                </div>
+                <div style="display:flex; align-items:center; gap:10px;"><div style="width:4px; height:20px; background:${color}"></div>
+                <span style="font-size:0.85rem; font-weight:800;">${c}</span></div>
                 <span onclick="removeCode('${m}',${i})" style="color:var(--danger); font-weight:bold; padding:10px;">✕</span>
             </div>`;
         });
@@ -230,7 +210,7 @@ async function pushData() {
         const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
         const r = await fetch(url, { headers: {'Authorization': `token ${config.token}`} });
         const sha = r.ok ? (await r.json()).sha : "";
-        await fetch(url, { method:'PUT', headers:{'Authorization':`token ${config.token}`}, body:JSON.stringify({message:"V54.0 Sync", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage)))), sha}) });
+        await fetch(url, { method:'PUT', headers:{'Authorization':`token ${config.token}`}, body:JSON.stringify({message:"V54.1 Sync", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage)))), sha}) });
     } catch(e) {}
 }
 
@@ -261,7 +241,7 @@ function openLogModal() {
         return `<div style="background:var(--bg); padding:15px; border-radius:18px; margin-bottom:12px; border:1px solid var(--border)">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                 <span style="color:${colors[t]}; font-weight:800;">${t}</span>
-                <button onclick="launchScanner('${t}')" style="background:var(--brand); border:none; color:#fff; padding:8px 15px; border-radius:12px; font-size:0.75rem; font-weight:800;">📷 TURBO SCAN</button>
+                <button onclick="launchScanner('${t}')" style="background:var(--brand); color:#fff; border:none; padding:8px 15px; border-radius:12px; font-size:0.75rem; font-weight:800;">📷 SCAN</button>
             </div>
             <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
                 <input type="number" id="q_s_${t}" value="${old.s}"><input type="number" id="q_p_${t}" value="${old.p}"><input type="number" id="q_c_${t}" value="${old.c}">
@@ -286,7 +266,7 @@ function showTable(type) {
             <td onclick="viewCodes('${type}','${r.date}','c')" style="color:var(--danger)">${r.c}</td>
             <td style="color:var(--brand); font-weight:800;">${tot>0?((r.s/tot)*100).toFixed(0):0}%</td>
         </tr>`;
-    }).join('') || '<tr><td colspan="5">Empty month</td></tr>';
+    }).join('') || '<tr><td colspan="5">Empty</td></tr>';
 }
 
 function viewCodes(type, date, mode) {
@@ -296,7 +276,7 @@ function viewCodes(type, date, mode) {
     document.getElementById('codeModalTitle').innerText = `${type} - ${mode.toUpperCase()}`;
     document.getElementById('codeModalTitle').style.color = color;
     document.getElementById('codeModal').style.display = 'flex';
-    document.getElementById('codeList').innerHTML = codes.map(c => `<div class="package-card"><span>${c}</span></div>`).join('') || '<p style="text-align:center; opacity:0.4;">No logs stored.</p>';
+    document.getElementById('codeList').innerHTML = codes.map(c => `<div class="package-card"><span>${c}</span></div>`).join('') || '<p style="text-align:center; opacity:0.4;">No logs.</p>';
 }
 
 function updateChart(y, m) {
@@ -327,7 +307,7 @@ function render() {
 
 function setScanMode(m) { currentScanMode = m; document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active')); document.getElementById(`btn_${m}`).classList.add('active'); }
 function stopScanner() { if(videoStream) videoStream.getTracks().forEach(t => t.stop()); codeReader.reset(); document.getElementById('scannerOverlay').style.display = 'none'; }
-function toggleFlash() { const t = videoStream?.getVideoTracks()[0]; isFlashOn = !isFlashOn; t.applyConstraints({ advanced: [{ torch: isFlashOn }] }); }
+async function toggleFlash() { const t = videoStream?.getVideoTracks()[0]; isFlashOn = !isFlashOn; await t.applyConstraints({ advanced: [{ torch: isFlashOn }] }); }
 function moveMonth(dir) { viewDate.setMonth(viewDate.getMonth()+dir); render(); }
 
 async function start() {
