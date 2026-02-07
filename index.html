@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>Insight Pro - V83.0 Ultimate</title>
+    <title>Insight Pro - V85.0 Audio Fix</title>
     
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -15,12 +15,56 @@
         * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--text); margin: 0; padding: 15px; padding-bottom: 120px; }
         
-        /* === إصلاح جذري لإزالة علامات المكتبة === */
+        /* === تصميم الفيديو النظيف === */
         #video video { width: 100% !important; height: 100% !important; object-fit: cover !important; border-radius: 0 !important; }
-        /* إخفاء أي عنصر div يضيفه المكتبة فوق الفيديو (مثل الظلال والزوايا) */
-        #video > div:not(:first-child) { display: none !important; opacity: 0 !important; }
-        #video { border: none !important; background: #000 !important; }
+        #qr-shaded-region { display: none !important; }
+        #video > div:not(:first-child), #video > canvas { display: none !important; opacity: 0 !important; }
+        
+        #videoContainer { 
+            height: 40vh; 
+            position: relative; 
+            background: #000; 
+            overflow: hidden; 
+            flex: none; 
+            border-bottom: 1px solid var(--border); 
+            border-radius: 0 0 24px 24px; 
+        }
+        #video { width: 100% !important; height: 100% !important; border: none !important; }
 
+        /* الفريم وليزر المسح */
+        .scan-frame { 
+            position: absolute; 
+            width: 280px; 
+            height: 140px; 
+            border: 2px solid rgba(255,255,255,0.5); 
+            border-radius: 20px; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            box-shadow: 0 0 0 4000px rgba(0,0,0,0.6); 
+            z-index: 10; 
+            pointer-events: none; 
+            overflow: hidden; 
+        }
+        
+        .scan-frame::before, .scan-frame::after { content: ''; position: absolute; width: 30px; height: 30px; border-color: var(--brand); border-style: solid; transition: all 0.3s; }
+        .scan-frame::before { top: 0; left: 0; border-width: 4px 0 0 4px; border-radius: 16px 0 0 0; }
+        .scan-frame::after { bottom: 0; right: 0; border-width: 0 4px 4px 0; border-radius: 0 0 16px 0; }
+
+        .scan-laser {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: var(--brand);
+            box-shadow: 0 0 10px var(--brand), 0 0 20px var(--brand);
+            top: 0;
+            animation: scanMove 2s infinite linear;
+            opacity: 0.8;
+        }
+
+        @keyframes scanMove { 0% { top: 0; } 50% { top: 100%; } 100% { top: 0; } }
+
+        /* بقية العناصر */
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
         .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #475569; }
         .online { background: var(--success); box-shadow: 0 0 10px var(--success); }
@@ -40,17 +84,10 @@
         .scanner-header { position: absolute; top: 0; width: 100%; padding: 15px; background: rgba(0,0,0,0.7); z-index: 2010; }
         
         .mode-selector { display: flex; gap: 8px; margin-top: 10px; }
-        .mode-btn { flex: 1; padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #fff; font-size: 0.7rem; font-weight: 800; }
-        .mode-btn.active.s { background: var(--success); color: #000; }
-        .mode-btn.active.p { background: var(--warning); color: #000; }
-        .mode-btn.active.c { background: var(--danger); color: #000; }
-
-        #videoContainer { height: 40vh; position: relative; background: #000; overflow: hidden; flex: none; border-bottom: 1px solid var(--border); }
-        .scan-frame { position: absolute; width: 280px; height: 130px; border: 2px solid rgba(255,255,255,0.8); border-radius: 18px; top: 50%; left: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 0 4000px rgba(0,0,0,0.7); z-index: 10; pointer-events: none; }
-        /* علامات زوايا إضافية للفريم */
-        .scan-frame::before, .scan-frame::after { content: ''; position: absolute; width: 20px; height: 20px; border-color: var(--brand); border-style: solid; }
-        .scan-frame::before { top: -2px; left: -2px; border-width: 3px 0 0 3px; border-radius: 4px 0 0 0; }
-        .scan-frame::after { bottom: -2px; right: -2px; border-width: 0 3px 3px 0; border-radius: 0 0 4px 0; }
+        .mode-btn { flex: 1; padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #fff; font-size: 0.7rem; font-weight: 800; transition: 0.2s; }
+        .mode-btn.active.s { background: var(--success); color: #000; box-shadow: 0 0 15px rgba(52, 211, 153, 0.4); }
+        .mode-btn.active.p { background: var(--warning); color: #000; box-shadow: 0 0 15px rgba(251, 191, 36, 0.4); }
+        .mode-btn.active.c { background: var(--danger); color: #000; box-shadow: 0 0 15px rgba(251, 113, 133, 0.4); }
 
         #scannedCardsContainer { flex: 1; background: var(--bg); padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
         .package-card { background: var(--card); border-radius: 16px; padding: 12px; display: flex; align-items: center; gap: 12px; border: 1px solid var(--border); animation: slideUp 0.2s ease; }
@@ -68,7 +105,7 @@
 <body>
 
 <header>
-    <h1 style="font-size:1.1rem; margin:0; font-weight: 800;">Insight <span style="color:var(--brand)">Pro V83.0</span></h1>
+    <h1 style="font-size:1.1rem; margin:0; font-weight: 800;">Insight <span style="color:var(--brand)">Pro V85.0</span></h1>
     <span id="dot" class="status-dot"></span>
 </header>
 
@@ -113,8 +150,10 @@
     </div>
     <div id="videoContainer">
         <div id="video"></div>
-        <div class="scan-frame"></div>
-        <div id="scanFeedback" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:var(--success); font-weight:900; font-size:1.5rem; display:none; z-index:20;">OK!</div>
+        <div class="scan-frame">
+            <div class="scan-laser"></div>
+        </div>
+        <div id="scanFeedback" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:var(--success); font-weight:900; font-size:1.8rem; text-shadow:0 0 10px rgba(0,0,0,0.8); display:none; z-index:20;">OK!</div>
     </div>
     <div id="scannedCardsContainer"></div>
     <div style="padding:15px; background:var(--card);">
@@ -140,8 +179,26 @@
 </div>
 
 <script>
-// صوت البيب
-const beepSound = new Audio("data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU"); // Short placeholder beep
+// === مولد الصوت الاحترافي (AudioContext) ===
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function playBeep() {
+    // التأكد من أن السياق الصوتي نشط
+    if (audioCtx.state === 'suspended') { audioCtx.resume(); }
+    
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    
+    oscillator.type = 'square'; // نوع الصوت: حاد وواضح
+    oscillator.frequency.setValueAtTime(800, audioCtx.currentTime); // التردد
+    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime); // مستوى الصوت
+    
+    oscillator.start();
+    oscillator.stop(audioCtx.currentTime + 0.1); // مدة الصوت: 0.1 ثانية
+}
 
 let config = JSON.parse(localStorage.getItem('gh_config'));
 const types = ["Delivery", "PickUp", "SameDay", "Khazenly"];
@@ -163,24 +220,23 @@ function setScanMode(mode) {
     currentScanMode = mode;
     document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
     document.getElementById(`btn_${mode}`).classList.add('active');
+    
+    const color = mode === 's' ? 'var(--success)' : (mode === 'p' ? 'var(--warning)' : 'var(--danger)');
+    document.documentElement.style.setProperty('--brand', color);
 }
 
 async function launchScanner(type) {
     activeScanType = type;
+    // === تفعيل الصوت عند ضغط الزر (لحل مشكلة المتصفحات) ===
+    if (audioCtx.state === 'suspended') { audioCtx.resume(); }
+
     document.getElementById('scannerOverlay').style.display = 'flex';
     document.getElementById('scannedCardsContainer').innerHTML = '';
-    setScanMode('s');
+    setScanMode('s'); 
     
     if(!html5QrCode) html5QrCode = new Html5Qrcode("video");
     
-    // إعدادات محسنة تملأ الشاشة وتمنع التشويه
-    const aspectRatio = window.innerWidth / window.innerHeight;
-    const configScanner = { 
-        fps: 25, 
-        qrbox: { width: 280, height: 130 }, // تكبير منطقة المسح قليلاً
-        aspectRatio: aspectRatio,
-        disableFlip: false 
-    };
+    const configScanner = { fps: 25, qrbox: { width: 250, height: 150 }, aspectRatio: window.innerWidth / window.innerHeight, disableFlip: false };
 
     try {
         await html5QrCode.start({ facingMode: "environment" }, configScanner, (text) => registerCode(text));
@@ -188,7 +244,7 @@ async function launchScanner(type) {
 }
 
 function registerCode(code) {
-    if(isScanning) return; // منع التكرار السريع
+    if(isScanning) return; 
     
     const h = document.getElementById(`c_${currentScanMode}_${activeScanType}`);
     let codes = h.value ? h.value.split(',') : [];
@@ -196,11 +252,17 @@ function registerCode(code) {
     if(!codes.includes(code)) {
         isScanning = true;
         
-        // تشغيل الصوت والمؤثر البصري
-        // beepSound.play().catch(e=>{}); 
+        // تشغيل الصوت الجديد
+        playBeep();
+
         const fb = document.getElementById('scanFeedback');
         fb.style.display = 'block';
-        setTimeout(() => { fb.style.display = 'none'; isScanning = false; }, 800);
+        fb.style.color = currentScanMode === 's' ? 'var(--success)' : (currentScanMode === 'p' ? 'var(--warning)' : 'var(--danger)');
+        fb.innerText = code.slice(-4);
+        
+        if(navigator.vibrate) navigator.vibrate(50);
+        
+        setTimeout(() => { fb.style.display = 'none'; isScanning = false; }, 700);
 
         codes.push(code); h.value = codes.join(',');
         
@@ -210,8 +272,6 @@ function registerCode(code) {
         card.innerHTML = `<div class="status-badge" style="background:${cardColor}"></div><div style="flex:1"><div style="font-size:0.9rem; font-weight:800;">${code}</div><div style="font-size:0.6rem; color:var(--dim);">${activeScanType} • ${currentScanMode.toUpperCase()}</div></div>`;
         document.getElementById('scannedCardsContainer').prepend(card);
         document.getElementById('pkgCount').innerText = `${codes.length} Scanned`;
-        
-        if(navigator.vibrate) navigator.vibrate(100);
     }
 }
 
@@ -233,7 +293,7 @@ async function pushData() {
         const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
         const r = await fetch(url, { headers: {'Authorization': `token ${config.token}`} });
         const sha = r.ok ? (await r.json()).sha : "";
-        await fetch(url, { method:'PUT', headers:{'Authorization':`token ${config.token}`}, body:JSON.stringify({message:"V83 Auto Sync", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage)))), sha}) });
+        await fetch(url, { method:'PUT', headers:{'Authorization':`token ${config.token}`}, body:JSON.stringify({message:"V85 Audio Fix", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage)))), sha}) });
     } catch(e) {}
 }
 
@@ -251,7 +311,6 @@ function saveData() {
         if(!entry) {
             storage[t].push({ date: d, s: parseInt(sIn)||0, p: parseInt(pIn)||0, c: parseInt(cIn)||0, codes_s: codesS, codes_p: codesP, codes_c: codesC });
         } else {
-            // منطق الاستبدال (Replace)
             if(sIn !== "") entry.s = parseInt(sIn);
             if(pIn !== "") entry.p = parseInt(pIn);
             if(cIn !== "") entry.c = parseInt(cIn);
@@ -263,6 +322,7 @@ function saveData() {
     localStorage.setItem("logistics_v52", JSON.stringify(storage));
     document.getElementById('logModal').style.display = 'none'; 
     render(); pushData();
+    document.documentElement.style.setProperty('--brand', '#818cf8');
 }
 
 function openLogModal() {
@@ -339,6 +399,7 @@ function render() {
 async function stopScanner() { 
     if(html5QrCode) { await html5QrCode.stop(); html5QrCode = null; } 
     document.getElementById('scannerOverlay').style.display = 'none'; 
+    document.documentElement.style.setProperty('--brand', '#818cf8');
 }
 
 async function toggleFlash() {
