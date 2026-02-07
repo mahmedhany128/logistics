@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>Insight Pro - V82.0</title>
+    <title>Insight Pro - V83.0 Ultimate</title>
     
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -15,10 +15,11 @@
         * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--text); margin: 0; padding: 15px; padding-bottom: 120px; }
         
-        /* إخفاء علامات المكتبة الرمادية نهائياً */
-        #video * { border: none !important; box-shadow: none !important; }
-        #video b, #video span, #video br, #video img { display: none !important; }
-        #video video { border: none !important; width: 100% !important; height: 100% !important; object-fit: cover !important; }
+        /* === إصلاح جذري لإزالة علامات المكتبة === */
+        #video video { width: 100% !important; height: 100% !important; object-fit: cover !important; border-radius: 0 !important; }
+        /* إخفاء أي عنصر div يضيفه المكتبة فوق الفيديو (مثل الظلال والزوايا) */
+        #video > div:not(:first-child) { display: none !important; opacity: 0 !important; }
+        #video { border: none !important; background: #000 !important; }
 
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
         .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #475569; }
@@ -44,12 +45,15 @@
         .mode-btn.active.p { background: var(--warning); color: #000; }
         .mode-btn.active.c { background: var(--danger); color: #000; }
 
-        #videoContainer { height: 35vh; position: relative; background: #000; overflow: hidden; flex: none; }
-        #video { width: 100% !important; height: 100% !important; }
-        .scan-frame { position: absolute; width: 260px; height: 110px; border: 2px solid rgba(255,255,255,0.6); border-radius: 15px; top: 50%; left: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 0 2000px rgba(0,0,0,0.6); z-index: 5; pointer-events: none; }
-        
+        #videoContainer { height: 40vh; position: relative; background: #000; overflow: hidden; flex: none; border-bottom: 1px solid var(--border); }
+        .scan-frame { position: absolute; width: 280px; height: 130px; border: 2px solid rgba(255,255,255,0.8); border-radius: 18px; top: 50%; left: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 0 4000px rgba(0,0,0,0.7); z-index: 10; pointer-events: none; }
+        /* علامات زوايا إضافية للفريم */
+        .scan-frame::before, .scan-frame::after { content: ''; position: absolute; width: 20px; height: 20px; border-color: var(--brand); border-style: solid; }
+        .scan-frame::before { top: -2px; left: -2px; border-width: 3px 0 0 3px; border-radius: 4px 0 0 0; }
+        .scan-frame::after { bottom: -2px; right: -2px; border-width: 0 3px 3px 0; border-radius: 0 0 4px 0; }
+
         #scannedCardsContainer { flex: 1; background: var(--bg); padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .package-card { background: var(--card); border-radius: 16px; padding: 12px; display: flex; align-items: center; gap: 12px; border: 1px solid var(--border); }
+        .package-card { background: var(--card); border-radius: 16px; padding: 12px; display: flex; align-items: center; gap: 12px; border: 1px solid var(--border); animation: slideUp 0.2s ease; }
         .status-badge { width: 8px; height: 35px; border-radius: 4px; }
 
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; align-items: flex-end; backdrop-filter: blur(8px); }
@@ -57,12 +61,14 @@
         
         input { width: 100%; padding: 14px; margin: 8px 0; border: 1px solid var(--border); border-radius: 14px; background: var(--bg); color: #fff; outline: none; }
         .btn-main { background: var(--brand); color: #fff; border: none; padding: 18px; border-radius: 22px; font-weight: 800; width: 100%; cursor: pointer; }
+        
+        @keyframes slideUp { from { transform: translateY(15px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 </head>
 <body>
 
 <header>
-    <h1 style="font-size:1.1rem; margin:0; font-weight: 800;">Insight <span style="color:var(--brand)">Pro V82.0</span></h1>
+    <h1 style="font-size:1.1rem; margin:0; font-weight: 800;">Insight <span style="color:var(--brand)">Pro V83.0</span></h1>
     <span id="dot" class="status-dot"></span>
 </header>
 
@@ -96,7 +102,7 @@
 <div id="scannerOverlay">
     <div class="scanner-header">
         <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span id="pkgCount" style="color:#fff; font-size:0.8rem; font-weight:600;">Ready to scan...</span>
+            <span id="pkgCount" style="color:#fff; font-size:0.8rem; font-weight:600;">System Ready</span>
             <button style="background:none; border:none; font-size:1.3rem;" onclick="toggleFlash()" id="flashBtn">🔦</button>
         </div>
         <div class="mode-selector">
@@ -108,10 +114,11 @@
     <div id="videoContainer">
         <div id="video"></div>
         <div class="scan-frame"></div>
+        <div id="scanFeedback" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:var(--success); font-weight:900; font-size:1.5rem; display:none; z-index:20;">OK!</div>
     </div>
     <div id="scannedCardsContainer"></div>
     <div style="padding:15px; background:var(--card);">
-        <button class="btn-main" onclick="stopScanner()">DONE & REVIEW</button>
+        <button class="btn-main" onclick="stopScanner()">FINISH & SAVE</button>
     </div>
 </div>
 
@@ -133,13 +140,16 @@
 </div>
 
 <script>
+// صوت البيب
+const beepSound = new Audio("data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU"); // Short placeholder beep
+
 let config = JSON.parse(localStorage.getItem('gh_config'));
 const types = ["Delivery", "PickUp", "SameDay", "Khazenly"];
 const colors = { Delivery: '#818cf8', PickUp: '#34d399', SameDay: '#fbbf24', Khazenly: '#fb7185' };
 let storage = JSON.parse(localStorage.getItem("logistics_v52")) || {};
 types.forEach(t => { if(!storage[t]) storage[t] = []; });
 
-let chart, viewDate = new Date(), html5QrCode = null, isFlashOn = false;
+let chart, viewDate = new Date(), html5QrCode = null, isFlashOn = false, isScanning = false;
 let currentScanMode = 's', activeScanType = '';
 
 function updateOnlineStatus() {
@@ -160,26 +170,48 @@ async function launchScanner(type) {
     document.getElementById('scannerOverlay').style.display = 'flex';
     document.getElementById('scannedCardsContainer').innerHTML = '';
     setScanMode('s');
+    
     if(!html5QrCode) html5QrCode = new Html5Qrcode("video");
-    // إعدادات تمنع ظهور أي رسومات للمكتبة
-    const configScanner = { fps: 25, qrbox: { width: 260, height: 110 }, aspectRatio: 1.0, disableFlip: true };
+    
+    // إعدادات محسنة تملأ الشاشة وتمنع التشويه
+    const aspectRatio = window.innerWidth / window.innerHeight;
+    const configScanner = { 
+        fps: 25, 
+        qrbox: { width: 280, height: 130 }, // تكبير منطقة المسح قليلاً
+        aspectRatio: aspectRatio,
+        disableFlip: false 
+    };
+
     try {
         await html5QrCode.start({ facingMode: "environment" }, configScanner, (text) => registerCode(text));
-    } catch (e) {}
+    } catch (e) { console.log("Cam Error", e); }
 }
 
 function registerCode(code) {
+    if(isScanning) return; // منع التكرار السريع
+    
     const h = document.getElementById(`c_${currentScanMode}_${activeScanType}`);
     let codes = h.value ? h.value.split(',') : [];
+    
     if(!codes.includes(code)) {
+        isScanning = true;
+        
+        // تشغيل الصوت والمؤثر البصري
+        // beepSound.play().catch(e=>{}); 
+        const fb = document.getElementById('scanFeedback');
+        fb.style.display = 'block';
+        setTimeout(() => { fb.style.display = 'none'; isScanning = false; }, 800);
+
         codes.push(code); h.value = codes.join(',');
+        
         const cardColor = currentScanMode === 's' ? 'var(--success)' : (currentScanMode === 'p' ? 'var(--warning)' : 'var(--danger)');
         const card = document.createElement('div');
         card.className = 'package-card';
-        card.innerHTML = `<div class="status-badge" style="background:${cardColor}"></div><div><div style="font-size:0.85rem; font-weight:800;">${code}</div><div style="font-size:0.6rem; color:var(--dim);">${activeScanType} - ${currentScanMode.toUpperCase()}</div></div>`;
+        card.innerHTML = `<div class="status-badge" style="background:${cardColor}"></div><div style="flex:1"><div style="font-size:0.9rem; font-weight:800;">${code}</div><div style="font-size:0.6rem; color:var(--dim);">${activeScanType} • ${currentScanMode.toUpperCase()}</div></div>`;
         document.getElementById('scannedCardsContainer').prepend(card);
-        document.getElementById('pkgCount').innerText = `${codes.length} scanned`;
-        if(navigator.vibrate) navigator.vibrate(80);
+        document.getElementById('pkgCount').innerText = `${codes.length} Scanned`;
+        
+        if(navigator.vibrate) navigator.vibrate(100);
     }
 }
 
@@ -201,11 +233,10 @@ async function pushData() {
         const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
         const r = await fetch(url, { headers: {'Authorization': `token ${config.token}`} });
         const sha = r.ok ? (await r.json()).sha : "";
-        await fetch(url, { method:'PUT', headers:{'Authorization':`token ${config.token}`}, body:JSON.stringify({message:"V82 Master Sync", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage)))), sha}) });
+        await fetch(url, { method:'PUT', headers:{'Authorization':`token ${config.token}`}, body:JSON.stringify({message:"V83 Auto Sync", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage)))), sha}) });
     } catch(e) {}
 }
 
-// منطق الاستبدال الذكي: الخانة الفارغة لا تمسح القديم
 function saveData() {
     const d = document.getElementById('logDate').value;
     types.forEach(t => {
@@ -220,6 +251,7 @@ function saveData() {
         if(!entry) {
             storage[t].push({ date: d, s: parseInt(sIn)||0, p: parseInt(pIn)||0, c: parseInt(cIn)||0, codes_s: codesS, codes_p: codesP, codes_c: codesC });
         } else {
+            // منطق الاستبدال (Replace)
             if(sIn !== "") entry.s = parseInt(sIn);
             if(pIn !== "") entry.p = parseInt(pIn);
             if(cIn !== "") entry.c = parseInt(cIn);
@@ -233,7 +265,6 @@ function saveData() {
     render(); pushData();
 }
 
-// فتح الواجهة فارغة تماماً بناءً على طلبك
 function openLogModal() {
     const d = new Date().toISOString().split('T')[0];
     document.getElementById('logDate').value = d;
@@ -290,7 +321,7 @@ function updateChart(y, m) {
         const f = storage[t].find(x => x.date === dateStr); return f ? f.s : 0;
     })}));
     if(chart) chart.destroy();
-    chart = new Chart(ctx, { type:'bar', data: { labels, datasets: ds }, options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{stacked:true, grid:{display:false}}, y:{stacked:true, beginAtZero:true, grid:{color:'rgba(255,255,255,0.05)'}}} }});
+    chart = new Chart(ctx, { type:'bar', data: { labels, datasets: ds }, options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{stacked:true, grid:{display:false}, ticks:{font:{size:9}}}, y:{stacked:true, beginAtZero:true, grid:{color:'rgba(255,255,255,0.05)'}}} }});
 }
 
 function render() {
@@ -305,7 +336,10 @@ function render() {
     updateChart(y, m);
 }
 
-async function stopScanner() { if(html5QrCode) { await html5QrCode.stop(); html5QrCode = null; } document.getElementById('scannerOverlay').style.display = 'none'; }
+async function stopScanner() { 
+    if(html5QrCode) { await html5QrCode.stop(); html5QrCode = null; } 
+    document.getElementById('scannerOverlay').style.display = 'none'; 
+}
 
 async function toggleFlash() {
     try { isFlashOn = !isFlashOn; const track = html5QrCode.getRunningTrack(); if (track && track.getCapabilities().torch) { await track.applyConstraints({ advanced: [{ torch: isFlashOn }] }); document.getElementById('flashBtn').style.color = isFlashOn ? '#fbbf24' : '#fff'; } } catch (e) {}
