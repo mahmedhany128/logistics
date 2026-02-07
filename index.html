@@ -3,197 +3,244 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#000000">
+    <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>Insight Pro - V53 Delivery</title>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Insight Pro - V54 Full Experience</title>
+    
     <script src="https://unpkg.com/@zxing/library@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+
     <style>
-        :root { --bg: #000000; --card: #121212; --brand: #f3a847; --text: #ffffff; --dim: #a0a0a0; --border: #2a2a2a; --success: #2e7d32; }
-        * { box-sizing: border-box; font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
-        body { background: var(--bg); color: var(--text); padding-bottom: 80px; }
+        :root { --bg: #0f172a; --card: #1e293b; --brand: #818cf8; --text: #f1f5f9; --dim: #94a3b8; --border: rgba(255,255,255,0.08); --success: #34d399; --danger: #fb7185; }
+        * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: var(--text); margin: 0; padding: 15px; padding-bottom: 120px; -webkit-user-select: none; }
+        
+        /* الهيدر */
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; background: var(--success); box-shadow: 0 0 8px var(--success); }
+        .danger-zone { background: rgba(251, 113, 133, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 5px 10px; border-radius: 10px; font-size: 0.65rem; font-weight: 800; cursor: pointer; }
 
-        /* Header Style */
-        header { padding: 20px; background: var(--card); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .danger-zone { color: #ff5252; font-size: 0.7rem; font-weight: bold; border: 1px solid #ff5252; padding: 4px 8px; border-radius: 4px; }
+        /* التحكم في الشهر */
+        .month-ctrl { background: var(--card); border: 1px solid var(--border); padding: 8px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .nav-btn { background: var(--bg); border: none; width: 40px; height: 40px; border-radius: 12px; color: var(--brand); cursor: pointer; font-weight: bold; }
 
-        /* Dashboard Cards */
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; }
-        .stat-box { background: var(--card); padding: 20px; border-radius: 8px; border-left: 4px solid var(--brand); }
-        .stat-box h3 { font-size: 0.7rem; color: var(--dim); text-transform: uppercase; margin-bottom: 5px; }
-        .stat-box p { font-size: 1.5rem; font-weight: bold; }
+        /* شبكة الإحصائيات */
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .stat-card { background: linear-gradient(145deg, #1e293b, #111827); padding: 18px; border-radius: 24px; border: 1px solid var(--border); cursor: pointer; transition: 0.3s; }
+        .stat-card:active { transform: scale(0.95); }
+        .stat-val { font-size: 1.6rem; font-weight: 900; color: #fff; display: block; margin: 5px 0; }
+        
+        /* الرسم البياني */
+        .chart-card { background: var(--card); border-radius: 24px; padding: 15px; margin-bottom: 20px; border: 1px solid var(--border); }
+        .chart-wrapper { width: 100%; overflow-x: auto; scrollbar-width: none; }
+        .chart-container { width: 1000px; height: 220px; }
 
-        /* Scanner Overlay (Same as Video) */
-        #scannerOverlay { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 2000; flex-direction: column; }
-        #videoContainer { position: relative; flex: 1; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #000; }
+        /* الجداول */
+        .table-container { background: var(--card); border-radius: 24px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 20px; animation: slideUp 0.4s ease; }
+        table { width: 100%; border-collapse: collapse; }
+        td, th { padding: 12px; text-align: center; border-bottom: 1px solid #334155; font-size: 0.75rem; }
+        th { color: var(--dim); font-weight: 600; }
+
+        /* الأزرار */
+        .btn-main { background: var(--brand); color: #fff; border: none; padding: 16px; border-radius: 20px; font-weight: 800; width: 100%; cursor: pointer; box-shadow: 0 10px 20px rgba(129, 140, 248, 0.2); }
+
+        /* السكنر المطور */
+        #scannerOverlay { display: none; position: fixed; inset: 0; background: #000; z-index: 2000; flex-direction: column; }
+        #videoContainer { position: relative; flex: 1; background: #000; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         #video { width: 100%; height: 100%; object-fit: cover; }
+        .scan-region { position: absolute; width: 260px; height: 160px; border: 2px solid rgba(255,255,255,0.3); border-radius: 20px; box-shadow: 0 0 0 2000px rgba(0,0,0,0.7); pointer-events: none; }
+        .scan-region.success { border-color: var(--success); box-shadow: 0 0 0 2000px rgba(52, 211, 153, 0.2); transition: 0.2s; }
         
-        .scan-window { position: absolute; width: 80%; height: 30%; border: 2px solid rgba(255,255,255,0.5); border-radius: 2px; box-shadow: 0 0 0 2000px rgba(0,0,0,0.6); }
-        .scan-window::before { content: ""; position: absolute; inset: -2px; border: 2px solid transparent; }
-        .scan-window.active { border-color: var(--brand); box-shadow: 0 0 0 2000px rgba(243, 168, 71, 0.1); }
+        .flash-btn { position: absolute; bottom: 30px; left: 30px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; backdrop-filter: blur(10px); z-index: 2005; }
+        .flash-btn.active { background: #fbbf24; color: #000; box-shadow: 0 0 20px #fbbf24; border: none; }
 
-        .scan-info { padding: 20px; text-align: center; color: var(--dim); font-size: 0.85rem; line-height: 1.4; }
+        /* المودال */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; align-items: flex-end; backdrop-filter: blur(8px); }
+        .modal-content { background: var(--card); width: 100%; padding: 25px; border-radius: 32px 32px 0 0; max-height: 85vh; overflow-y: auto; }
+        input, select { width: 100%; padding: 14px; margin: 8px 0; border: 1px solid var(--border); border-radius: 14px; background: var(--bg); color: #fff; outline: none; font-size: 1rem; }
 
-        /* Scanned Item Card (Same as Video) */
-        .scanned-items-list { padding: 10px; background: var(--bg); max-height: 200px; overflow-y: auto; }
-        .package-card { background: var(--card); border: 1px solid var(--border); padding: 15px; margin-bottom: 8px; display: flex; align-items: center; gap: 15px; border-radius: 4px; }
-        .check-circle { width: 24px; height: 24px; border: 2px solid var(--success); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--success); font-weight: bold; }
-        .package-details p { font-size: 0.65rem; color: var(--dim); }
-        .package-details h4 { font-size: 0.9rem; font-weight: 600; }
-
-        /* Actions Area */
-        .scanner-actions { padding: 20px; background: var(--card); border-top: 1px solid var(--border); }
-        .manual-btn { width: 100%; background: none; border: 1px solid var(--border); color: var(--text); padding: 12px; margin-bottom: 10px; font-size: 0.9rem; text-align: left; }
-        
-        /* Main Controls */
-        .btn-confirm { background: var(--brand); color: #000; font-weight: bold; width: 100%; padding: 18px; border: none; font-size: 1rem; position: fixed; bottom: 0; }
-        
-        /* Flashlight */
-        .flash-btn { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.5); border: 1px solid #fff; color: #fff; width: 45px; height: 45px; border-radius: 50%; z-index: 2001; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
     </style>
 </head>
 <body>
 
 <header>
-    <div style="font-weight: 900; letter-spacing: -0.5px;">INSIGHT <span style="color:var(--brand)">PRO</span></div>
-    <div onclick="wipeAllData()" class="danger-zone">CLEAR ALL</div>
+    <h1 style="font-size:1.1rem; margin:0; font-weight: 800;">Insight <span style="color:var(--brand)">Pro V54</span></h1>
+    <div style="display:flex; align-items:center; gap:12px;">
+        <button class="danger-zone" onclick="wipeAllData()">Wipe Data</button>
+        <span class="status-dot"></span>
+    </div>
 </header>
 
-<div class="stats-grid" id="metricsPanel"></div>
-
-<div class="chart-card" style="padding: 15px;">
-    <div style="overflow-x: auto;"><div style="width: 1000px; height: 200px;"><canvas id="mainChart"></canvas></div></div>
+<div class="month-ctrl">
+    <button class="nav-btn" onclick="moveMonth(-1)">‹</button>
+    <span id="monthLab" style="font-weight:800; font-size: 0.9rem;">---</span>
+    <button class="nav-btn" onclick="moveMonth(1)">›</button>
 </div>
 
-<button class="btn-confirm" onclick="openLogModal()">UPDATE SHIPMENTS</button>
+<div class="grid" id="metricsPanel"></div>
+
+<div id="detailsTable" style="display:none;">
+    <div class="table-container">
+        <div style="padding:15px; display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid var(--border);">
+            <span id="activeTitle" style="font-weight:800; color:var(--brand)">Details</span>
+            <button onclick="document.getElementById('detailsTable').style.display='none'" style="background:none; border:none; color:var(--dim); font-size: 1.2rem;">✕</button>
+        </div>
+        <table>
+            <thead><tr><th>Day</th><th>S</th><th>P</th><th>C</th><th>%</th></tr></thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<div class="chart-card">
+    <div class="chart-wrapper"><div class="chart-container"><canvas id="mainChart"></canvas></div></div>
+</div>
+
+<button class="btn-main" style="position:fixed; bottom:20px; left:15px; width:calc(100% - 30px); z-index:100;" onclick="openLogModal()">+ UPDATE DATA</button>
 
 <div id="scannerOverlay">
-    <div style="padding: 15px; background: var(--card); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
-        <span style="font-size: 0.9rem; font-weight: bold;">Scan Packages</span>
-        <button onclick="stopScanner()" style="background: none; border: none; color: var(--brand); font-weight: bold;">DONE</button>
+    <div style="padding: 20px; background: #1e293b; z-index: 2001;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <select id="scanTypeSelect"><option>Delivery</option><option>PickUp</option><option>SameDay</option><option>Khazenly</option></select>
+            <select id="scanModeSelect"><option value="s">Success</option><option value="p">Pending</option><option value="c">Cancel</option></select>
+        </div>
+        <div style="display:flex; gap:8px; margin-top:12px;">
+            <input type="text" id="manualInput" placeholder="Enter ID manually..." style="margin:0; flex:1;">
+            <button onclick="addManualCode()" style="background:var(--brand); border:none; border-radius:12px; color:#fff; padding:0 15px; font-weight:bold;">Add</button>
+        </div>
+        <div id="scannedStatus" style="margin-top:10px; font-size: 0.75rem; color: var(--dim); text-align: center;">Ready to scan...</div>
     </div>
-
     <div id="videoContainer">
         <video id="video" playsinline></video>
-        <div class="scan-window" id="scanWindow"></div>
+        <div class="scan-region" id="scanRegion"></div>
         <button class="flash-btn" id="flashToggle" onclick="toggleFlash()">🔦</button>
     </div>
-
-    <div class="scanned-items-list" id="scannedItemsList">
-        </div>
-
-    <div class="scan-info">
-        <p>Aim your device at each label from 1-2 feet away. Too dark? Try the flashlight. Still won't scan? Go to Help to enter manually.</p>
-    </div>
-
-    <div class="scanner-actions">
-        <button class="manual-btn" onclick="promptManual()">Manually enter package ID</button>
-    </div>
+    <button class="btn-main" style="border-radius:0" onclick="stopScanner()">SAVE & EXIT</button>
 </div>
 
-<div id="logModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:1000; padding:20px; overflow-y:auto;">
-    <h2 style="margin-bottom:20px;">Update Data</h2>
-    <input type="date" id="logDate" style="width:100%; padding:15px; background:#121212; border:1px solid #2a2a2a; color:#fff; margin-bottom:20px;">
-    <div id="logInputs"></div>
-    <button class="btn-confirm" style="position:relative; margin-top:20px;" onclick="saveData()">CONFIRM & SYNC</button>
-    <button onclick="closeLogModal()" style="width:100%; background:none; border:none; color:var(--dim); margin-top:15px;">Close</button>
+<div id="logModal" class="modal">
+    <div class="modal-content">
+        <h3 style="margin-top:0; margin-bottom:15px; font-size: 1.1rem;">Log Shipments</h3>
+        <input type="date" id="logDate">
+        <div id="logInputs"></div>
+        <button class="btn-main" style="margin-top:15px;" onclick="saveData()">CONFIRM & SYNC</button>
+        <button onclick="document.getElementById('logModal').style.display='none'" style="width:100%; background:none; border:none; color:var(--dim); padding:15px; font-weight:bold;">CANCEL</button>
+    </div>
 </div>
 
 <script>
-// المنطق البرمجي (نفس الميزات السابقة مع تحسين واجهة السكنر)
-let storage = JSON.parse(localStorage.getItem("logistics_v53")) || {};
+// الإعدادات والمزامنة
+let config = JSON.parse(localStorage.getItem('gh_config'));
 const types = ["Delivery", "PickUp", "SameDay", "Khazenly"];
+const colors = { Delivery: '#818cf8', PickUp: '#34d399', SameDay: '#fbbf24', Khazenly: '#fb7185' };
+let storage = JSON.parse(localStorage.getItem("logistics_v54")) || {};
 types.forEach(t => { if(!storage[t]) storage[t] = []; });
-let videoStream = null, isFlashOn = false, activeScanType = "";
+
+let chart, viewDate = new Date(), videoStream = null, isFlashOn = false;
 const codeReader = new ZXing.BrowserMultiFormatReader();
 
+// ميزة التطبيق (PWA)
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('data:text/javascript;base64,c2VsZi5hZGRFdmVudExpc3RlbmVyKCdmZXRjaCcsIGZ1bmN0aW9uKGV2ZW50KSB7IH0pOw==');
+    });
+}
+
+// تنظيف الصفر تلقائياً
+function setupSmartInputs() {
+    document.querySelectorAll('input[type="number"]').forEach(input => {
+        input.onclick = function() { if(this.value === "0") this.value = ""; };
+        input.onblur = function() { if(this.value === "") this.value = "0"; };
+    });
+}
+
+// السكنر القوي (Turbo HD)
 async function launchScanner(type) {
-    activeScanType = type;
+    document.getElementById('scanTypeSelect').value = type;
     document.getElementById('scannerOverlay').style.display = 'flex';
-    const constraints = { video: { facingMode: "environment", width: { ideal: 1280 }, focusMode: "continuous" } };
+    const constraints = { 
+        video: { 
+            facingMode: "environment", 
+            width: { ideal: 1280 }, 
+            height: { ideal: 720 },
+            focusMode: "continuous"
+        } 
+    };
     try {
         videoStream = await navigator.mediaDevices.getUserMedia(constraints);
-        codeReader.decodeFromConstraints(constraints, 'video', (result) => { if(result) registerCode(result.text); });
-    } catch (e) { alert("Camera error"); }
+        codeReader.decodeFromConstraints(constraints, 'video', (result) => { 
+            if (result) registerCode(result.text); 
+        });
+    } catch (e) { alert("Camera access denied."); }
 }
 
 function registerCode(code) {
-    const m = "s"; // الافتراضي ناجح في السكنر السريع
-    const h = document.getElementById(`c_${m}_${activeScanType}`);
+    const t = document.getElementById('scanTypeSelect').value;
+    const m = document.getElementById('scanModeSelect').value;
+    const h = document.getElementById(`c_${m}_${t}`);
     let codes = h.value ? h.value.split(',') : [];
-    
     if(!codes.includes(code)) {
-        codes.push(code);
-        h.value = codes.join(',');
-        
-        // تأثير بصري للنجاح
-        document.getElementById('scanWindow').classList.add('active');
-        setTimeout(() => document.getElementById('scanWindow').classList.remove('active'), 300);
-        if(navigator.vibrate) navigator.vibrate(100);
-
-        // إضافة الكارت للقائمة مثل الفيديو
-        const list = document.getElementById('scannedItemsList');
-        const card = document.createElement('div');
-        card.className = 'package-card';
-        card.innerHTML = `
-            <div class="check-circle">✓</div>
-            <div class="package-details">
-                <p>Package ID</p>
-                <h4>${code}</h4>
-                <p>Status: Scanned Successfully</p>
-            </div>
-        `;
-        list.prepend(card);
+        codes.push(code); h.value = codes.join(',');
+        document.getElementById('scanRegion').classList.add('success');
+        document.getElementById('scannedStatus').innerText = "Last Scanned: " + code;
+        setTimeout(() => document.getElementById('scanRegion').classList.remove('success'), 300);
+        if(navigator.vibrate) navigator.vibrate(80);
     }
 }
 
-function stopScanner() {
+function stopScanner() { 
     if(videoStream) videoStream.getTracks().forEach(t => t.stop());
-    codeReader.reset();
-    document.getElementById('scannerOverlay').style.display = 'none';
-    document.getElementById('scannedItemsList').innerHTML = "";
-}
-
-function promptManual() {
-    const code = prompt("Enter Package ID:");
-    if(code) registerCode(code);
+    codeReader.reset(); isFlashOn = false;
+    document.getElementById('scannerOverlay').style.display = 'none'; 
 }
 
 async function toggleFlash() {
     const track = videoStream?.getVideoTracks()[0];
-    isFlashOn = !isFlashOn;
-    await track.applyConstraints({ advanced: [{ torch: isFlashOn }] });
+    try {
+        isFlashOn = !isFlashOn;
+        await track.applyConstraints({ advanced: [{ torch: isFlashOn }] });
+        document.getElementById('flashToggle').classList.toggle('active', isFlashOn);
+    } catch (e) { console.log("Flash not available"); }
 }
 
-// ... (بقية دوال saveData, render, pullData, pushData من النسخ السابقة لضمان عمل المزامنة)
-// سيتم وضعها بالكامل لضمان عمل الكود بمجرد النسخ
-function openLogModal() {
-    const d = new Date().toISOString().split('T')[0];
-    document.getElementById('logDate').value = d;
-    document.getElementById('logInputs').innerHTML = types.map(t => {
-        const old = storage[t].find(x => x.date === d) || {s:0, p:0, c:0, codes_s:''};
-        return `
-            <div style="background:#121212; padding:15px; margin-bottom:10px; border:1px solid #2a2a2a">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
-                    <span style="color:var(--brand); font-weight:bold;">${t}</span>
-                    <button onclick="launchScanner('${t}')" style="background:#f3a847; color:#000; border:none; padding:5px 10px; border-radius:4px; font-size:0.7rem; font-weight:bold;">SCAN CAMERA</button>
-                </div>
-                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
-                    <input type="number" id="q_s_${t}" value="${old.s}" placeholder="Success">
-                    <input type="number" id="q_p_${t}" value="${old.p}" placeholder="Pending">
-                    <input type="number" id="q_c_${t}" value="${old.c}" placeholder="Cancel">
-                </div>
-                <input type="hidden" id="c_s_${t}" value="${old.codes_s}">
-                <input type="hidden" id="c_p_${t}" value="">
-                <input type="hidden" id="c_c_${t}" value="">
-            </div>
-        `;
-    }).join('');
-    document.getElementById('logModal').style.display = 'block';
+function addManualCode() {
+    const input = document.getElementById('manualInput');
+    if(input.value.trim()) { registerCode(input.value.trim()); input.value = ""; }
 }
 
-function closeLogModal() { document.getElementById('logModal').style.display = 'none'; }
+// عرض البيانات والرسوم
+async function start() {
+    if (!config) { 
+        config = {token: prompt("GitHub Token:"), user: prompt("User:"), repo: prompt("Repo:")}; 
+        localStorage.setItem('gh_config', JSON.stringify(config)); 
+    }
+    await pullData();
+}
+
+async function pullData() {
+    try {
+        const r = await fetch(`https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`, { headers: {'Authorization': `token ${config.token}`} });
+        if(r.ok) {
+            const j = await r.json();
+            storage = JSON.parse(decodeURIComponent(escape(atob(j.content))));
+            localStorage.setItem("logistics_v54", JSON.stringify(storage));
+        }
+    } catch(e) {}
+    render();
+}
+
+async function pushData() {
+    if(!navigator.onLine) return;
+    try {
+        const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
+        const r = await fetch(url, { headers: {'Authorization': `token ${config.token}`} });
+        const sha = r.ok ? (await r.json()).sha : "";
+        await fetch(url, { method:'PUT', headers:{'Authorization':`token ${config.token}`}, body:JSON.stringify({message:"V54 Sync", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage)))), sha}) });
+    } catch(e) {}
+}
 
 function saveData() {
     const d = document.getElementById('logDate').value;
@@ -204,22 +251,97 @@ function saveData() {
             s: parseInt(document.getElementById(`q_s_${t}`).value)||0,
             p: parseInt(document.getElementById(`q_p_${t}`).value)||0,
             c: parseInt(document.getElementById(`q_c_${t}`).value)||0,
-            codes_s: document.getElementById(`c_s_${t}`).value
+            codes_s: document.getElementById(`c_s_${t}`).value,
+            codes_p: document.getElementById(`c_p_${t}`).value,
+            codes_c: document.getElementById(`c_c_${t}`).value
         });
     });
-    localStorage.setItem("logistics_v53", JSON.stringify(storage));
-    closeLogModal();
-    render();
+    localStorage.setItem("logistics_v54", JSON.stringify(storage));
+    document.getElementById('logModal').style.display = 'none';
+    render(); pushData();
+}
+
+function openLogModal() {
+    const d = new Date().toISOString().split('T')[0];
+    document.getElementById('logDate').value = d;
+    document.getElementById('logInputs').innerHTML = types.map(t => {
+        const old = storage[t].find(x => x.date === d) || {s:0, p:0, c:0, codes_s:'', codes_p:'', codes_c:''};
+        return `
+            <div style="background:rgba(255,255,255,0.03); padding:15px; border-radius:18px; margin-bottom:12px; border:1px solid var(--border)">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
+                    <span style="color:${colors[t]}; font-weight:800; font-size:0.9rem">${t}</span>
+                    <button onclick="launchScanner('${t}')" style="background:var(--brand); color:#fff; border:none; padding:6px 12px; border-radius:8px; font-size:0.7rem; font-weight:bold;">📷 SCAN</button>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px;">
+                    <input type="number" id="q_s_${t}" value="${old.s}" placeholder="S">
+                    <input type="number" id="q_p_${t}" value="${old.p}" placeholder="P">
+                    <input type="number" id="q_c_${t}" value="${old.c}" placeholder="C">
+                    <input type="hidden" id="c_s_${t}" value="${old.codes_s}">
+                    <input type="hidden" id="c_p_${t}" value="${old.codes_p}">
+                    <input type="hidden" id="c_c_${t}" value="${old.codes_c}">
+                </div>
+            </div>`;
+    }).join('');
+    setupSmartInputs();
+    document.getElementById('logModal').style.display = 'flex';
+}
+
+function showTable(type) {
+    const m = viewDate.getMonth(), y = viewDate.getFullYear();
+    document.getElementById("detailsTable").style.display = "block";
+    document.getElementById("activeTitle").innerText = type;
+    const active = storage[type].filter(d => {
+        const dt = new Date(d.date);
+        return dt.getMonth() === m && dt.getFullYear() === y && ((parseInt(d.s)||0) + (parseInt(d.p)||0) + (parseInt(d.c)||0) > 0);
+    }).sort((a,b) => new Date(a.date) - new Date(b.date));
+
+    document.getElementById("tableBody").innerHTML = active.map(r => {
+        const tot = (parseInt(r.s)||0) + (parseInt(r.p)||0) + (parseInt(r.c)||0);
+        return `<tr>
+            <td style="font-weight:800">${new Date(r.date).getDate()}</td>
+            <td>${r.s}</td><td>${r.p}</td><td>${r.c}</td>
+            <td style="color:var(--brand)">${tot>0?((r.s/tot)*100).toFixed(0):0}%</td>
+        </tr>`;
+    }).join('') || '<tr><td colspan="5">No data this month</td></tr>';
+}
+
+function updateChart(y, m) {
+    const ctx = document.getElementById('mainChart').getContext('2d');
+    const days = new Date(y, m + 1, 0).getDate();
+    const labels = Array.from({length: days}, (_, i) => i + 1);
+    const ds = types.map(t => ({
+        label: t, backgroundColor: colors[t], borderRadius: 4,
+        data: labels.map(d => {
+            const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const f = storage[t].find(x => x.date === dateStr);
+            return f ? f.s : 0;
+        })
+    }));
+    if(chart) chart.destroy();
+    chart = new Chart(ctx, { type:'bar', data: { labels, datasets: ds }, options: { 
+        responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+        scales:{ x:{stacked:true, grid:{display:false}, ticks:{font:{size:9}}}, y:{stacked:true, beginAtZero:true, grid:{color:'rgba(255,255,255,0.05)'}}} 
+    }});
 }
 
 function render() {
-    const today = new Date().toISOString().split('T')[0];
+    const m = viewDate.getMonth(), y = viewDate.getFullYear();
+    document.getElementById('monthLab').innerText = viewDate.toLocaleString('en-US',{month:'long', year:'numeric'});
     document.getElementById('metricsPanel').innerHTML = types.map(t => {
-        const d = storage[t].find(x => x.date === today) || {s:0};
-        return `<div class="stat-box"><h3>${t}</h3><p>${d.s}</p></div>`;
+        const mData = storage[t].filter(d => { const dt = new Date(d.date); return dt.getMonth() === m && dt.getFullYear() === y; });
+        const s = mData.reduce((a,b) => a + (parseInt(b.s)||0), 0);
+        return `<div class="stat-card" onclick="showTable('${t}')">
+            <span style="font-size:0.7rem; color:${colors[t]}; font-weight:bold;">${t.toUpperCase()}</span>
+            <span class="stat-val">${s}</span>
+        </div>`;
     }).join('');
+    updateChart(y, m);
 }
-render();
+
+function moveMonth(dir) { viewDate.setMonth(viewDate.getMonth()+dir); render(); }
+function wipeAllData() { if(confirm("This will clear all data. Proceed?")) { types.forEach(t => storage[t] = []); localStorage.setItem("logistics_v54", JSON.stringify(storage)); render(); pushData(); } }
+
+start();
 </script>
 </body>
 </html>
