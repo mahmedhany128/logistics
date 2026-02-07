@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Insight Pro - Master</title>
+    <title>Insight Pro - Master V27</title>
 
     <script src="https://unpkg.com/@zxing/library@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -18,7 +18,6 @@
         body { background: var(--bg); color: var(--text); margin: 0; padding: 15px; padding-bottom: 140px; }
         
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .header-btns { display: flex; gap: 8px; }
         .btn-mini { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; cursor: pointer; }
 
         .month-ctrl { background: var(--card); border: 1px solid var(--border); padding: 10px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
@@ -26,17 +25,9 @@
 
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
         .stat-card { background: var(--card); padding: 18px; border-radius: 24px; border: 1px solid var(--border); position: relative; cursor: pointer; }
-        .stat-perc { font-size: 0.65rem; font-weight: 800; color: var(--success); position: absolute; top: 18px; right: 18px; background: #34d39915; padding: 2px 6px; border-radius: 6px; }
         .stat-label { font-size: 0.6rem; font-weight: 800; color: var(--dim); text-transform: uppercase; }
         .stat-val { font-size: 1.5rem; font-weight: 800; display: block; margin-top: 5px; color: #fff; }
 
-        #detailsTable { display: none; margin-bottom: 25px; animation: fadeIn 0.3s; }
-        .table-container { background: var(--card); border-radius: 24px; border: 1px solid var(--border); overflow: hidden; }
-        table { width: 100%; border-collapse: collapse; }
-        td { padding: 14px 8px; text-align: center; border-bottom: 1px solid #334155; font-size: 0.85rem; font-weight: 600; color: #fff; }
-        .clickable { color: var(--brand); text-decoration: underline; cursor: pointer; }
-
-        /* Chart Fix */
         .chart-scroll-area { width: 100%; overflow-x: auto; background: var(--card); border-radius: 25px; border: 1px solid var(--border); padding: 15px; margin-bottom: 25px; }
         .chart-container { height: 280px; min-width: 700px; }
 
@@ -46,23 +37,26 @@
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000; align-items: flex-end; backdrop-filter: blur(8px); }
         .modal-content { background: var(--card); width: 100%; padding: 25px; border-radius: 35px 35px 0 0; max-height: 90vh; overflow-y: auto; }
         
-        input, select { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); color: #fff; font-weight: 700; }
+        input, select { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); color: #fff; font-weight: 700; font-size: 0.8rem; }
         .btn-add { background: var(--brand); color: #fff; border: none; padding: 18px; border-radius: 22px; font-weight: 800; width: 100%; cursor: pointer; }
 
-        /* Security Modal Styles */
         #confirmModal { align-items: center; justify-content: center; }
         .secure-content { background: var(--card); width: 90%; max-width: 400px; padding: 30px; border-radius: 30px; border: 1px solid var(--border); text-align: center; }
         
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        #detailsTable { display: none; margin-bottom: 25px; animation: fadeIn 0.3s; }
+        .table-container { background: var(--card); border-radius: 24px; border: 1px solid var(--border); overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; }
+        td { padding: 14px 8px; text-align: center; border-bottom: 1px solid #334155; font-size: 0.85rem; font-weight: 600; color: #fff; }
+        .clickable { color: var(--brand); text-decoration: underline; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <header>
     <h1 style="margin:0; font-size:1.2rem; font-weight:800;">Insight Pro</h1>
-    <div class="header-btns">
+    <div style="display:flex; gap:8px;">
         <button class="btn-mini" onclick="exportData()">Export</button>
-        <div id="sync" class="btn-mini" style="color:var(--brand); border-color:transparent;">☁️ OK</div>
+        <div id="sync" class="btn-mini" style="border:none; color:var(--brand)">☁️ OK</div>
     </div>
 </header>
 
@@ -81,7 +75,7 @@
             <button onclick="document.getElementById('detailsTable').style.display='none'" style="background:none; border:none; color:var(--dim); font-weight:800">Close</button>
         </div>
         <table>
-            <thead><tr><th style="font-size:0.6rem; color:var(--dim); padding:12px;">DAY</th><th style="font-size:0.6rem; color:var(--dim)">S</th><th style="font-size:0.6rem; color:var(--dim)">P</th><th style="font-size:0.6rem; color:var(--dim)">C</th><th style="font-size:0.6rem; color:var(--dim)">%</th></tr></thead>
+            <thead><tr><th style="font-size:0.6rem; color:var(--dim);">DAY</th><th>S</th><th>P</th><th>C</th><th>%</th></tr></thead>
             <tbody id="tableBody"></tbody>
         </table>
     </div>
@@ -101,7 +95,7 @@
     <video id="video"></video>
     <div style="position:absolute; inset:0; border:2px solid var(--brand); margin:auto; width:280px; height:160px; border-radius:15px; box-shadow: 0 0 0 2000px rgba(0,0,0,0.7);"></div>
     <div style="position:absolute; bottom:30px; left:20px; right:20px; background:var(--card); padding:20px; border-radius:25px; text-align:center;">
-        <div id="scanMsg" style="margin-bottom:10px; font-weight:800; color:var(--brand)">Mode: <span id="currentScanMode">S</span></div>
+        <div style="margin-bottom:10px; font-weight:800; color:var(--brand)">Mode: <span id="currentScanMode">S</span></div>
         <button class="btn-add" onclick="stopScanner()">FINISH SESSION</button>
     </div>
 </div>
@@ -111,7 +105,7 @@
         <h3 style="margin:0 0 15px 0;">Batch Update</h3>
         <input type="date" id="logDate">
         <div id="logInputs"></div>
-        <button class="btn-add" style="margin-top:15px" onclick="saveData()">Save & Sync Data</button>
+        <button class="btn-add" style="margin-top:15px" onclick="saveData()">Save & Sync</button>
         <button onclick="openConfirmModal()" style="color:var(--danger); background:none; border:none; width:100%; margin-top:20px; font-weight:800; font-size:0.75rem; text-decoration:underline;">⚠️ Clear All Data</button>
         <button onclick="document.getElementById('logModal').style.display='none'" style="width:100%; border:none; background:none; margin-top:10px; color:var(--dim); font-weight:700">Close</button>
     </div>
@@ -121,7 +115,7 @@
     <div class="secure-content">
         <div style="font-size: 2rem; margin-bottom: 10px;">🛡️</div>
         <h3 style="margin:0; color:#fff;">System Reset</h3>
-        <p style="color: var(--dim); font-size: 0.8rem; margin: 10px 0 20px;">Type <b style="color:var(--danger)">DELETE</b> to erase all cloud and local data.</p>
+        <p style="color: var(--dim); font-size: 0.8rem; margin: 10px 0 20px;">Type <b style="color:var(--danger)">DELETE</b> to confirm.</p>
         <input type="text" id="confirmInput" placeholder="Enter word" style="text-align:center;">
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
             <button onclick="closeConfirmModal()" style="background:var(--bg); color:var(--text); border:1px solid var(--border); padding:15px; border-radius:15px; font-weight:700;">Cancel</button>
@@ -143,7 +137,7 @@ const beep = new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-pr
 let config = JSON.parse(localStorage.getItem('gh_config'));
 const types = ["Delivery", "PickUp", "SameDay", "Khazenly"];
 const colors = { Delivery: '#818cf8', PickUp: '#34d399', SameDay: '#fbbf24', Khazenly: '#fb7185' };
-let storage = JSON.parse(localStorage.getItem("logistics_pro_master")) || {};
+let storage = JSON.parse(localStorage.getItem("logistics_pro_v27")) || {};
 types.forEach(t => { if(!storage[t]) storage[t] = []; });
 
 let chart, viewDate = new Date();
@@ -164,7 +158,7 @@ async function pullData() {
         if(r.ok) {
             const j = await r.json();
             storage = JSON.parse(decodeURIComponent(escape(atob(j.content))));
-            localStorage.setItem("logistics_pro_master", JSON.stringify(storage));
+            localStorage.setItem("logistics_pro_v27", JSON.stringify(storage));
         }
     } catch(e) {}
     render();
@@ -176,9 +170,7 @@ function render() {
     document.getElementById('metricsPanel').innerHTML = types.map(t => {
         const mData = storage[t].filter(d => { const dt = new Date(d.date); return dt.getMonth() === m && dt.getFullYear() === y; });
         const s = mData.reduce((a,b) => a + (parseInt(b.s)||0), 0);
-        const tot = mData.reduce((a,b) => a + (parseInt(b.s)+parseInt(b.p)+parseInt(b.c)||0), 0);
         return `<div class="stat-card" onclick="showTable('${t}')">
-            <span class="stat-perc">${tot>0 ? ((s/tot)*100).toFixed(0) : 0}%</span>
             <span class="stat-label" style="color:${colors[t]}">${t}</span>
             <span class="stat-val">${s}</span>
         </div>`;
@@ -195,16 +187,16 @@ function showTable(type) {
         const tot = (parseInt(r.s)||0) + (parseInt(r.p)||0) + (parseInt(r.c)||0);
         return `<tr>
             <td>${new Date(r.date).getDate()}</td>
-            <td class="clickable" onclick="viewCodes('${r.codes_s}', 'Success')">${r.s}</td>
-            <td class="clickable" onclick="viewCodes('${r.codes_p}', 'Pending')" style="color:var(--warning)">${r.p}</td>
-            <td class="clickable" onclick="viewCodes('${r.codes_c}', 'Canceled')" style="color:var(--danger)">${r.c}</td>
-            <td style="color:var(--success)">${tot>0?((r.s/tot)*100).toFixed(0):0}%</td>
+            <td class="clickable" onclick="viewCodes('${r.codes_s}', 'S')">${r.s}</td>
+            <td class="clickable" onclick="viewCodes('${r.codes_p}', 'P')" style="color:var(--warning)">${r.p}</td>
+            <td class="clickable" onclick="viewCodes('${r.codes_c}', 'C')" style="color:var(--danger)">${r.c}</td>
+            <td>${tot>0?((r.s/tot)*100).toFixed(0):0}%</td>
         </tr>`;
     }).join('');
 }
 
 function viewCodes(c, title) {
-    if(!c || c === "undefined") return;
+    if(!c || c === "undefined" || c === "") return;
     document.getElementById('codeModal').style.display = 'flex';
     document.getElementById('codeTitle').innerText = title + " Codes";
     document.getElementById('codeList').innerHTML = c.split(',').filter(x=>x).map(x => `<span style="background:#818cf820; color:#818cf8; padding:5px 10px; border-radius:8px; font-size:0.7rem;">${x}</span>`).join('');
@@ -223,11 +215,10 @@ function openLogModal() {
                 </div>
             </div>
             <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px;">
-                <div><label style="font-size:0.55rem; color:var(--dim); font-weight:800; margin-left:4px;">SUCCESS</label><input type="number" id="s_${t}" placeholder="0"></div>
-                <div><label style="font-size:0.55rem; color:var(--dim); font-weight:800; margin-left:4px;">PENDING</label><input type="number" id="p_${t}" placeholder="0"></div>
-                <div><label style="font-size:0.55rem; color:var(--dim); font-weight:800; margin-left:4px;">CANCEL</label><input type="number" id="c_${t}" placeholder="0"></div>
+                <input type="text" id="s_${t}" placeholder="Success Codes/Qty">
+                <input type="text" id="p_${t}" placeholder="Pending Codes/Qty">
+                <input type="text" id="c_${t}" placeholder="Cancel Codes/Qty">
             </div>
-            <input type="hidden" id="h_s_${t}"><input type="hidden" id="h_p_${t}"><input type="hidden" id="h_c_${t}">
         </div>`).join('');
 }
 
@@ -237,12 +228,11 @@ function launchScanner(type) {
     document.getElementById('scannerOverlay').style.display = 'flex';
     codeReader.decodeFromVideoDevice(undefined, 'video', (result) => {
         if (result) {
-            const h = document.getElementById(`h_${mode}_${type}`);
-            const inputField = document.getElementById(`${mode}_${type}`);
-            let curr = h.value ? h.value.split(',') : [];
-            if(!curr.includes(result.text)) {
-                curr.push(result.text); h.value = curr.join(',');
-                inputField.value = curr.length;
+            const displayField = document.getElementById(`${mode}_${type}`);
+            let codesArray = displayField.value.trim() ? displayField.value.split(',') : [];
+            if(!codesArray.includes(result.text)) {
+                codesArray.push(result.text);
+                displayField.value = codesArray.join(',');
                 beep.play(); navigator.vibrate(100);
             }
         }
@@ -254,13 +244,39 @@ function stopScanner() { codeReader.reset(); document.getElementById('scannerOve
 async function saveData() {
     const d = document.getElementById('logDate').value;
     types.forEach(t => {
-        const idx = storage[t].findIndex(x => x.date === d);
-        const sVal = document.getElementById(`s_${t}`).value, pVal = document.getElementById(`p_${t}`).value, cVal = document.getElementById(`c_${t}`).value;
-        const sCodes = document.getElementById(`h_s_${t}`).value, pCodes = document.getElementById(`h_p_${t}`).value, cCodes = document.getElementById(`h_c_${t}`).value;
-        const entry = { date:d, s:parseInt(sVal)||0, p:parseInt(pVal)||0, c:parseInt(cVal)||0, codes_s:sCodes, codes_p:pCodes, codes_c:cCodes };
-        if(idx >= 0) storage[t][idx] = entry; else storage[t].push(entry);
+        const existingIdx = storage[t].findIndex(x => x.date === d);
+        const old = existingIdx >= 0 ? storage[t][existingIdx] : { s:0, p:0, c:0, codes_s:"", codes_p:"", codes_c:"" };
+
+        const sIn = document.getElementById(`s_${t}`).value;
+        const pIn = document.getElementById(`p_${t}`).value;
+        const cIn = document.getElementById(`c_${t}`).value;
+
+        const merge = (oldCodes, input) => {
+            if(!input) return oldCodes || "";
+            if(!input.includes(',')) return oldCodes; // لو رقم يدوي مش هنغير الأكواد
+            let combined = [...new Set([...(oldCodes||"").split(','), ...input.split(',')])];
+            return combined.filter(x => x).join(',');
+        };
+
+        const getCount = (val, oldVal) => {
+            if(!val) return oldVal;
+            if(val.includes(',')) return val.split(',').length;
+            return isNaN(val) ? oldVal : parseInt(val);
+        };
+
+        const entry = {
+            date: d,
+            s: getCount(sIn, old.s),
+            p: getCount(pIn, old.p),
+            c: getCount(cIn, old.c),
+            codes_s: sIn.includes(',') ? merge(old.codes_s, sIn) : old.codes_s,
+            codes_p: pIn.includes(',') ? merge(old.codes_p, pIn) : old.codes_p,
+            codes_c: cIn.includes(',') ? merge(old.codes_c, cIn) : old.codes_c
+        };
+
+        if(existingIdx >= 0) storage[t][existingIdx] = entry; else storage[t].push(entry);
     });
-    localStorage.setItem("logistics_pro_master", JSON.stringify(storage));
+    localStorage.setItem("logistics_pro_v27", JSON.stringify(storage));
     document.getElementById('logModal').style.display = 'none'; render(); await pushData();
 }
 
@@ -277,7 +293,6 @@ async function pushData() {
 
 function openConfirmModal() { document.getElementById('confirmModal').style.display = 'flex'; document.getElementById('confirmInput').value=''; }
 function closeConfirmModal() { document.getElementById('confirmModal').style.display = 'none'; }
-
 document.getElementById('confirmInput').addEventListener('input', (e) => {
     const btn = document.getElementById('finalDeleteBtn');
     if(e.target.value.toUpperCase() === "DELETE") { btn.disabled = false; btn.style.opacity = '1'; }
@@ -286,17 +301,9 @@ document.getElementById('confirmInput').addEventListener('input', (e) => {
 
 async function executeHardReset() {
     types.forEach(t => storage[t] = []);
-    localStorage.setItem("logistics_pro_master", JSON.stringify(storage));
+    localStorage.setItem("logistics_pro_v27", JSON.stringify(storage));
     await pushData();
     location.reload();
-}
-
-function exportData() {
-    let csv = "Type,Date,Success,Pending,Cancel\n";
-    types.forEach(t => storage[t].forEach(r => csv += `${t},${r.date},${r.s},${r.p},${r.c}\n`));
-    const b = new Blob([csv], {type:'text/csv'});
-    const u = URL.createObjectURL(b);
-    const a = document.createElement('a'); a.href=u; a.download='logistics_master.csv'; a.click();
 }
 
 function updateChart(y, m) {
@@ -312,6 +319,15 @@ function updateChart(y, m) {
     if(chart) chart.destroy();
     chart = new Chart(ctx, { type:'bar', data: { labels: dayLabels, datasets }, options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{stacked:true, grid:{display:false}, ticks:{color:'#94a3b8', font:{weight:'bold'}}}, y:{stacked:true, grid:{color:'#334155'}}} } });
 }
+
+function exportData() {
+    let csv = "Type,Date,Success,Pending,Cancel,Codes_S,Codes_P,Codes_C\n";
+    types.forEach(t => storage[t].forEach(r => csv += `${t},${r.date},${r.s},${r.p},${r.c},"${r.codes_s}","${r.codes_p}","${r.codes_c}"\n`));
+    const b = new Blob([csv], {type:'text/csv'});
+    const u = URL.createObjectURL(b);
+    const a = document.createElement('a'); a.href=u; a.download='logistics_full.csv'; a.click();
+}
+
 function moveMonth(dir) { viewDate.setMonth(viewDate.getMonth()+dir); render(); }
 start();
 </script>
