@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Insight Pro - V52.2 Final</title>
+    <title>Insight Pro - V53.2 Final</title>
     
     <link rel="manifest" href="manifest.json">
     
@@ -15,73 +15,72 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
 
     <style>
-        :root { --bg: #0f172a; --card: #1e293b; --brand: #818cf8; --text: #f1f5f9; --dim: #94a3b8; --border: rgba(255,255,255,0.08); --success: #34d399; --danger: #fb7185; }
+        :root { --bg: #0f172a; --card: #1e293b; --brand: #818cf8; --text: #f1f5f9; --dim: #94a3b8; --border: rgba(255,255,255,0.08); --success: #34d399; --warning: #fbbf24; --danger: #fb7185; }
         * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--text); margin: 0; padding: 15px; padding-bottom: 120px; -webkit-user-select: none; }
         
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; background: #475569; transition: 0.3s; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; background: #475569; }
         .online { background: var(--success); box-shadow: 0 0 10px var(--success); }
-        .danger-zone { background: rgba(251, 113, 133, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 5px 12px; border-radius: 10px; font-size: 0.7rem; font-weight: 800; cursor: pointer; }
 
         .month-ctrl { background: var(--card); border: 1px solid var(--border); padding: 10px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .nav-btn { background: var(--bg); border: 1px solid var(--border); width: 45px; height: 45px; border-radius: 15px; color: var(--brand); cursor: pointer; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; line-height: 0; }
+        .nav-btn { background: var(--bg); border: 1px solid var(--border); width: 45px; height: 45px; border-radius: 15px; color: var(--brand); cursor: pointer; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; }
 
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
         .stat-card { background: linear-gradient(145deg, #1e293b, #111827); padding: 18px; border-radius: 24px; border: 1px solid var(--border); cursor: pointer; }
         .stat-val { font-size: 1.6rem; font-weight: 900; color: #fff; display: block; margin: 5px 0; }
         
-        .chart-card { background: var(--card); border-radius: 24px; padding: 15px; margin-bottom: 20px; border: 1px solid var(--border); }
-        .chart-wrapper { width: 100%; overflow-x: auto; scrollbar-width: none; }
-        .chart-container { width: 1000px; height: 220px; }
-
         .table-container { background: var(--card); border-radius: 24px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; }
         td, th { padding: 14px; text-align: center; border-bottom: 1px solid #334155; font-size: 0.8rem; color: var(--text); }
-        th { color: var(--dim); font-weight: 600; background: rgba(0,0,0,0.1); }
+
+        /* سكنر Amazon Flex المتطور */
+        #scannerOverlay { display: none; position: fixed; inset: 0; background: #000; z-index: 2000; flex-direction: column; }
+        .scanner-header { position: absolute; top: 0; width: 100%; padding: 15px; background: rgba(0,0,0,0.7); z-index: 2010; }
         
-        .code-badge { background: var(--bg); color: var(--text); padding: 12px 15px; border-radius: 14px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); margin-bottom: 10px; }
-        .del-btn { background: rgba(251, 113, 133, 0.2); color: var(--danger); border: none; padding: 8px 12px; border-radius: 10px; font-weight: 800; cursor: pointer; }
+        .mode-selector { display: flex; gap: 8px; margin-top: 10px; }
+        .mode-btn { flex: 1; padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #fff; font-size: 0.7rem; font-weight: 800; cursor: pointer; }
+        .mode-btn.active.s { background: var(--success); color: #000; border: none; }
+        .mode-btn.active.p { background: var(--warning); color: #000; border: none; }
+        .mode-btn.active.c { background: var(--danger); color: #000; border: none; }
+
+        #videoContainer { height: 35vh; position: relative; background: #000; overflow: hidden; flex: none; }
+        #video { width: 100%; height: 100%; object-fit: cover; }
+        .scan-frame { position: absolute; width: 260px; height: 110px; border: 1px solid rgba(255,255,255,0.4); border-radius: 15px; top: 50%; left: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 0 2000px rgba(0,0,0,0.6); }
+        
+        #scannedCardsContainer { flex: 1; background: var(--bg); padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .package-card { background: var(--card); border-radius: 16px; padding: 12px; display: flex; align-items: center; gap: 12px; border: 1px solid var(--border); animation: slideUp 0.3s ease; }
+        .status-badge { width: 8px; height: 35px; border-radius: 4px; }
 
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; align-items: flex-end; backdrop-filter: blur(8px); }
         .modal-content { background: var(--card); width: 100%; padding: 25px; border-radius: 32px 32px 0 0; max-height: 85vh; overflow-y: auto; }
         
-        input, select { width: 100%; padding: 14px; margin: 8px 0; border: 1px solid var(--border); border-radius: 14px; background: var(--bg); color: #fff; outline: none; font-size: 1rem; }
+        input, select { width: 100%; padding: 14px; margin: 8px 0; border: 1px solid var(--border); border-radius: 14px; background: var(--bg); color: #fff; outline: none; }
         .btn-main { background: var(--brand); color: #fff; border: none; padding: 18px; border-radius: 22px; font-weight: 800; width: 100%; cursor: pointer; box-shadow: 0 10px 20px rgba(129, 140, 248, 0.2); }
         
-        #scannerOverlay { display: none; position: fixed; inset: 0; background: #000; z-index: 2000; flex-direction: column; }
-        #videoContainer { position: relative; flex: 1; background: #000; overflow: hidden; display: flex; align-items: center; justify-content: center; }
-        #video { width: 100%; height: 100%; object-fit: cover; }
-        .scan-region { position: absolute; width: 260px; height: 160px; border: 2px solid rgba(255,255,255,0.3); border-radius: 20px; box-shadow: 0 0 0 2000px rgba(0,0,0,0.7); pointer-events: none; }
-        .scan-region.success { border-color: var(--success); box-shadow: 0 0 0 2000px rgba(52, 211, 153, 0.2); transition: 0.2s; }
-        
-        .flash-btn { position: absolute; bottom: 30px; left: 30px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; backdrop-filter: blur(10px); z-index: 2005; }
-        .flash-btn.active { background: #fbbf24; color: #000; box-shadow: 0 0 20px #fbbf24; border: none; }
+        @keyframes slideUp { from { transform: translateY(15px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 </head>
 <body>
 
 <header>
-    <h1 style="font-size:1.1rem; margin:0; font-weight: 800;">Insight <span style="color:var(--brand)">Pro V52.2</span></h1>
-    <div style="display:flex; align-items:center; gap:12px;">
-        <button class="danger-zone" onclick="wipeAllData()">Wipe All</button>
-        <span id="dot" class="status-dot"></span>
-    </div>
+    <h1 style="font-size:1.1rem; margin:0; font-weight: 800;">Insight <span style="color:var(--brand)">Pro V53.2</span></h1>
+    <span id="dot" class="status-dot"></span>
 </header>
 
 <div class="month-ctrl">
-    <button class="nav-btn" onclick="moveMonth(-1)">&#8249;</button>
-    <span id="monthLab" style="font-weight:800; font-size: 1rem;">---</span>
-    <button class="nav-btn" onclick="moveMonth(1)">&#8250;</button>
+    <button class="nav-btn" onclick="moveMonth(-1)">‹</button>
+    <span id="monthLab" style="font-weight:800;">---</span>
+    <button class="nav-btn" onclick="moveMonth(1)">›</button>
 </div>
 
 <div class="grid" id="metricsPanel"></div>
 
 <div id="detailsTable" style="display:none;">
     <div class="table-container">
-        <div style="padding:15px; display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid var(--border);">
+        <div style="padding:15px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border);">
             <span id="activeTitle" style="font-weight:800; color:var(--brand)">Details</span>
-            <button onclick="document.getElementById('detailsTable').style.display='none'" style="background:none; border:none; color:var(--dim); font-size: 1.2rem;">✕</button>
+            <button onclick="document.getElementById('detailsTable').style.display='none'" style="background:none; border:none; color:var(--dim); font-size:1.2rem;">✕</button>
         </div>
         <table>
             <thead><tr><th>Day</th><th>S</th><th>P</th><th>C</th><th>%</th></tr></thead>
@@ -90,58 +89,53 @@
     </div>
 </div>
 
-<div class="chart-card">
-    <div class="chart-wrapper"><div class="chart-container"><canvas id="mainChart"></canvas></div></div>
+<div class="chart-card" style="height: 230px; padding:10px; background:var(--card); border-radius:24px; border:1px solid var(--border);">
+    <canvas id="mainChart"></canvas>
 </div>
 
 <button class="btn-main" style="position:fixed; bottom:20px; left:15px; width:calc(100% - 30px); z-index:100;" onclick="openLogModal()">+ UPDATE SHIPMENTS</button>
 
 <div id="scannerOverlay">
-    <div style="padding: 20px; background: #1e293b; z-index: 2001;">
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-            <select id="scanTypeSelect"><option>Delivery</option><option>PickUp</option><option>SameDay</option><option>Khazenly</option></select>
-            <select id="scanModeSelect"><option value="s">Success</option><option value="p">Pending</option><option value="c">Cancel</option></select>
+    <div class="scanner-header">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <span class="pkg-count" id="pkgCount" style="color:#fff; font-size:0.8rem; font-weight:600;">Scan to begin...</span>
+            <button style="background:none; border:none; font-size:1.3rem;" onclick="toggleFlash()" id="flashBtn">🔦</button>
         </div>
-        <div style="display:flex; gap:8px; margin-top:12px;">
-            <input type="text" id="manualInput" placeholder="Type ID manually..." style="margin:0; flex:1;">
-            <button onclick="addManualCode()" style="background:var(--brand); border:none; border-radius:12px; color:#fff; padding:0 15px; font-weight:bold;">Add</button>
+        <div class="mode-selector">
+            <button class="mode-btn active s" id="btn_s" onclick="setScanMode('s')">SUCCESS</button>
+            <button class="mode-btn p" id="btn_p" onclick="setScanMode('p')">PENDING</button>
+            <button class="mode-btn c" id="btn_c" onclick="setScanMode('c')">CANCEL</button>
         </div>
-        <div id="scannedListDisplay" style="margin-top:12px; font-size: 0.75rem; color:var(--dim); text-align: center;">Ready to scan...</div>
     </div>
     <div id="videoContainer">
         <video id="video" playsinline></video>
-        <div class="scan-region" id="scanRegion"></div>
-        <button class="flash-btn" id="flashToggle" onclick="toggleFlash()">🔦</button>
+        <div class="scan-frame"></div>
+        <div id="lookupText" style="display:none; position:absolute; top:20%; width:100%; text-align:center; color:#fff; font-size:0.6rem; background:rgba(0,0,0,0.7); padding:4px;">PROCESSED...</div>
     </div>
-    <button class="btn-main" style="border-radius:0" onclick="stopScanner()">SAVE & CLOSE</button>
-</div>
-
-<div id="codeModal" class="modal" style="align-items: center; justify-content: center;">
-    <div class="modal-content" style="width: 90%; border-radius: 28px; max-height: 70vh;">
-        <h3 style="margin-top:0; margin-bottom:15px; text-align:center;">Managed Codes</h3>
-        <div id="codeList"></div>
-        <button onclick="document.getElementById('codeModal').style.display='none'" class="btn-main" style="margin-top:15px; background:var(--bg);">Close</button>
+    <div id="scannedCardsContainer"></div>
+    <div style="padding:15px; background:var(--card);">
+        <button class="btn-main" onclick="stopScanner()">REVIEW & SAVE</button>
     </div>
 </div>
 
 <div id="logModal" class="modal">
     <div class="modal-content">
-        <h3 style="margin-top:0; margin-bottom:15px;">Edit Data</h3>
+        <h3 style="margin-top:0;">Log Data</h3>
         <input type="date" id="logDate">
         <div id="logInputs"></div>
         <button class="btn-main" style="margin-top:15px;" onclick="saveData()">Confirm & Sync</button>
-        <button onclick="document.getElementById('logModal').style.display='none'" style="width:100%; background:none; border:none; color:var(--dim); padding:15px; font-weight:bold;">Cancel</button>
+        <button onclick="document.getElementById('logModal').style.display='none'" style="width:100%; background:none; border:none; color:var(--dim); padding:15px;">Cancel</button>
+    </div>
+</div>
+
+<div id="codeModal" class="modal" style="align-items: center; justify-content: center;">
+    <div class="modal-content" style="width: 90%; border-radius: 28px;">
+        <div id="codeList"></div>
+        <button onclick="document.getElementById('codeModal').style.display='none'" class="btn-main" style="margin-top:15px; background:var(--bg);">Close</button>
     </div>
 </div>
 
 <script>
-// تسجيل الـ Service Worker الخارجي الخاص بك
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').catch(err => console.log("SW error", err));
-    });
-}
-
 let config = JSON.parse(localStorage.getItem('gh_config'));
 const types = ["Delivery", "PickUp", "SameDay", "Khazenly"];
 const colors = { Delivery: '#818cf8', PickUp: '#34d399', SameDay: '#fbbf24', Khazenly: '#fb7185' };
@@ -149,86 +143,54 @@ let storage = JSON.parse(localStorage.getItem("logistics_v52")) || {};
 types.forEach(t => { if(!storage[t]) storage[t] = []; });
 
 let chart, viewDate = new Date(), videoStream = null, isFlashOn = false;
+let currentScanMode = 's', activeScanType = '';
 const codeReader = new ZXing.BrowserMultiFormatReader();
+
+if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js'); }); }
 
 function updateOnlineStatus() {
     const dot = document.getElementById('dot');
-    if(navigator.onLine) {
-        dot.classList.add('online');
-        pushData(); 
-    } else {
-        dot.classList.remove('online');
-    }
+    if(navigator.onLine) { dot.classList.add('online'); pushData(); } else { dot.classList.remove('online'); }
 }
 window.addEventListener('online', updateOnlineStatus);
 window.addEventListener('offline', updateOnlineStatus);
 
-function setupSmartInputs() {
-    document.querySelectorAll('input[type="number"]').forEach(input => {
-        input.onclick = function() { if(this.value === "0") this.value = ""; };
-        input.onblur = function() { if(this.value === "") this.value = "0"; };
-    });
-}
-
-async function toggleFlash() {
-    const track = videoStream?.getVideoTracks()[0];
-    try {
-        isFlashOn = !isFlashOn;
-        await track.applyConstraints({ advanced: [{ torch: isFlashOn }] });
-        document.getElementById('flashToggle').classList.toggle('active', isFlashOn);
-    } catch (e) { console.log("Flash error"); }
+function setScanMode(mode) {
+    currentScanMode = mode;
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`btn_${mode}`).classList.add('active');
 }
 
 async function launchScanner(type) {
-    document.getElementById('scanTypeSelect').value = type;
+    activeScanType = type;
     document.getElementById('scannerOverlay').style.display = 'flex';
-    updateScanUI();
-    const constraints = { video: { facingMode: "environment", width: { ideal: 1280 }, focusMode: "continuous" } };
+    document.getElementById('scannedCardsContainer').innerHTML = '';
+    setScanMode('s');
+    const constraints = { video: { facingMode: "environment", focusMode: "continuous" } };
     try {
         videoStream = await navigator.mediaDevices.getUserMedia(constraints);
-        codeReader.decodeFromConstraints(constraints, 'video', (result) => { if (result) registerCode(result.text); });
-    } catch (e) { console.error(e); }
-}
-
-function stopScanner() { 
-    if(videoStream) videoStream.getTracks().forEach(t => t.stop());
-    codeReader.reset(); isFlashOn = false;
-    document.getElementById('scannerOverlay').style.display = 'none'; 
+        codeReader.decodeFromConstraints(constraints, 'video', (res) => { if(res) registerCode(res.text); });
+    } catch (e) {}
 }
 
 function registerCode(code) {
-    const t = document.getElementById('scanTypeSelect').value;
-    const m = document.getElementById('scanModeSelect').value;
-    const h = document.getElementById(`c_${m}_${t}`);
+    const h = document.getElementById(`c_${currentScanMode}_${activeScanType}`);
     let codes = h.value ? h.value.split(',') : [];
+    
     if(!codes.includes(code)) {
         codes.push(code); h.value = codes.join(',');
-        document.getElementById('scanRegion').classList.add('success');
-        setTimeout(() => document.getElementById('scanRegion').classList.remove('success'), 300);
+        
+        document.getElementById('lookupText').style.display = 'block';
+        setTimeout(() => document.getElementById('lookupText').style.display = 'none', 500);
+
+        const cardColor = currentScanMode === 's' ? 'var(--success)' : (currentScanMode === 'p' ? 'var(--warning)' : 'var(--danger)');
+        const card = document.createElement('div');
+        card.className = 'package-card';
+        card.innerHTML = `<div class="status-badge" style="background:${cardColor}"></div><div><div style="font-size:0.85rem; font-weight:800;">${code}</div><div style="font-size:0.6rem; color:var(--dim);">${activeScanType} - ${currentScanMode.toUpperCase()}</div></div>`;
+        document.getElementById('scannedCardsContainer').prepend(card);
+        document.getElementById('pkgCount').innerText = `${codes.length} scanned in ${activeScanType}`;
         if(navigator.vibrate) navigator.vibrate(80);
-        updateScanUI();
     }
-}
-
-function addManualCode() {
-    const input = document.getElementById('manualInput');
-    if (input.value.trim()) { registerCode(input.value.trim()); input.value = ""; }
-}
-
-function updateScanUI() {
-    const t = document.getElementById('scanTypeSelect').value;
-    const m = document.getElementById('scanModeSelect').value;
-    const codes = document.getElementById(`c_${m}_${t}`).value.split(',').filter(x => x);
-    document.getElementById('scannedListDisplay').innerText = `Total Scanned (${m.toUpperCase()}): ${codes.length}`;
-}
-
-async function start() {
-    if (!config) { 
-        config = {token: prompt("GitHub Token:"), user: prompt("User:"), repo: prompt("Repo:")}; 
-        localStorage.setItem('gh_config', JSON.stringify(config)); 
-    }
-    updateOnlineStatus();
-    await pullData();
 }
 
 async function pullData() {
@@ -249,7 +211,7 @@ async function pushData() {
         const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
         const r = await fetch(url, { headers: {'Authorization': `token ${config.token}`} });
         const sha = r.ok ? (await r.json()).sha : "";
-        await fetch(url, { method:'PUT', headers:{'Authorization':`token ${config.token}`}, body:JSON.stringify({message:"V52.2 Final Sync", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage)))), sha}) });
+        await fetch(url, { method:'PUT', headers:{'Authorization':`token ${config.token}`}, body:JSON.stringify({message:"Final V53.2 Sync", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage)))), sha}) });
     } catch(e) {}
 }
 
@@ -284,7 +246,6 @@ function openLogModal() {
                 <input type="hidden" id="c_s_${t}" value="${old.codes_s}"><input type="hidden" id="c_p_${t}" value="${old.codes_p}"><input type="hidden" id="c_c_${t}" value="${old.codes_c}">
             </div></div>`;
     }).join('');
-    setupSmartInputs();
     document.getElementById('logModal').style.display = 'flex';
 }
 
@@ -292,37 +253,24 @@ function showTable(type) {
     const m = viewDate.getMonth(), y = viewDate.getFullYear();
     document.getElementById("detailsTable").style.display = "block";
     document.getElementById("activeTitle").innerText = type;
-    
     const active = storage[type].filter(d => {
         const dt = new Date(d.date);
-        // الشرط المحدث: يظهر اليوم إذا كان هناك أرقام أو أكواد مسجلة
         const hasNumbers = (parseInt(d.s)||0) + (parseInt(d.p)||0) + (parseInt(d.c)||0) > 0;
-        const hasCodes = (d.codes_s && d.codes_s.length > 2) || 
-                         (d.codes_p && d.codes_p.length > 2) || 
-                         (d.codes_c && d.codes_c.length > 2);
-        
+        const hasCodes = (d.codes_s?.length > 2) || (d.codes_p?.length > 2) || (d.codes_c?.length > 2);
         return dt.getMonth() === m && dt.getFullYear() === y && (hasNumbers || hasCodes);
     }).sort((a,b) => new Date(a.date) - new Date(b.date));
 
     document.getElementById("tableBody").innerHTML = active.map(r => {
         const tot = (parseInt(r.s)||0) + (parseInt(r.p)||0) + (parseInt(r.c)||0);
-        return `<tr>
-            <td style="font-weight:800">${new Date(r.date).getDate()}</td>
-            <td onclick="manageCodes('${type}','${r.date}','s')">${r.s}</td>
-            <td onclick="manageCodes('${type}','${r.date}','p')">${r.p}</td>
-            <td onclick="manageCodes('${type}','${r.date}','c')">${r.c}</td>
-            <td style="color:var(--brand); font-weight:bold;">${tot>0?((r.s/tot)*100).toFixed(0):0}%</td>
-        </tr>`;
-    }).join('') || '<tr><td colspan="5">No data</td></tr>';
+        return `<tr><td style="font-weight:800;">${new Date(r.date).getDate()}</td><td onclick="manageCodes('${type}','${r.date}','s')">${r.s}</td><td onclick="manageCodes('${type}','${r.date}','p')">${r.p}</td><td onclick="manageCodes('${type}','${r.date}','c')">${r.c}</td><td style="color:var(--brand); font-weight:800;">${tot>0?((r.s/tot)*100).toFixed(0):0}%</td></tr>`;
+    }).join('') || '<tr><td colspan="5">No data for this month</td></tr>';
 }
 
 function manageCodes(type, date, mode) {
     const entry = storage[type].find(x => x.date === date);
     const codes = (entry[`codes_${mode}`] || "").split(',').filter(x => x);
     document.getElementById('codeModal').style.display = 'flex';
-    document.getElementById('codeList').innerHTML = codes.map((c, i) => `
-        <div class="code-badge"><span>${c}</span><button class="del-btn" onclick="deleteCode('${type}','${date}','${mode}',${i})">✕</button></div>
-    `).join('') || '<p style="text-align:center; color:var(--dim);">No codes stored</p>';
+    document.getElementById('codeList').innerHTML = codes.map((c, i) => `<div class="package-card" style="margin-bottom:8px;"><span>${c}</span><button style="margin-left:auto; background:none; border:none; color:var(--danger); font-weight:bold;" onclick="deleteCode('${type}','${date}','${mode}',${i})">✕</button></div>`).join('') || '<p style="text-align:center;">No codes stored</p>';
 }
 
 function deleteCode(type, date, mode, idx) {
@@ -338,19 +286,13 @@ function updateChart(y, m) {
     const ctx = document.getElementById('mainChart').getContext('2d');
     const days = new Date(y, m + 1, 0).getDate();
     const labels = Array.from({length: days}, (_, i) => i + 1);
-    const ds = types.map(t => ({
-        label: t, backgroundColor: colors[t], borderRadius: 4,
-        data: labels.map(d => {
-            const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            const f = storage[t].find(x => x.date === dateStr);
-            return f ? f.s : 0;
-        })
-    }));
+    const ds = types.map(t => ({ label: t, backgroundColor: colors[t], borderRadius: 4, data: labels.map(d => {
+        const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const f = storage[t].find(x => x.date === dateStr);
+        return f ? f.s : 0;
+    })}));
     if(chart) chart.destroy();
-    chart = new Chart(ctx, { type:'bar', data: { labels, datasets: ds }, options: { 
-        responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
-        scales:{ x:{stacked:true, grid:{display:false}, ticks:{font:{size:9}}}, y:{stacked:true, beginAtZero:true, grid:{color:'rgba(255,255,255,0.05)'}}} 
-    }});
+    chart = new Chart(ctx, { type:'bar', data: { labels, datasets: ds }, options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{stacked:true, grid:{display:false}, ticks:{font:{size:9}}}, y:{stacked:true, beginAtZero:true, grid:{color:'rgba(255,255,255,0.05)'}}} }});
 }
 
 function render() {
@@ -360,17 +302,28 @@ function render() {
         const mData = storage[t].filter(d => { const dt = new Date(d.date); return dt.getMonth() === m && dt.getFullYear() === y; });
         const s = mData.reduce((a,b) => a + (parseInt(b.s)||0), 0);
         const tot = mData.reduce((a,b) => a + (parseInt(b.s)+parseInt(b.p)+parseInt(b.c)||0), 0);
-        return `<div class="stat-card" onclick="showTable('${t}')">
-            <span style="font-size:0.75rem; color:${colors[t]}; font-weight:800; letter-spacing:0.5px;">${t.toUpperCase()}</span>
-            <span class="stat-val">${s}</span>
-            <div style="font-size:0.7rem; color:var(--dim); font-weight:600;">${tot > 0 ? ((s/tot)*100).toFixed(0) : 0}% Succ.</div>
-        </div>`;
+        return `<div class="stat-card" onclick="showTable('${t}')"><span style="font-size:0.75rem; color:${colors[t]}; font-weight:800;">${t.toUpperCase()}</span><span class="stat-val">${s}</span><div style="font-size:0.7rem; color:var(--dim); font-weight:600;">${tot > 0 ? ((s/tot)*100).toFixed(0) : 0}% Succ.</div></div>`;
     }).join('');
     updateChart(y, m);
 }
 
-function wipeAllData() { if(confirm("Permanently wipe ALL data?")) { types.forEach(t => storage[t] = []); localStorage.setItem("logistics_v52", JSON.stringify(storage)); render(); pushData(); } }
+function stopScanner() { 
+    if(videoStream) videoStream.getTracks().forEach(t => t.stop());
+    codeReader.reset();
+    document.getElementById('scannerOverlay').style.display = 'none'; 
+}
+
+async function toggleFlash() {
+    const track = videoStream?.getVideoTracks()[0];
+    try { isFlashOn = !isFlashOn; await track.applyConstraints({ advanced: [{ torch: isFlashOn }] }); document.getElementById('flashBtn').style.color = isFlashOn ? '#fbbf24' : '#fff'; } catch (e) {}
+}
+
 function moveMonth(dir) { viewDate.setMonth(viewDate.getMonth()+dir); render(); }
+
+async function start() {
+    if (!config) { config = {token: prompt("Token:"), user: prompt("User:"), repo: prompt("Repo:")}; localStorage.setItem('gh_config', JSON.stringify(config)); }
+    updateOnlineStatus(); await pullData();
+}
 
 start();
 </script>
