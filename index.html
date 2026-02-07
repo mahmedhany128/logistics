@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Insight Pro - Premium V32</title>
+    <title>Insight Pro - Elite V33</title>
     <script src="https://unpkg.com/@zxing/library@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -13,20 +13,16 @@
         body { background: var(--bg); color: var(--text); margin: 0; padding: 15px; padding-bottom: 120px; overflow-x: hidden; }
         
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .header-actions { display: flex; gap: 8px; }
         .btn-mini { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 8px 14px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; cursor: pointer; }
+        .btn-danger-mini { background: #fb718515; border: 1px solid #fb718530; color: var(--danger); padding: 8px 14px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; cursor: pointer; }
 
         .month-ctrl { background: var(--card); border: 1px solid var(--border); padding: 8px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
         .nav-btn { background: var(--bg); border: none; width: 40px; height: 40px; border-radius: 12px; color: var(--brand); font-weight: 800; cursor: pointer; }
 
-        /* التصميم الجديد للكروت V32 */
+        /* الكروت الفاخرة */
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 25px; }
-        .stat-card { 
-            background: linear-gradient(145deg, #1e293b, #111827);
-            padding: 20px; border-radius: 28px; border: 1px solid var(--border); 
-            position: relative; overflow: hidden; transition: 0.3s;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-        }
-        .stat-card:active { transform: scale(0.96); }
+        .stat-card { background: linear-gradient(145deg, #1e293b, #111827); padding: 20px; border-radius: 28px; border: 1px solid var(--border); position: relative; overflow: hidden; transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
         .stat-label { display: block; font-size: 0.7rem; font-weight: 800; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
         .stat-val { font-size: 1.8rem; font-weight: 900; color: #fff; display: block; }
         .stat-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
@@ -34,22 +30,18 @@
         .progress-track { height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; flex: 1; margin-left: 10px; overflow: hidden; }
         .progress-bar { height: 100%; background: var(--card-color); box-shadow: 0 0 10px var(--card-color); transition: width 0.5s ease; }
 
-        /* الجدول */
+        /* الجدول والرسوم */
         .table-container { background: var(--card); border-radius: 28px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 25px; }
         table { width: 100%; border-collapse: collapse; }
         th { background: #ffffff05; padding: 15px 10px; font-size: 0.6rem; color: var(--dim); text-transform: uppercase; }
         td { padding: 16px 10px; text-align: center; border-bottom: 1px solid #334155; font-size: 0.85rem; font-weight: 600; }
         .clickable { color: var(--brand); text-decoration: underline; cursor: pointer; }
-
         .chart-scroll-area { width: 100%; overflow-x: auto; background: var(--card); border-radius: 28px; border: 1px solid var(--border); padding: 20px; margin-bottom: 25px; }
         .chart-container { height: 280px; min-width: 800px; }
 
-        /* الاسكنر المطور */
+        /* الأوضاع العائمة */
         #scannerOverlay { display: none; position: fixed; inset: 0; background: #000; z-index: 9999; flex-direction: column; }
         .scan-header { background: rgba(30,41,59,0.95); padding: 20px; display: flex; flex-direction: column; gap: 10px; backdrop-filter: blur(10px); }
-        #scannedListDisplay { max-height: 80px; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 5px; }
-        .scan-tag { background: var(--brand); color: #fff; font-size: 0.6rem; padding: 4px 8px; border-radius: 6px; }
-
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000; align-items: flex-end; backdrop-filter: blur(10px); }
         .modal-content { background: var(--card); width: 100%; padding: 30px; border-radius: 40px 40px 0 0; max-height: 90vh; overflow-y: auto; }
         
@@ -64,8 +56,9 @@
         <div style="width:12px; height:12px; border-radius:50%; background:var(--brand); box-shadow:0 0 15px var(--brand)"></div>
         <h1 style="margin:0; font-size:1.4rem; font-weight:800;">Insight Pro</h1>
     </div>
-    <div style="display:flex; gap:8px;">
-        <button class="btn-mini" onclick="exportData()">Export</button>
+    <div class="header-actions">
+        <button class="btn-danger-mini" onclick="masterReset()">Reset All</button>
+        <button class="btn-mini" onclick="exportData()">Export CSV</button>
         <div id="sync" class="btn-mini" style="border:none; color:var(--brand)">☁️ Sync</div>
     </div>
 </header>
@@ -85,7 +78,7 @@
             <button onclick="document.getElementById('detailsTable').style.display='none'" style="background:#ffffff10; border:none; color:#fff; padding:6px 12px; border-radius:10px;">Close</button>
         </div>
         <table>
-            <thead><tr><th>Day</th><th>S</th><th>P</th><th>C</th><th>Rate</th></tr></thead>
+            <thead><tr><th>Day</th><th>Success</th><th>Pending</th><th>Cancel</th><th>Rate</th></tr></thead>
             <tbody id="tableBody"></tbody>
         </table>
     </div>
@@ -94,18 +87,18 @@
 <div class="chart-scroll-area"><div class="chart-container"><canvas id="mainChart"></canvas></div></div>
 
 <div style="position: fixed; bottom: 20px; left: 15px; right: 15px; z-index: 100;">
-    <button class="btn-add" onclick="openLogModal()">+ Add New Activities</button>
+    <button class="btn-add" onclick="openLogModal()">+ Update Today's Log</button>
 </div>
 
 <div id="logModal" class="modal">
     <div class="modal-content">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h2 style="margin:0; font-size:1.2rem;">Batch Entry</h2>
+            <h2 style="margin:0; font-size:1.2rem;">Log Entry</h2>
             <input type="date" id="logDate" style="width:auto; margin:0; padding:10px;">
         </div>
         <div id="logInputs"></div>
-        <button class="btn-add" style="margin-top:20px" onclick="saveData()">Save All Records</button>
-        <button onclick="document.getElementById('logModal').style.display='none'" style="width:100%; border:none; background:none; margin-top:15px; color:var(--dim); font-weight:700">Cancel</button>
+        <button class="btn-add" style="margin-top:20px" onclick="saveData()">Save All Changes</button>
+        <button onclick="document.getElementById('logModal').style.display='none'" style="width:100%; border:none; background:none; margin-top:15px; color:var(--dim); font-weight:700">Go Back</button>
     </div>
 </div>
 
@@ -119,21 +112,21 @@
                 <option value="s">Success (S)</option><option value="p">Pending (P)</option><option value="c">Cancel (C)</option>
             </select>
         </div>
-        <div id="scannedListDisplay"></div>
+        <div id="scannedListDisplay" style="display:flex; flex-wrap:wrap; gap:5px; max-height:80px; overflow-y:auto;"></div>
     </div>
-    <video id="video"></video>
+    <video id="video" style="width:100%; height:100%; object-fit:cover;"></video>
     <div style="position:absolute; inset:0; border:2px solid var(--brand); margin:auto; width:260px; height:180px; border-radius:20px; box-shadow: 0 0 0 2000px rgba(0,0,0,0.7);"></div>
     <div style="position:absolute; bottom:0; width:100%; background:rgba(30,41,59,0.95); padding:25px; border-radius:30px 30px 0 0; text-align:center;">
-        <div style="color:#fff; font-weight:800; margin-bottom:15px;">Scanned in session: <span id="sessionCount" style="color:var(--brand)">0</span></div>
-        <button class="btn-add" onclick="stopScanner()">DONE & SYNC DATA</button>
+        <div style="color:#fff; font-weight:800; margin-bottom:15px;">Session Count: <span id="sessionCount" style="color:var(--brand)">0</span></div>
+        <button class="btn-add" onclick="stopScanner()">FINISH & UPDATE FIELDS</button>
     </div>
 </div>
 
 <div id="codeModal" class="modal" style="align-items: center; justify-content: center;">
     <div class="modal-content" style="width: 85%; border-radius: 30px; text-align: center;">
-        <h3 id="codeTitle" style="color:var(--brand)">Codes</h3>
-        <div id="codeList" style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; max-height: 250px; overflow-y: auto;"></div>
-        <button onclick="document.getElementById('codeModal').style.display='none'" class="btn-add" style="margin-top:20px; background:var(--card);">Close</button>
+        <h3 id="codeTitle" style="color:var(--brand)">Details</h3>
+        <div id="codeList" style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; max-height:250px; overflow-y:auto;"></div>
+        <button onclick="document.getElementById('codeModal').style.display='none'" class="btn-add" style="margin-top:20px; background:var(--card);">Close View</button>
     </div>
 </div>
 
@@ -142,7 +135,7 @@ const beep = new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-pr
 let config = JSON.parse(localStorage.getItem('gh_config'));
 const types = ["Delivery", "PickUp", "SameDay", "Khazenly"];
 const colors = { Delivery: '#818cf8', PickUp: '#34d399', SameDay: '#fbbf24', Khazenly: '#fb7185' };
-let storage = JSON.parse(localStorage.getItem("logistics_pro_v32")) || {};
+let storage = JSON.parse(localStorage.getItem("logistics_pro_v33")) || {};
 types.forEach(t => { if(!storage[t]) storage[t] = []; });
 
 let chart, viewDate = new Date();
@@ -163,7 +156,7 @@ async function pullData() {
         if(r.ok) {
             const j = await r.json();
             storage = JSON.parse(decodeURIComponent(escape(atob(j.content))));
-            localStorage.setItem("logistics_pro_v32", JSON.stringify(storage));
+            localStorage.setItem("logistics_pro_v33", JSON.stringify(storage));
         }
     } catch(e) {}
     render();
@@ -172,22 +165,15 @@ async function pullData() {
 function render() {
     const m = viewDate.getMonth(), y = viewDate.getFullYear();
     document.getElementById('monthLab').innerText = viewDate.toLocaleString('en-US',{month:'long', year:'numeric'});
-    
     document.getElementById('metricsPanel').innerHTML = types.map(t => {
         const mData = storage[t].filter(d => { const dt = new Date(d.date); return dt.getMonth() === m && dt.getFullYear() === y; });
         const s = mData.reduce((a,b) => a + (parseInt(b.s)||0), 0);
         const tot = mData.reduce((a,b) => a + (parseInt(b.s)+parseInt(b.p)+parseInt(b.c)||0), 0);
         const perc = tot > 0 ? ((s/tot)*100).toFixed(0) : 0;
-        
-        return `
-        <div class="stat-card" style="--card-color: ${colors[t]}" onclick="showTable('${t}')">
-            <span class="stat-label">${t}</span>
-            <span class="stat-val">${s}</span>
-            <div class="stat-footer">
-                <span class="stat-perc-pill" style="color: ${colors[t]}">${perc}%</span>
-                <div class="progress-track"><div class="progress-bar" style="width: ${perc}%"></div></div>
-            </div>
-        </div>`;
+        return `<div class="stat-card" style="--card-color: ${colors[t]}" onclick="showTable('${t}')">
+            <span class="stat-label">${t}</span><span class="stat-val">${s}</span>
+            <div class="stat-footer"><span class="stat-perc-pill" style="color:${colors[t]}">${perc}%</span>
+            <div class="progress-track"><div class="progress-bar" style="width:${perc}%"></div></div></div></div>`;
     }).join('');
     updateChart(y, m);
 }
@@ -199,20 +185,17 @@ function showTable(type) {
     const filtered = storage[type].filter(d => { const dt = new Date(d.date); return dt.getMonth() === m && dt.getFullYear() === y; });
     document.getElementById("tableBody").innerHTML = filtered.sort((a,b)=>new Date(b.date)-new Date(a.date)).map(r => {
         const tot = (parseInt(r.s)||0) + (parseInt(r.p)||0) + (parseInt(r.c)||0);
-        return `<tr>
-            <td style="color:var(--dim)">${new Date(r.date).getDate()}</td>
+        return `<tr><td>${new Date(r.date).getDate()}</td>
             <td class="clickable" onclick="viewCodes('${r.codes_s}', 'S')">${r.s}</td>
             <td class="clickable" onclick="viewCodes('${r.codes_p}', 'P')" style="color:var(--warning)">${r.p}</td>
             <td class="clickable" onclick="viewCodes('${r.codes_c}', 'C')" style="color:var(--danger)">${r.c}</td>
-            <td style="color:var(--success)">${tot>0?((r.s/tot)*100).toFixed(0):0}%</td>
-        </tr>`;
+            <td style="color:var(--success)">${tot>0?((r.s/tot)*100).toFixed(0):0}%</td></tr>`;
     }).join('');
 }
 
 function viewCodes(c, title) {
     if(!c || c === "" || c === "undefined") return;
     document.getElementById('codeModal').style.display = 'flex';
-    document.getElementById('codeTitle').innerText = title + " Codes";
     document.getElementById('codeList').innerHTML = c.split(',').filter(x=>x).map(x => `<span style="background:var(--brand); color:#fff; padding:6px 12px; border-radius:10px; font-size:0.75rem;">${x}</span>`).join('');
 }
 
@@ -222,21 +205,17 @@ function openLogModal() {
     document.getElementById('logDate').value = d;
     document.getElementById('logInputs').innerHTML = types.map(t => {
         const old = storage[t].find(x => x.date === d) || {s:'', p:'', c:'', codes_s:'', codes_p:'', codes_c:''};
-        return `
-        <div style="background:var(--bg); padding:20px; border-radius:24px; margin-bottom:15px; border:1px solid var(--border)">
+        return `<div style="background:var(--bg); padding:20px; border-radius:24px; margin-bottom:15px; border:1px solid var(--border)">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
                 <span style="font-weight:800; color:${colors[t]}">${t}</span>
-                <button onclick="launchScanner('${t}')" style="background:var(--brand); border:none; border-radius:12px; color:#fff; padding:8px 15px; font-size:0.75rem; font-weight:700;">📷 Scan Multi</button>
+                <button onclick="launchScanner('${t}')" style="background:var(--brand); border:none; border-radius:12px; color:#fff; padding:8px 15px; font-size:0.75rem;">📷 Scan Multi</button>
             </div>
             <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
-                <input type="number" id="q_s_${t}" value="${old.s}" placeholder="S Qty">
-                <input type="number" id="q_p_${t}" value="${old.p}" placeholder="P Qty">
-                <input type="number" id="q_c_${t}" value="${old.c}" placeholder="C Qty">
-                <input type="hidden" id="c_s_${t}" value="${old.codes_s}">
-                <input type="hidden" id="c_p_${t}" value="${old.codes_p}">
-                <input type="hidden" id="c_c_${t}" value="${old.codes_c}">
-            </div>
-        </div>`;
+                <input type="number" id="q_s_${t}" value="${old.s}" placeholder="S">
+                <input type="number" id="q_p_${t}" value="${old.p}" placeholder="P">
+                <input type="number" id="q_c_${t}" value="${old.c}" placeholder="C">
+                <input type="hidden" id="c_s_${t}" value="${old.codes_s}"><input type="hidden" id="c_p_${t}" value="${old.codes_p}"><input type="hidden" id="c_c_${t}" value="${old.codes_c}">
+            </div></div>`;
     }).join('');
 }
 
@@ -246,15 +225,13 @@ function launchScanner(type) {
     updateScanLabels();
     codeReader.decodeFromVideoDevice(undefined, 'video', (result) => {
         if (result) {
-            const currentType = document.getElementById('scanTypeSelect').value;
-            const currentMode = document.getElementById('scanModeSelect').value;
-            const hField = document.getElementById(`c_${currentMode}_${currentType}`);
-            let codes = hField.value ? hField.value.split(',') : [];
+            const t = document.getElementById('scanTypeSelect').value;
+            const m = document.getElementById('scanModeSelect').value;
+            const h = document.getElementById(`c_${m}_${t}`);
+            let codes = h.value ? h.value.split(',') : [];
             if(!codes.includes(result.text)) {
-                codes.push(result.text);
-                hField.value = codes.join(',');
-                beep.play(); navigator.vibrate(100);
-                updateScanLabels();
+                codes.push(result.text); h.value = codes.join(',');
+                beep.play(); navigator.vibrate(100); updateScanLabels();
             }
         }
     });
@@ -264,8 +241,7 @@ function updateScanLabels() {
     const t = document.getElementById('scanTypeSelect').value;
     const m = document.getElementById('scanModeSelect').value;
     const codes = document.getElementById(`c_${m}_${t}`).value;
-    const count = codes ? codes.split(',').length : 0;
-    document.getElementById('sessionCount').innerText = count;
+    document.getElementById('sessionCount').innerText = codes ? codes.split(',').length : 0;
     document.getElementById('scannedListDisplay').innerHTML = codes ? codes.split(',').map(c => `<span class="scan-tag">${c}</span>`).join('') : '';
 }
 
@@ -276,22 +252,42 @@ async function saveData() {
     types.forEach(t => {
         const idx = storage[t].findIndex(x => x.date === d);
         const old = idx >= 0 ? storage[t][idx] : {s:0, p:0, c:0, codes_s:'', codes_p:'', codes_c:''};
-        const sIn = document.getElementById(`q_s_${t}`).value;
-        const pIn = document.getElementById(`q_p_${t}`).value;
-        const cIn = document.getElementById(`q_c_${t}`).value;
         const entry = {
             date: d,
-            s: sIn !== "" ? parseInt(sIn) : old.s,
-            p: pIn !== "" ? parseInt(pIn) : old.p,
-            c: cIn !== "" ? parseInt(cIn) : old.c,
+            s: document.getElementById(`q_s_${t}`).value !== "" ? parseInt(document.getElementById(`q_s_${t}`).value) : old.s,
+            p: document.getElementById(`q_p_${t}`).value !== "" ? parseInt(document.getElementById(`q_p_${t}`).value) : old.p,
+            c: document.getElementById(`q_c_${t}`).value !== "" ? parseInt(document.getElementById(`q_c_${t}`).value) : old.c,
             codes_s: document.getElementById(`c_s_${t}`).value,
             codes_p: document.getElementById(`c_p_${t}`).value,
             codes_c: document.getElementById(`c_c_${t}`).value
         };
         if(idx >= 0) storage[t][idx] = entry; else storage[t].push(entry);
     });
-    localStorage.setItem("logistics_pro_v32", JSON.stringify(storage));
+    localStorage.setItem("logistics_pro_v33", JSON.stringify(storage));
     document.getElementById('logModal').style.display = 'none'; render(); await pushData();
+}
+
+async function masterReset() {
+    if(confirm("⚠️ ARE YOU SURE? This will delete all local and remote data!")) {
+        if(confirm("LAST WARNING: This action cannot be undone. Clear everything?")) {
+            storage = {}; types.forEach(t => storage[t] = []);
+            localStorage.setItem("logistics_pro_v33", JSON.stringify(storage));
+            await pushData(); location.reload();
+        }
+    }
+}
+
+function exportData() {
+    let csv = "\uFEFFDate,Service Type,Success (S),Pending (P),Canceled (C),Total,Success Rate %,Codes Success,Codes Pending,Codes Canceled\n";
+    types.forEach(t => {
+        storage[t].sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach(r => {
+            const tot = (parseInt(r.s)||0) + (parseInt(r.p)||0) + (parseInt(r.c)||0);
+            const rate = tot > 0 ? ((r.s/tot)*100).toFixed(1) : 0;
+            csv += `${r.date},${t},${r.s},${r.p},${r.c},${tot},${rate}%,"${r.codes_s}","${r.codes_p}","${r.codes_c}"\n`;
+        });
+    });
+    const b = new Blob([csv], {type:'text/csv;charset=utf-8'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `Insight_Pro_Report_${new Date().toISOString().split('T')[0]}.csv`; a.click();
 }
 
 async function pushData() {
@@ -300,7 +296,7 @@ async function pushData() {
     try {
         const r = await fetch(url, { headers: {'Authorization': `token ${config.token}`} });
         const sha = r.ok ? (await r.json()).sha : "";
-        await fetch(url, { method:'PUT', headers:{'Authorization':`token ${config.token}`}, body:JSON.stringify({message:"V32 Sync", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage, null, 2)))), sha}) });
+        await fetch(url, { method:'PUT', headers:{'Authorization':`token ${config.token}`}, body:JSON.stringify({message:"V33 Master Sync", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage, null, 2)))), sha}) });
         document.getElementById('sync').innerText = "☁️ OK";
     } catch(e) { document.getElementById('sync').innerText = "❌"; }
 }
@@ -318,13 +314,6 @@ function updateChart(y, m) {
     }));
     if(chart) chart.destroy();
     chart = new Chart(ctx, { type:'bar', data: { labels, datasets: ds }, options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{stacked:true, grid:{display:false}}, y:{stacked:true, grid:{color:'#ffffff05'}}} } });
-}
-
-function exportData() {
-    let csv = "Type,Date,S,P,C,Codes_S,Codes_P,Codes_C\n";
-    types.forEach(t => storage[t].forEach(r => csv += `${t},${r.date},${r.s},${r.p},${r.c},"${r.codes_s}","${r.codes_p}","${r.codes_c}"\n`));
-    const b = new Blob([csv], {type:'text/csv'});
-    const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'logistics_data.csv'; a.click();
 }
 
 function moveMonth(dir) { viewDate.setMonth(viewDate.getMonth()+dir); render(); }
