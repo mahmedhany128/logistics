@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Insight Pro - V79.0 Master (Ref V53.2)</title>
+    <title>Insight Pro - V80.0 Final Master</title>
     
     <link rel="manifest" href="manifest.json">
     
@@ -34,7 +34,7 @@
         table { width: 100%; border-collapse: collapse; }
         td, th { padding: 14px; text-align: center; border-bottom: 1px solid #334155; font-size: 0.8rem; color: var(--text); }
 
-        /* سكنر Amazon Flex المتطور - المرجع الرئيسي */
+        /* سكنر Amazon Flex المتطور - مع إخفاء علامات المكتبة */
         #scannerOverlay { display: none; position: fixed; inset: 0; background: #000; z-index: 2000; flex-direction: column; }
         .scanner-header { position: absolute; top: 0; width: 100%; padding: 15px; background: rgba(0,0,0,0.7); z-index: 2010; }
         
@@ -46,7 +46,10 @@
 
         #videoContainer { height: 35vh; position: relative; background: #000; overflow: hidden; flex: none; }
         #video { width: 100% !important; height: 100% !important; object-fit: cover; }
-        /* البرواز الخاص بك */
+        /* إخفاء الزوائد الرمادية للمكتبة */
+        #video b, #video span, #video br { display: none !important; }
+        #video video { border: none !important; }
+
         .scan-frame { position: absolute; width: 260px; height: 110px; border: 1px solid rgba(255,255,255,0.4); border-radius: 15px; top: 50%; left: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 0 2000px rgba(0,0,0,0.6); z-index: 5; pointer-events: none; }
         
         #scannedCardsContainer { flex: 1; background: var(--bg); padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
@@ -65,7 +68,7 @@
 <body>
 
 <header>
-    <h1 style="font-size:1.1rem; margin:0; font-weight: 800;">Insight <span style="color:var(--brand)">Pro V79.0</span></h1>
+    <h1 style="font-size:1.1rem; margin:0; font-weight: 800;">Insight <span style="color:var(--brand)">Pro Master</span></h1>
     <span id="dot" class="status-dot"></span>
 </header>
 
@@ -109,7 +112,7 @@
         </div>
     </div>
     <div id="videoContainer">
-        <div id="video" style="width:100%; height:100%;"></div>
+        <div id="video"></div>
         <div class="scan-frame"></div>
         <div id="lookupText" style="display:none; position:absolute; top:20%; width:100%; z-index:10; text-align:center; color:#fff; font-size:0.6rem; background:rgba(0,0,0,0.7); padding:4px;">PROCESSED...</div>
     </div>
@@ -159,46 +162,34 @@ function setScanMode(mode) {
     document.getElementById(`btn_${mode}`).classList.add('active');
 }
 
-// إطلاق السكنر الجديد
 async function launchScanner(type) {
     activeScanType = type;
     document.getElementById('scannerOverlay').style.display = 'flex';
     document.getElementById('scannedCardsContainer').innerHTML = '';
     setScanMode('s');
     
-    if(!html5QrCode) {
-        html5QrCode = new Html5Qrcode("video");
-    }
-
-    const configScanner = { fps: 20, qrbox: { width: 260, height: 110 } };
+    if(!html5QrCode) html5QrCode = new Html5Qrcode("video");
+    
+    const configScanner = { fps: 20, qrbox: { width: 260, height: 110 }, aspectRatio: 1.0 };
     
     try {
-        await html5QrCode.start(
-            { facingMode: "environment" }, 
-            configScanner,
-            (decodedText) => { registerCode(decodedText); }
-        );
-    } catch (err) {
-        console.error("Scanner Error: ", err);
-    }
+        await html5QrCode.start({ facingMode: "environment" }, configScanner, (text) => registerCode(text));
+    } catch (e) { console.error(e); }
 }
 
 function registerCode(code) {
     const h = document.getElementById(`c_${currentScanMode}_${activeScanType}`);
     let codes = h.value ? h.value.split(',') : [];
-    
     if(!codes.includes(code)) {
         codes.push(code); h.value = codes.join(',');
-        
         document.getElementById('lookupText').style.display = 'block';
         setTimeout(() => document.getElementById('lookupText').style.display = 'none', 500);
-
         const cardColor = currentScanMode === 's' ? 'var(--success)' : (currentScanMode === 'p' ? 'var(--warning)' : 'var(--danger)');
         const card = document.createElement('div');
         card.className = 'package-card';
         card.innerHTML = `<div class="status-badge" style="background:${cardColor}"></div><div><div style="font-size:0.85rem; font-weight:800;">${code}</div><div style="font-size:0.6rem; color:var(--dim);">${activeScanType} - ${currentScanMode.toUpperCase()}</div></div>`;
         document.getElementById('scannedCardsContainer').prepend(card);
-        document.getElementById('pkgCount').innerText = `${codes.length} scanned in ${activeScanType}`;
+        document.getElementById('pkgCount').innerText = `${codes.length} scanned`;
         if(navigator.vibrate) navigator.vibrate(80);
     }
 }
@@ -221,35 +212,21 @@ async function pushData() {
         const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
         const r = await fetch(url, { headers: {'Authorization': `token ${config.token}`} });
         const sha = r.ok ? (await r.json()).sha : "";
-        await fetch(url, { method:'PUT', headers:{'Authorization':`token ${config.token}`}, body:JSON.stringify({message:"Ref Master Sync", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage)))), sha}) });
+        await fetch(url, { method:'PUT', headers:{'Authorization':`token ${config.token}`}, body:JSON.stringify({message:"V80 Sync", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage)))), sha}) });
     } catch(e) {}
 }
 
-// منطق الحفظ الذكي (Update)
 function saveData() {
     const d = document.getElementById('logDate').value;
     types.forEach(t => {
         let entry = storage[t].find(x => x.date === d);
-        const sVal = document.getElementById(`q_s_${t}`).value;
-        const pVal = document.getElementById(`q_p_${t}`).value;
-        const cVal = document.getElementById(`q_c_${t}`).value;
-        const codesS = document.getElementById(`c_s_${t}`).value;
-        const codesP = document.getElementById(`c_p_${t}`).value;
-        const codesC = document.getElementById(`c_c_${t}`).value;
-
+        const sVal = document.getElementById(`q_s_${t}`).value, pVal = document.getElementById(`q_p_${t}`).value, cVal = document.getElementById(`q_c_${t}`).value;
+        const codesS = document.getElementById(`c_s_${t}`).value, codesP = document.getElementById(`c_p_${t}`).value, codesC = document.getElementById(`c_c_${t}`).value;
         if(!entry) {
-            storage[t].push({
-                date: d,
-                s: parseInt(sVal)||0, p: parseInt(pVal)||0, c: parseInt(cVal)||0,
-                codes_s: codesS, codes_p: codesP, codes_c: codesC
-            });
+            storage[t].push({ date: d, s: parseInt(sVal)||0, p: parseInt(pVal)||0, c: parseInt(cVal)||0, codes_s: codesS, codes_p: codesP, codes_c: codesC });
         } else {
-            if(sVal !== "") entry.s = parseInt(sVal);
-            if(pVal !== "") entry.p = parseInt(pVal);
-            if(cVal !== "") entry.c = parseInt(cVal);
-            if(codesS) entry.codes_s = codesS;
-            if(codesP) entry.codes_p = codesP;
-            if(codesC) entry.codes_c = codesC;
+            if(sVal !== "") entry.s = parseInt(sVal); if(pVal !== "") entry.p = parseInt(pVal); if(cVal !== "") entry.c = parseInt(cVal);
+            if(codesS) entry.codes_s = codesS; if(codesP) entry.codes_p = codesP; if(codesC) entry.codes_c = codesC;
         }
     });
     localStorage.setItem("logistics_v52", JSON.stringify(storage));
@@ -272,36 +249,33 @@ function openLogModal() {
     document.getElementById('logModal').style.display = 'flex';
 }
 
-// منطق الجدول: إظهار الأيام الصفرية التي تحتوي على أكواد
 function showTable(type) {
     const m = viewDate.getMonth(), y = viewDate.getFullYear();
     document.getElementById("detailsTable").style.display = "block";
     document.getElementById("activeTitle").innerText = type;
     const active = storage[type].filter(d => {
         const dt = new Date(d.date);
-        const hasNumbers = (parseInt(d.s)||0) + (parseInt(d.p)||0) + (parseInt(d.c)||0) > 0;
+        const hasNum = (parseInt(d.s)||0) + (parseInt(d.p)||0) + (parseInt(d.c)||0) > 0;
         const hasCodes = (d.codes_s?.length > 2) || (d.codes_p?.length > 2) || (d.codes_c?.length > 2);
-        return dt.getMonth() === m && dt.getFullYear() === y && (hasNumbers || hasCodes);
+        return dt.getMonth() === m && dt.getFullYear() === y && (hasNum || hasCodes);
     }).sort((a,b) => new Date(a.date) - new Date(b.date));
-
     document.getElementById("tableBody").innerHTML = active.map(r => {
         const tot = (parseInt(r.s)||0) + (parseInt(r.p)||0) + (parseInt(r.c)||0);
         return `<tr><td style="font-weight:800;">${new Date(r.date).getDate()}</td><td onclick="manageCodes('${type}','${r.date}','s')">${r.s}</td><td onclick="manageCodes('${type}','${r.date}','p')">${r.p}</td><td onclick="manageCodes('${type}','${r.date}','c')">${r.c}</td><td style="color:var(--brand); font-weight:800;">${tot>0?((r.s/tot)*100).toFixed(0):0}%</td></tr>`;
-    }).join('') || '<tr><td colspan="5">No data for this month</td></tr>';
+    }).join('') || '<tr><td colspan="5">No data</td></tr>';
 }
 
 function manageCodes(type, date, mode) {
     const entry = storage[type].find(x => x.date === date);
     const codes = (entry[`codes_${mode}`] || "").split(',').filter(x => x);
     document.getElementById('codeModal').style.display = 'flex';
-    document.getElementById('codeList').innerHTML = codes.map((c, i) => `<div class="package-card" style="margin-bottom:8px;"><span>${c}</span><button style="margin-left:auto; background:none; border:none; color:var(--danger); font-weight:bold;" onclick="deleteCode('${type}','${date}','${mode}',${i})">✕</button></div>`).join('') || '<p style="text-align:center;">No codes stored</p>';
+    document.getElementById('codeList').innerHTML = codes.map((c, i) => `<div class="package-card" style="margin-bottom:8px;"><span>${c}</span><button style="margin-left:auto; background:none; border:none; color:var(--danger); font-weight:bold;" onclick="deleteCode('${type}','${date}','${mode}',${i})">✕</button></div>`).join('') || '<p style="text-align:center;">No codes</p>';
 }
 
 function deleteCode(type, date, mode, idx) {
     const entry = storage[type].find(x => x.date === date);
     let codes = entry[`codes_${mode}`].split(',').filter(x => x);
-    codes.splice(idx, 1);
-    entry[`codes_${mode}`] = codes.join(',');
+    codes.splice(idx, 1); entry[`codes_${mode}`] = codes.join(',');
     localStorage.setItem("logistics_v52", JSON.stringify(storage));
     manageCodes(type, date, mode); render(); pushData();
 }
@@ -312,11 +286,10 @@ function updateChart(y, m) {
     const labels = Array.from({length: days}, (_, i) => i + 1);
     const ds = types.map(t => ({ label: t, backgroundColor: colors[t], borderRadius: 4, data: labels.map(d => {
         const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        const f = storage[t].find(x => x.date === dateStr);
-        return f ? f.s : 0;
+        const f = storage[t].find(x => x.date === dateStr); return f ? f.s : 0;
     })}));
     if(chart) chart.destroy();
-    chart = new Chart(ctx, { type:'bar', data: { labels, datasets: ds }, options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{stacked:true, grid:{display:false}, ticks:{font:{size:9}}}, y:{stacked:true, beginAtZero:true, grid:{color:'rgba(255,255,255,0.05)'}}} }});
+    chart = new Chart(ctx, { type:'bar', data: { labels, datasets: ds }, options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{stacked:true, grid:{display:false}}, y:{stacked:true, beginAtZero:true, grid:{color:'rgba(255,255,255,0.05)'}}} }});
 }
 
 function render() {
@@ -331,25 +304,10 @@ function render() {
     updateChart(y, m);
 }
 
-// توقيف السكنر الجديد
-async function stopScanner() { 
-    if(html5QrCode) {
-        await html5QrCode.stop();
-        html5QrCode = null;
-    }
-    document.getElementById('scannerOverlay').style.display = 'none'; 
-}
+async function stopScanner() { if(html5QrCode) { await html5QrCode.stop(); html5QrCode = null; } document.getElementById('scannerOverlay').style.display = 'none'; }
 
-// الكشاف في المكتبة الجديدة
 async function toggleFlash() {
-    try {
-        isFlashOn = !isFlashOn;
-        const track = html5QrCode.getRunningTrack();
-        if (track && track.getCapabilities().torch) {
-            await track.applyConstraints({ advanced: [{ torch: isFlashOn }] });
-            document.getElementById('flashBtn').style.color = isFlashOn ? '#fbbf24' : '#fff';
-        }
-    } catch (e) { console.error("Flash error", e); }
+    try { isFlashOn = !isFlashOn; const track = html5QrCode.getRunningTrack(); if (track && track.getCapabilities().torch) { await track.applyConstraints({ advanced: [{ torch: isFlashOn }] }); document.getElementById('flashBtn').style.color = isFlashOn ? '#fbbf24' : '#fff'; } } catch (e) {}
 }
 
 function moveMonth(dir) { viewDate.setMonth(viewDate.getMonth()+dir); render(); }
@@ -358,7 +316,6 @@ async function start() {
     if (!config) { config = {token: prompt("Token:"), user: prompt("User:"), repo: prompt("Repo:")}; localStorage.setItem('gh_config', JSON.stringify(config)); }
     updateOnlineStatus(); await pullData();
 }
-
 start();
 </script>
 </body>
