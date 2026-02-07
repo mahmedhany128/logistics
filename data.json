@@ -1,6 +1,46 @@
 {
-  "Delivery": [],
-  "PickUp": [],
-  "SameDay": [],
-  "Khazenly": []
+  "Delivery": [
+    {
+      "date": "2026-02-06",
+      "s": 56,
+      "p": 0,
+      "c": 4,
+      "codes_s": "",
+      "codes_p": "",
+      "codes_c": ""
+    }
+  ],
+  "PickUp": [
+    {
+      "date": "2026-02-06",
+      "s": 4,
+      "p": 0,
+      "c": 1,
+      "codes_s": "",
+      "codes_p": "",
+      "codes_c": ""
+    }
+  ],
+  "SameDay": [
+    {
+      "date": "2026-02-06",
+      "s": 0,
+      "p": 0,
+      "c": 0,
+      "codes_s": "",
+      "codes_p": "",
+      "codes_c": ""
+    }
+  ],
+  "Khazenly": [
+    {
+      "date": "2026-02-06",
+      "s": 0,
+      "p": 0,
+      "c": 0,
+      "codes_s": "",
+      "codes_p": "",
+      "codes_c": ""
+    }
+  ]
 }
