@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Insight Pro - V47 Smart Filter</title>
+    <title>Insight Pro - V49 Smart Focus</title>
     <script src="https://unpkg.com/@zxing/library@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -21,7 +21,7 @@
         .nav-btn { background: var(--bg); border: none; width: 40px; height: 40px; border-radius: 12px; color: var(--brand); cursor: pointer; }
 
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-        .stat-card { background: linear-gradient(145deg, #1e293b, #111827); padding: 18px; border-radius: 24px; border: 1px solid var(--border); position: relative; }
+        .stat-card { background: linear-gradient(145deg, #1e293b, #111827); padding: 18px; border-radius: 24px; border: 1px solid var(--border); }
         .stat-val { font-size: 1.6rem; font-weight: 900; color: #fff; display: block; margin: 5px 0; }
         
         .chart-card { background: var(--card); border-radius: 24px; padding: 15px; margin-bottom: 20px; border: 1px solid var(--border); }
@@ -53,7 +53,7 @@
 <body>
 
 <header>
-    <h1 style="font-size:1.1rem; margin:0;">Insight <span style="color:var(--brand)">V47</span> Master</h1>
+    <h1 style="font-size:1.1rem; margin:0;">Insight <span style="color:var(--brand)">V49</span></h1>
     <div style="display:flex; align-items:center; gap:10px;">
         <button class="danger-zone" onclick="wipeAllData()">Wipe All</button>
         <span id="dot" class="status-dot online"></span>
@@ -93,7 +93,11 @@
             <select id="scanTypeSelect"><option>Delivery</option><option>PickUp</option><option>SameDay</option><option>Khazenly</option></select>
             <select id="scanModeSelect"><option value="s">Success</option><option value="p">Pending</option><option value="c">Cancel</option></select>
         </div>
-        <div id="scannedListDisplay" style="margin-top:15px; max-height:80px; overflow-y:auto; font-size: 0.8rem;"></div>
+        <div style="display:flex; gap:8px; margin-top:12px;">
+            <input type="text" id="manualInput" placeholder="Type code manually..." style="margin:0; flex:1;">
+            <button onclick="addManualCode()" style="background:var(--brand); border:none; border-radius:12px; color:#fff; padding:0 15px; font-weight:bold;">Add</button>
+        </div>
+        <div id="scannedListDisplay" style="margin-top:15px; max-height:80px; overflow-y:auto; font-size: 0.75rem;"></div>
     </div>
     <div id="videoContainer">
         <video id="video"></video>
@@ -119,61 +123,52 @@
 let config = JSON.parse(localStorage.getItem('gh_config'));
 const types = ["Delivery", "PickUp", "SameDay", "Khazenly"];
 const colors = { Delivery: '#818cf8', PickUp: '#34d399', SameDay: '#fbbf24', Khazenly: '#fb7185' };
-let storage = JSON.parse(localStorage.getItem("logistics_v47")) || {};
+let storage = JSON.parse(localStorage.getItem("logistics_v49")) || {};
 types.forEach(t => { if(!storage[t]) storage[t] = []; });
 
 let chart, viewDate = new Date();
 const codeReader = new ZXing.BrowserMultiFormatReader();
 
-// --- نظام العرض الذكي المطور (أرقام أو باركودات) ---
-function showTable(type) {
-    const m = viewDate.getMonth(), y = viewDate.getFullYear();
-    document.getElementById("detailsTable").style.display = "block";
-    document.getElementById("activeTitle").innerText = type;
-
-    const active = storage[type].filter(d => {
-        const dt = new Date(d.date);
-        const hasNumbers = (parseInt(d.s)||0) + (parseInt(d.p)||0) + (parseInt(d.c)||0) > 0;
-        const hasCodes = (d.codes_s && d.codes_s.length > 2) || (d.codes_p && d.codes_p.length > 2) || (d.codes_c && d.codes_c.length > 2);
-        
-        return dt.getMonth() === m && dt.getFullYear() === y && (hasNumbers || hasCodes);
-    }).sort((a,b) => new Date(a.date) - new Date(b.date));
-
-    document.getElementById("tableBody").innerHTML = active.map(r => {
-        const tot = (parseInt(r.s)||0) + (parseInt(r.p)||0) + (parseInt(r.c)||0);
-        return `<tr>
-            <td style="font-weight:800">${new Date(r.date).getDate()}</td>
-            <td onclick="manageCodes('${type}','${r.date}','s')">${r.s}</td>
-            <td onclick="manageCodes('${type}','${r.date}','p')">${r.p}</td>
-            <td onclick="manageCodes('${type}','${r.date}','c')">${r.c}</td>
-            <td>${tot>0?((r.s/tot)*100).toFixed(0):0}%</td>
-        </tr>`;
-    }).join('') || '<tr><td colspan="5">No entries found</td></tr>';
+// --- ميزة التنظيف الذكي للخانات ---
+function setupSmartInputs() {
+    document.querySelectorAll('input[type="number"]').forEach(input => {
+        input.addEventListener('focus', function() {
+            if (this.value === "0") this.value = "";
+        });
+        input.addEventListener('blur', function() {
+            if (this.value === "") this.value = "0";
+        });
+    });
 }
 
-// --- سكنر فائق الدقة ---
+// --- بقية الوظائف الأساسية ---
 async function launchScanner(type) {
     document.getElementById('scanTypeSelect').value = type;
     document.getElementById('scannerOverlay').style.display = 'flex';
     updateScanUI();
-
     const constraints = { video: { facingMode: "environment", focusMode: "continuous" } };
-
     codeReader.decodeFromConstraints(constraints, 'video', (result) => {
-        if (result) {
-            const m = document.getElementById('scanModeSelect').value;
-            const h = document.getElementById(`c_${m}_${type}`);
-            let codes = h.value ? h.value.split(',') : [];
-            
-            if(!codes.includes(result.text)) {
-                codes.push(result.text); h.value = codes.join(',');
-                document.getElementById('scanRegion').classList.add('success');
-                setTimeout(() => document.getElementById('scanRegion').classList.remove('success'), 400);
-                if(navigator.vibrate) navigator.vibrate(100);
-                updateScanUI();
-            }
-        }
+        if (result) registerCode(result.text);
     });
+}
+
+function addManualCode() {
+    const input = document.getElementById('manualInput');
+    if (input.value.trim()) { registerCode(input.value.trim()); input.value = ""; }
+}
+
+function registerCode(code) {
+    const t = document.getElementById('scanTypeSelect').value;
+    const m = document.getElementById('scanModeSelect').value;
+    const h = document.getElementById(`c_${m}_${t}`);
+    let codes = h.value ? h.value.split(',') : [];
+    if(!codes.includes(code)) {
+        codes.push(code); h.value = codes.join(',');
+        document.getElementById('scanRegion').classList.add('success');
+        setTimeout(() => document.getElementById('scanRegion').classList.remove('success'), 400);
+        if(navigator.vibrate) navigator.vibrate(100);
+        updateScanUI();
+    }
 }
 
 function updateScanUI() {
@@ -193,7 +188,29 @@ function removeFromScannerUI(type, mode, index) {
     updateScanUI();
 }
 
-// --- المزامنة وبقية العمليات ---
+function showTable(type) {
+    const m = viewDate.getMonth(), y = viewDate.getFullYear();
+    document.getElementById("detailsTable").style.display = "block";
+    document.getElementById("activeTitle").innerText = type;
+    const active = storage[type].filter(d => {
+        const dt = new Date(d.date);
+        const hasNumbers = (parseInt(d.s)||0) + (parseInt(d.p)||0) + (parseInt(d.c)||0) > 0;
+        const hasCodes = (d.codes_s?.length > 2) || (d.codes_p?.length > 2) || (d.codes_c?.length > 2);
+        return dt.getMonth() === m && dt.getFullYear() === y && (hasNumbers || hasCodes);
+    }).sort((a,b) => new Date(a.date) - new Date(b.date));
+
+    document.getElementById("tableBody").innerHTML = active.map(r => {
+        const tot = (parseInt(r.s)||0) + (parseInt(r.p)||0) + (parseInt(r.c)||0);
+        return `<tr>
+            <td style="font-weight:800">${new Date(r.date).getDate()}</td>
+            <td onclick="manageCodes('${type}','${r.date}','s')">${r.s}</td>
+            <td onclick="manageCodes('${type}','${r.date}','p')">${r.p}</td>
+            <td onclick="manageCodes('${type}','${r.date}','c')">${r.c}</td>
+            <td>${tot>0?((r.s/tot)*100).toFixed(0):0}%</td>
+        </tr>`;
+    }).join('') || '<tr><td colspan="5">No logs found</td></tr>';
+}
+
 async function start() {
     if (!config) { config = {token: prompt("Token:"), user: prompt("User:"), repo: prompt("Repo:")}; localStorage.setItem('gh_config', JSON.stringify(config)); }
     await pullData();
@@ -205,7 +222,7 @@ async function pullData() {
         if(r.ok) {
             const j = await r.json();
             storage = JSON.parse(decodeURIComponent(escape(atob(j.content))));
-            localStorage.setItem("logistics_v47", JSON.stringify(storage));
+            localStorage.setItem("logistics_v49", JSON.stringify(storage));
         }
     } catch(e) {}
     render();
@@ -217,7 +234,7 @@ async function pushData() {
         const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
         const r = await fetch(url, { headers: {'Authorization': `token ${config.token}`} });
         const sha = r.ok ? (await r.json()).sha : "";
-        await fetch(url, { method:'PUT', headers:{'Authorization':`token ${config.token}`}, body:JSON.stringify({message:"V47 Master Sync", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage)))), sha}) });
+        await fetch(url, { method:'PUT', headers:{'Authorization':`token ${config.token}`}, body:JSON.stringify({message:"V49 Master Sync", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage)))), sha}) });
     } catch(e) {}
 }
 
@@ -236,7 +253,7 @@ function saveData() {
         const idx = storage[t].findIndex(x => x.date === d);
         if(idx >= 0) storage[t][idx] = entry; else storage[t].push(entry);
     });
-    localStorage.setItem("logistics_v47", JSON.stringify(storage));
+    localStorage.setItem("logistics_v49", JSON.stringify(storage));
     document.getElementById('logModal').style.display = 'none'; 
     render(); pushData();
 }
@@ -253,6 +270,7 @@ function openLogModal() {
                 <input type="hidden" id="c_s_${t}" value="${old.codes_s}"><input type="hidden" id="c_p_${t}" value="${old.codes_p}"><input type="hidden" id="c_c_${t}" value="${old.codes_c}">
             </div></div>`;
     }).join('');
+    setupSmartInputs(); // تفعيل الميزة بعد رسم الخانات
     document.getElementById('logModal').style.display = 'flex';
 }
 
@@ -271,7 +289,7 @@ function deleteCodePermanently(type, date, mode, index) {
         let codes = entry[`codes_${mode}`].split(',').filter(x => x);
         codes.splice(index, 1);
         entry[`codes_${mode}`] = codes.join(',');
-        localStorage.setItem("logistics_v47", JSON.stringify(storage));
+        localStorage.setItem("logistics_v49", JSON.stringify(storage));
         manageCodes(type, date, mode); render(); pushData();
     }
 }
@@ -315,7 +333,7 @@ function render() {
 async function wipeAllData() {
     if(confirm("DANGER: Wipe all records?")) {
         types.forEach(t => storage[t] = []);
-        localStorage.setItem("logistics_v47", JSON.stringify(storage));
+        localStorage.setItem("logistics_v49", JSON.stringify(storage));
         render(); await pushData();
     }
 }
