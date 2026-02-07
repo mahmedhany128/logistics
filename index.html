@@ -3,50 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Insight Pro - Master V27</title>
-
+    <title>Insight Pro - Strict V30</title>
     <script src="https://unpkg.com/@zxing/library@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-    
     <style>
-        :root { 
-            --bg: #0f172a; --card: #1e293b; --brand: #818cf8; --text: #f1f5f9; 
-            --dim: #94a3b8; --border: #334155; --success: #34d399; --danger: #fb7185; --warning: #fbbf24;
-        }
+        :root { --bg: #0f172a; --card: #1e293b; --brand: #818cf8; --text: #f1f5f9; --dim: #94a3b8; --border: #334155; --success: #34d399; --danger: #fb7185; --warning: #fbbf24; }
         * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: var(--text); margin: 0; padding: 15px; padding-bottom: 140px; }
-        
+        body { background: var(--bg); color: var(--text); margin: 0; padding: 15px; padding-bottom: 120px; }
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .btn-mini { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; cursor: pointer; }
-
         .month-ctrl { background: var(--card); border: 1px solid var(--border); padding: 10px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .nav-btn { background: var(--bg); border: none; width: 42px; height: 42px; border-radius: 14px; color: var(--brand); font-weight: 800; cursor: pointer; }
-
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
         .stat-card { background: var(--card); padding: 18px; border-radius: 24px; border: 1px solid var(--border); position: relative; cursor: pointer; }
         .stat-label { font-size: 0.6rem; font-weight: 800; color: var(--dim); text-transform: uppercase; }
         .stat-val { font-size: 1.5rem; font-weight: 800; display: block; margin-top: 5px; color: #fff; }
-
         .chart-scroll-area { width: 100%; overflow-x: auto; background: var(--card); border-radius: 25px; border: 1px solid var(--border); padding: 15px; margin-bottom: 25px; }
         .chart-container { height: 280px; min-width: 700px; }
-
-        #scannerOverlay { display: none; position: fixed; inset: 0; background: #000; z-index: 9999; flex-direction: column; }
-        #video { width: 100%; height: 100%; object-fit: cover; }
-        
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000; align-items: flex-end; backdrop-filter: blur(8px); }
         .modal-content { background: var(--card); width: 100%; padding: 25px; border-radius: 35px 35px 0 0; max-height: 90vh; overflow-y: auto; }
-        
-        input, select { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); color: #fff; font-weight: 700; font-size: 0.8rem; }
+        input { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); color: #fff; font-weight: 700; }
         .btn-add { background: var(--brand); color: #fff; border: none; padding: 18px; border-radius: 22px; font-weight: 800; width: 100%; cursor: pointer; }
-
-        #confirmModal { align-items: center; justify-content: center; }
-        .secure-content { background: var(--card); width: 90%; max-width: 400px; padding: 30px; border-radius: 30px; border: 1px solid var(--border); text-align: center; }
-        
-        #detailsTable { display: none; margin-bottom: 25px; animation: fadeIn 0.3s; }
+        #scannerOverlay { display: none; position: fixed; inset: 0; background: #000; z-index: 9999; flex-direction: column; }
+        #video { width: 100%; height: 100%; object-fit: cover; }
+        #detailsTable { display: none; margin-bottom: 25px; }
         .table-container { background: var(--card); border-radius: 24px; border: 1px solid var(--border); overflow: hidden; }
         table { width: 100%; border-collapse: collapse; }
-        td { padding: 14px 8px; text-align: center; border-bottom: 1px solid #334155; font-size: 0.85rem; font-weight: 600; color: #fff; }
+        td { padding: 14px 8px; text-align: center; border-bottom: 1px solid #334155; font-size: 0.85rem; color: #fff; }
         .clickable { color: var(--brand); text-decoration: underline; cursor: pointer; }
     </style>
 </head>
@@ -75,29 +59,16 @@
             <button onclick="document.getElementById('detailsTable').style.display='none'" style="background:none; border:none; color:var(--dim); font-weight:800">Close</button>
         </div>
         <table>
-            <thead><tr><th style="font-size:0.6rem; color:var(--dim);">DAY</th><th>S</th><th>P</th><th>C</th><th>%</th></tr></thead>
+            <thead><tr style="font-size:0.6rem; color:var(--dim);"><th>DAY</th><th>S</th><th>P</th><th>C</th><th>%</th></tr></thead>
             <tbody id="tableBody"></tbody>
         </table>
     </div>
 </div>
 
-<div class="chart-scroll-area">
-    <div class="chart-container">
-        <canvas id="mainChart"></canvas>
-    </div>
-</div>
+<div class="chart-scroll-area"><div class="chart-container"><canvas id="mainChart"></canvas></div></div>
 
 <div style="position: fixed; bottom: 20px; left: 15px; right: 15px; z-index: 100;">
     <button class="btn-add" onclick="openLogModal()">+ Update Activities</button>
-</div>
-
-<div id="scannerOverlay">
-    <video id="video"></video>
-    <div style="position:absolute; inset:0; border:2px solid var(--brand); margin:auto; width:280px; height:160px; border-radius:15px; box-shadow: 0 0 0 2000px rgba(0,0,0,0.7);"></div>
-    <div style="position:absolute; bottom:30px; left:20px; right:20px; background:var(--card); padding:20px; border-radius:25px; text-align:center;">
-        <div style="margin-bottom:10px; font-weight:800; color:var(--brand)">Mode: <span id="currentScanMode">S</span></div>
-        <button class="btn-add" onclick="stopScanner()">FINISH SESSION</button>
-    </div>
 </div>
 
 <div id="logModal" class="modal">
@@ -106,28 +77,24 @@
         <input type="date" id="logDate">
         <div id="logInputs"></div>
         <button class="btn-add" style="margin-top:15px" onclick="saveData()">Save & Sync</button>
-        <button onclick="openConfirmModal()" style="color:var(--danger); background:none; border:none; width:100%; margin-top:20px; font-weight:800; font-size:0.75rem; text-decoration:underline;">⚠️ Clear All Data</button>
-        <button onclick="document.getElementById('logModal').style.display='none'" style="width:100%; border:none; background:none; margin-top:10px; color:var(--dim); font-weight:700">Close</button>
+        <button onclick="document.getElementById('logModal').style.display='none'" style="width:100%; border:none; background:none; margin-top:15px; color:var(--dim); font-weight:700">Close</button>
     </div>
 </div>
 
-<div id="confirmModal" class="modal">
-    <div class="secure-content">
-        <div style="font-size: 2rem; margin-bottom: 10px;">🛡️</div>
-        <h3 style="margin:0; color:#fff;">System Reset</h3>
-        <p style="color: var(--dim); font-size: 0.8rem; margin: 10px 0 20px;">Type <b style="color:var(--danger)">DELETE</b> to confirm.</p>
-        <input type="text" id="confirmInput" placeholder="Enter word" style="text-align:center;">
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
-            <button onclick="closeConfirmModal()" style="background:var(--bg); color:var(--text); border:1px solid var(--border); padding:15px; border-radius:15px; font-weight:700;">Cancel</button>
-            <button id="finalDeleteBtn" onclick="executeHardReset()" disabled style="background:var(--danger); color:#fff; border:none; padding:15px; border-radius:15px; font-weight:800; opacity:0.3;">Reset</button>
-        </div>
+<div id="scannerOverlay">
+    <video id="video"></video>
+    <div style="position:absolute; inset:0; border:2px solid var(--brand); margin:auto; width:280px; height:160px; border-radius:15px; box-shadow: 0 0 0 2000px rgba(0,0,0,0.7);"></div>
+    <div style="position:absolute; bottom:30px; left:20px; right:20px; background:var(--card); padding:20px; border-radius:25px; text-align:center;">
+        <div id="scanModeLabel" style="margin-bottom:10px; font-weight:800; color:var(--brand)">Mode: S</div>
+        <div id="scanCountLabel" style="font-size:0.8rem; margin-bottom:15px;">Codes Scanned: 0</div>
+        <button class="btn-add" onclick="stopScanner()">FINISH SESSION</button>
     </div>
 </div>
 
-<div id="codeModal" class="modal">
-    <div class="modal-content" style="border-radius:25px; align-items:center;">
+<div id="codeModal" class="modal" style="align-items: center; justify-content: center;">
+    <div class="modal-content" style="width: 90%; border-radius: 25px; text-align: center;">
         <h3 id="codeTitle" style="margin:0 0 15px 0;">Codes</h3>
-        <div id="codeList" style="display:flex; flex-wrap:wrap; gap:5px; justify-content:center;"></div>
+        <div id="codeList" style="display:flex; flex-wrap:wrap; gap:5px; justify-content:center; max-height: 200px; overflow-y: auto;"></div>
         <button onclick="document.getElementById('codeModal').style.display='none'" class="btn-add" style="margin-top:20px; background:var(--border)">Close</button>
     </div>
 </div>
@@ -137,7 +104,7 @@ const beep = new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-pr
 let config = JSON.parse(localStorage.getItem('gh_config'));
 const types = ["Delivery", "PickUp", "SameDay", "Khazenly"];
 const colors = { Delivery: '#818cf8', PickUp: '#34d399', SameDay: '#fbbf24', Khazenly: '#fb7185' };
-let storage = JSON.parse(localStorage.getItem("logistics_pro_v27")) || {};
+let storage = JSON.parse(localStorage.getItem("logistics_pro_v30")) || {};
 types.forEach(t => { if(!storage[t]) storage[t] = []; });
 
 let chart, viewDate = new Date();
@@ -158,7 +125,7 @@ async function pullData() {
         if(r.ok) {
             const j = await r.json();
             storage = JSON.parse(decodeURIComponent(escape(atob(j.content))));
-            localStorage.setItem("logistics_pro_v27", JSON.stringify(storage));
+            localStorage.setItem("logistics_pro_v30", JSON.stringify(storage));
         }
     } catch(e) {}
     render();
@@ -187,16 +154,16 @@ function showTable(type) {
         const tot = (parseInt(r.s)||0) + (parseInt(r.p)||0) + (parseInt(r.c)||0);
         return `<tr>
             <td>${new Date(r.date).getDate()}</td>
-            <td class="clickable" onclick="viewCodes('${r.codes_s}', 'S')">${r.s}</td>
-            <td class="clickable" onclick="viewCodes('${r.codes_p}', 'P')" style="color:var(--warning)">${r.p}</td>
-            <td class="clickable" onclick="viewCodes('${r.codes_c}', 'C')" style="color:var(--danger)">${r.c}</td>
+            <td class="clickable" onclick="viewCodes('${r.codes_s}', 'Success')">${r.s}</td>
+            <td class="clickable" onclick="viewCodes('${r.codes_p}', 'Pending')" style="color:var(--warning)">${r.p}</td>
+            <td class="clickable" onclick="viewCodes('${r.codes_c}', 'Canceled')" style="color:var(--danger)">${r.c}</td>
             <td>${tot>0?((r.s/tot)*100).toFixed(0):0}%</td>
         </tr>`;
     }).join('');
 }
 
 function viewCodes(c, title) {
-    if(!c || c === "undefined" || c === "") return;
+    if(!c || c === "" || c === "undefined") return;
     document.getElementById('codeModal').style.display = 'flex';
     document.getElementById('codeTitle').innerText = title + " Codes";
     document.getElementById('codeList').innerHTML = c.split(',').filter(x=>x).map(x => `<span style="background:#818cf820; color:#818cf8; padding:5px 10px; border-radius:8px; font-size:0.7rem;">${x}</span>`).join('');
@@ -204,35 +171,43 @@ function viewCodes(c, title) {
 
 function openLogModal() {
     document.getElementById('logModal').style.display = 'flex';
-    document.getElementById('logDate').value = new Date().toISOString().split('T')[0];
-    document.getElementById('logInputs').innerHTML = types.map(t => `
-        <div style="border-bottom:1px solid var(--border); padding-bottom:12px; margin-bottom:12px">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
+    const d = new Date().toISOString().split('T')[0];
+    document.getElementById('logDate').value = d;
+    document.getElementById('logInputs').innerHTML = types.map(t => {
+        const old = storage[t].find(x => x.date === d) || {s:'', p:'', c:'', codes_s:'', codes_p:'', codes_c:''};
+        return `
+        <div style="border-bottom:1px solid var(--border); padding-bottom:15px; margin-bottom:15px">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
                 <span style="font-weight:800; color:${colors[t]}">${t}</span>
-                <div style="display:flex; gap:5px; align-items:center">
-                    <select id="mode_${t}" style="width:50px; padding:2px; font-size:0.7rem; margin:0;"><option value="s">S</option><option value="p">P</option><option value="c">C</option></select>
-                    <button onclick="launchScanner('${t}')" style="background:var(--brand); border:none; border-radius:8px; color:#fff; padding:6px 12px; font-size:0.7rem;">📷</button>
+                <div style="display:flex; gap:5px;">
+                    <select id="mode_${t}" style="width:50px; padding:5px; margin:0;"><option value="s">S</option><option value="p">P</option><option value="c">C</option></select>
+                    <button onclick="launchScanner('${t}')" style="background:var(--brand); border:none; border-radius:10px; color:#fff; padding:8px 15px;">📷 Scan</button>
                 </div>
             </div>
-            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px;">
-                <input type="text" id="s_${t}" placeholder="Success Codes/Qty">
-                <input type="text" id="p_${t}" placeholder="Pending Codes/Qty">
-                <input type="text" id="c_${t}" placeholder="Cancel Codes/Qty">
+            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+                <input type="number" id="q_s_${t}" value="${old.s}" placeholder="S Qty">
+                <input type="number" id="q_p_${t}" value="${old.p}" placeholder="P Qty">
+                <input type="number" id="q_c_${t}" value="${old.c}" placeholder="C Qty">
+                <input type="hidden" id="c_s_${t}" value="${old.codes_s}">
+                <input type="hidden" id="c_p_${t}" value="${old.codes_p}">
+                <input type="hidden" id="c_c_${t}" value="${old.codes_c}">
             </div>
-        </div>`).join('');
+        </div>`;
+    }).join('');
 }
 
 function launchScanner(type) {
     const mode = document.getElementById(`mode_${type}`).value;
-    document.getElementById('currentScanMode').innerText = mode.toUpperCase();
+    document.getElementById('scanModeLabel').innerText = "Mode: " + mode.toUpperCase();
     document.getElementById('scannerOverlay').style.display = 'flex';
     codeReader.decodeFromVideoDevice(undefined, 'video', (result) => {
         if (result) {
-            const displayField = document.getElementById(`${mode}_${type}`);
-            let codesArray = displayField.value.trim() ? displayField.value.split(',') : [];
-            if(!codesArray.includes(result.text)) {
-                codesArray.push(result.text);
-                displayField.value = codesArray.join(',');
+            const h = document.getElementById(`c_${mode}_${type}`);
+            let codes = h.value ? h.value.split(',') : [];
+            if(!codes.includes(result.text)) {
+                codes.push(result.text);
+                h.value = codes.join(',');
+                document.getElementById('scanCountLabel').innerText = "Codes Scanned: " + codes.length;
                 beep.play(); navigator.vibrate(100);
             }
         }
@@ -244,88 +219,60 @@ function stopScanner() { codeReader.reset(); document.getElementById('scannerOve
 async function saveData() {
     const d = document.getElementById('logDate').value;
     types.forEach(t => {
-        const existingIdx = storage[t].findIndex(x => x.date === d);
-        const old = existingIdx >= 0 ? storage[t][existingIdx] : { s:0, p:0, c:0, codes_s:"", codes_p:"", codes_c:"" };
-
-        const sIn = document.getElementById(`s_${t}`).value;
-        const pIn = document.getElementById(`p_${t}`).value;
-        const cIn = document.getElementById(`c_${t}`).value;
-
-        const merge = (oldCodes, input) => {
-            if(!input) return oldCodes || "";
-            if(!input.includes(',')) return oldCodes; // لو رقم يدوي مش هنغير الأكواد
-            let combined = [...new Set([...(oldCodes||"").split(','), ...input.split(',')])];
-            return combined.filter(x => x).join(',');
-        };
-
-        const getCount = (val, oldVal) => {
-            if(!val) return oldVal;
-            if(val.includes(',')) return val.split(',').length;
-            return isNaN(val) ? oldVal : parseInt(val);
-        };
+        const idx = storage[t].findIndex(x => x.date === d);
+        const old = idx >= 0 ? storage[t][idx] : {s:0, p:0, c:0, codes_s:'', codes_p:'', codes_c:''};
+        
+        // الأرقام اليدوية (لو فارغة نحافظ على القديم)
+        const sIn = document.getElementById(`q_s_${t}`).value;
+        const pIn = document.getElementById(`q_p_${t}`).value;
+        const cIn = document.getElementById(`q_c_${t}`).value;
 
         const entry = {
             date: d,
-            s: getCount(sIn, old.s),
-            p: getCount(pIn, old.p),
-            c: getCount(cIn, old.c),
-            codes_s: sIn.includes(',') ? merge(old.codes_s, sIn) : old.codes_s,
-            codes_p: pIn.includes(',') ? merge(old.codes_p, pIn) : old.codes_p,
-            codes_c: cIn.includes(',') ? merge(old.codes_c, cIn) : old.codes_c
+            s: sIn !== "" ? parseInt(sIn) : old.s,
+            p: pIn !== "" ? parseInt(pIn) : old.p,
+            c: cIn !== "" ? parseInt(cIn) : old.c,
+            codes_s: document.getElementById(`c_s_${t}`).value,
+            codes_p: document.getElementById(`c_p_${t}`).value,
+            codes_c: document.getElementById(`c_c_${t}`).value
         };
-
-        if(existingIdx >= 0) storage[t][existingIdx] = entry; else storage[t].push(entry);
+        if(idx >= 0) storage[t][idx] = entry; else storage[t].push(entry);
     });
-    localStorage.setItem("logistics_pro_v27", JSON.stringify(storage));
+    localStorage.setItem("logistics_pro_v30", JSON.stringify(storage));
     document.getElementById('logModal').style.display = 'none'; render(); await pushData();
 }
 
 async function pushData() {
-    document.getElementById('sync').innerText = "☁️ Wait...";
+    document.getElementById('sync').innerText = "☁️ ...";
     const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
     try {
         const r = await fetch(url, { headers: {'Authorization': `token ${config.token}`} });
         const sha = r.ok ? (await r.json()).sha : "";
-        await fetch(url, { method:'PUT', headers:{'Authorization':`token ${config.token}`}, body:JSON.stringify({message:"Sync", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage, null, 2)))), sha}) });
+        await fetch(url, { method:'PUT', headers:{'Authorization':`token ${config.token}`}, body:JSON.stringify({message:"Update", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage, null, 2)))), sha}) });
         document.getElementById('sync').innerText = "☁️ OK";
-    } catch(e) { document.getElementById('sync').innerText = "❌ Error"; }
-}
-
-function openConfirmModal() { document.getElementById('confirmModal').style.display = 'flex'; document.getElementById('confirmInput').value=''; }
-function closeConfirmModal() { document.getElementById('confirmModal').style.display = 'none'; }
-document.getElementById('confirmInput').addEventListener('input', (e) => {
-    const btn = document.getElementById('finalDeleteBtn');
-    if(e.target.value.toUpperCase() === "DELETE") { btn.disabled = false; btn.style.opacity = '1'; }
-    else { btn.disabled = true; btn.style.opacity = '0.3'; }
-});
-
-async function executeHardReset() {
-    types.forEach(t => storage[t] = []);
-    localStorage.setItem("logistics_pro_v27", JSON.stringify(storage));
-    await pushData();
-    location.reload();
+    } catch(e) { document.getElementById('sync').innerText = "❌"; }
 }
 
 function updateChart(y, m) {
     const ctx = document.getElementById('mainChart').getContext('2d');
-    const daysInMonth = new Date(y, m+1, 0).getDate();
-    const dayLabels = Array.from({length: daysInMonth}, (_, i) => i + 1);
-    const datasets = types.map(t => ({
-        label: t, data: dayLabels.map(d => {
-            const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            const f = storage[t].find(x => x.date === dateStr); return f ? f.s : 0;
-        }), backgroundColor: colors[t], borderRadius: 5
+    const days = new Date(y, m+1, 0).getDate();
+    const labels = Array.from({length: days}, (_, i) => i + 1);
+    const ds = types.map(t => ({
+        label: t, backgroundColor: colors[t], borderRadius: 5,
+        data: labels.map(d => {
+            const f = storage[t].find(x => x.date === `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
+            return f ? f.s : 0;
+        })
     }));
     if(chart) chart.destroy();
-    chart = new Chart(ctx, { type:'bar', data: { labels: dayLabels, datasets }, options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{stacked:true, grid:{display:false}, ticks:{color:'#94a3b8', font:{weight:'bold'}}}, y:{stacked:true, grid:{color:'#334155'}}} } });
+    chart = new Chart(ctx, { type:'bar', data: { labels, datasets: ds }, options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{stacked:true, grid:{display:false}}, y:{stacked:true, grid:{color:'#334155'}}} } });
 }
 
 function exportData() {
-    let csv = "Type,Date,Success,Pending,Cancel,Codes_S,Codes_P,Codes_C\n";
+    let csv = "Type,Date,S,P,C,Codes_S,Codes_P,Codes_C\n";
     types.forEach(t => storage[t].forEach(r => csv += `${t},${r.date},${r.s},${r.p},${r.c},"${r.codes_s}","${r.codes_p}","${r.codes_c}"\n`));
     const b = new Blob([csv], {type:'text/csv'});
-    const u = URL.createObjectURL(b);
-    const a = document.createElement('a'); a.href=u; a.download='logistics_full.csv'; a.click();
+    const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'logistics.csv'; a.click();
 }
 
 function moveMonth(dir) { viewDate.setMonth(viewDate.getMonth()+dir); render(); }
