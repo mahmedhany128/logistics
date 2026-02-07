@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Insight Pro - V52.2 PWA</title>
+    <title>Insight Pro - V52.2 Final</title>
     
     <link rel="manifest" href="manifest.json">
     
@@ -25,7 +25,6 @@
         .danger-zone { background: rgba(251, 113, 133, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 5px 12px; border-radius: 10px; font-size: 0.7rem; font-weight: 800; cursor: pointer; }
 
         .month-ctrl { background: var(--card); border: 1px solid var(--border); padding: 10px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        /* تحسين شكل الأسهم */
         .nav-btn { background: var(--bg); border: 1px solid var(--border); width: 45px; height: 45px; border-radius: 15px; color: var(--brand); cursor: pointer; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; line-height: 0; }
 
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
@@ -36,7 +35,6 @@
         .chart-wrapper { width: 100%; overflow-x: auto; scrollbar-width: none; }
         .chart-container { width: 1000px; height: 220px; }
 
-        /* تحسين النصوص في الجداول */
         .table-container { background: var(--card); border-radius: 24px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; }
         td, th { padding: 14px; text-align: center; border-bottom: 1px solid #334155; font-size: 0.8rem; color: var(--text); }
@@ -137,7 +135,7 @@
 </div>
 
 <script>
-// تسجيل الـ Service Worker الخارجي (sw.js)
+// تسجيل الـ Service Worker الخارجي الخاص بك
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js').catch(err => console.log("SW error", err));
@@ -153,7 +151,6 @@ types.forEach(t => { if(!storage[t]) storage[t] = []; });
 let chart, viewDate = new Date(), videoStream = null, isFlashOn = false;
 const codeReader = new ZXing.BrowserMultiFormatReader();
 
-// مراقبة حالة الإنترنت
 function updateOnlineStatus() {
     const dot = document.getElementById('dot');
     if(navigator.onLine) {
@@ -252,7 +249,7 @@ async function pushData() {
         const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
         const r = await fetch(url, { headers: {'Authorization': `token ${config.token}`} });
         const sha = r.ok ? (await r.json()).sha : "";
-        await fetch(url, { method:'PUT', headers:{'Authorization':`token ${config.token}`}, body:JSON.stringify({message:"V52.2 Online Sync", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage)))), sha}) });
+        await fetch(url, { method:'PUT', headers:{'Authorization':`token ${config.token}`}, body:JSON.stringify({message:"V52.2 Final Sync", content:btoa(unescape(encodeURIComponent(JSON.stringify(storage)))), sha}) });
     } catch(e) {}
 }
 
@@ -295,9 +292,16 @@ function showTable(type) {
     const m = viewDate.getMonth(), y = viewDate.getFullYear();
     document.getElementById("detailsTable").style.display = "block";
     document.getElementById("activeTitle").innerText = type;
+    
     const active = storage[type].filter(d => {
         const dt = new Date(d.date);
-        return dt.getMonth() === m && dt.getFullYear() === y && ((parseInt(d.s)||0) + (parseInt(d.p)||0) + (parseInt(d.c)||0) > 0);
+        // الشرط المحدث: يظهر اليوم إذا كان هناك أرقام أو أكواد مسجلة
+        const hasNumbers = (parseInt(d.s)||0) + (parseInt(d.p)||0) + (parseInt(d.c)||0) > 0;
+        const hasCodes = (d.codes_s && d.codes_s.length > 2) || 
+                         (d.codes_p && d.codes_p.length > 2) || 
+                         (d.codes_c && d.codes_c.length > 2);
+        
+        return dt.getMonth() === m && dt.getFullYear() === y && (hasNumbers || hasCodes);
     }).sort((a,b) => new Date(a.date) - new Date(b.date));
 
     document.getElementById("tableBody").innerHTML = active.map(r => {
