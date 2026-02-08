@@ -4,282 +4,1018 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>Insight Pro - V86.2 Fix</title>
+    <title>Insight Pro - V100 Enhanced Scanner</title>
     
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
 
     <style>
-        :root { --bg: #0f172a; --card: #1e293b; --brand: #818cf8; --text: #f1f5f9; --dim: #94a3b8; --border: rgba(255,255,255,0.08); --success: #34d399; --warning: #fbbf24; --danger: #fb7185; }
-        * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: var(--text); margin: 0; padding: 15px; padding-bottom: 120px; }
+        :root { 
+            --bg: #0f172a; 
+            --card: #1e293b; 
+            --brand: #818cf8; 
+            --text: #f1f5f9; 
+            --dim: #94a3b8; 
+            --border: rgba(255,255,255,0.08); 
+            --success: #34d399; 
+            --warning: #fbbf24; 
+            --danger: #fb7185; 
+        }
         
-        /* الهيدر والتحكم */
-        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #475569; }
-        .online { background: var(--success); box-shadow: 0 0 10px var(--success); }
-        .month-ctrl { background: var(--card); border: 1px solid var(--border); padding: 10px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .nav-btn { background: var(--bg); border: 1px solid var(--border); width: 45px; height: 45px; border-radius: 15px; color: var(--brand); font-size: 1.2rem; display: flex; align-items: center; justify-content: center; }
+        * { 
+            box-sizing: border-box; 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            -webkit-tap-highlight-color: transparent; 
+            outline: none;
+        }
+        
+        body { 
+            background: var(--bg); 
+            color: var(--text); 
+            margin: 0; 
+            padding: 15px; 
+            padding-bottom: 120px; 
+            overflow-x: hidden; 
+        }
 
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-        .stat-card { background: linear-gradient(145deg, #1e293b, #111827); padding: 18px; border-radius: 24px; border: 1px solid var(--border); }
-        .stat-val { font-size: 1.6rem; font-weight: 900; color: #fff; display: block; margin: 5px 0; }
+        /* === تنظيف الفيديو من العناصر الزائدة === */
+        #video video { 
+            width: 100% !important; 
+            height: 100% !important; 
+            object-fit: cover !important; 
+            border-radius: 0 !important; 
+        }
+        
+        #qr-shaded-region { 
+            display: none !important; 
+        }
+        
+        #video > div:not(:first-child), 
+        #video > canvas { 
+            display: none !important; 
+            opacity: 0 !important; 
+        }
 
-        /* === SCANNER OVERLAY (تم رفع الـ Z-INDEX لـ 5000) === */
+        /* === Scanner Overlay === */
         #scannerOverlay { 
             display: none; 
             position: fixed; 
             inset: 0; 
             background: #000; 
-            z-index: 5000; /* أعلى من الـ Modal */
+            z-index: 9000; 
             flex-direction: column; 
         }
-        #videoContainer { height: 45vh; position: relative; background: #000; overflow: hidden; }
-        #video video { width: 100% !important; height: 100% !important; object-fit: cover !important; }
-        #qr-shaded-region { display: none !important; }
-
-        .scan-frame { position: absolute; width: 280px; height: 160px; border: 2px solid rgba(255,255,255,0.3); border-radius: 24px; top: 50%; left: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 0 4000px rgba(0,0,0,0.6); z-index: 10; pointer-events: none; }
-        .scan-laser { position: absolute; width: 100%; height: 2px; background: var(--brand); box-shadow: 0 0 15px var(--brand); top: 0; animation: scanMove 2s infinite linear; }
-        @keyframes scanMove { 0%, 100% { top: 0; } 50% { top: 100%; } }
-
-        .success-overlay { position: absolute; inset: 0; background: rgba(52, 211, 153, 0.4); display: none; z-index: 30; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
-        .success-overlay.active { display: flex; animation: fadeOut 0.5s forwards; }
-        @keyframes fadeOut { 0% { opacity: 1; } 100% { opacity: 0; } }
-
-        /* === MODALS (Z-index: 4000) === */
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 4000; align-items: flex-end; backdrop-filter: blur(8px); }
-        .modal-content { background: var(--card); width: 100%; padding: 25px; border-radius: 32px 32px 0 0; max-height: 85vh; overflow-y: auto; }
         
-        .package-card { background: var(--card); border-radius: 18px; padding: 15px; display: flex; align-items: center; gap: 15px; border: 1px solid var(--border); margin-bottom: 10px; }
-        .btn-main { background: var(--brand); color: #fff; border: none; padding: 18px; border-radius: 22px; font-weight: 800; width: 100%; cursor: pointer; transition: 0.2s; }
-        .btn-main:active { transform: scale(0.98); opacity: 0.9; }
+        #videoContainer { 
+            height: 45vh; 
+            position: relative; 
+            background: #000; 
+            overflow: hidden; 
+            flex: none;
+            border-bottom: 1px solid var(--border);
+        }
         
-        input { width: 100%; padding: 15px; margin: 8px 0; border: 1px solid var(--border); border-radius: 15px; background: var(--bg); color: #fff; outline: none; }
-        .mode-btn { flex: 1; padding: 12px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.1); color: #fff; font-size: 0.75rem; font-weight: 800; }
-        .mode-btn.active.s { background: var(--success); color: #000; }
+        #video { 
+            width: 100% !important; 
+            height: 100% !important; 
+            border: none !important; 
+        }
+
+        /* === إطار المسح المحسّن === */
+        .scan-frame { 
+            position: absolute; 
+            width: 280px; 
+            height: 150px; 
+            border: 2px solid rgba(255,255,255,0.3); 
+            border-radius: 24px; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            box-shadow: 0 0 0 4000px rgba(0,0,0,0.7); 
+            z-index: 10; 
+            pointer-events: none; 
+            overflow: hidden;
+        }
+        
+        .scan-frame::before, 
+        .scan-frame::after { 
+            content: ''; 
+            position: absolute; 
+            width: 35px; 
+            height: 35px; 
+            border-color: var(--brand); 
+            border-style: solid; 
+            transition: all 0.3s ease;
+        }
+        
+        .scan-frame::before { 
+            top: -2px; 
+            left: -2px; 
+            border-width: 4px 0 0 4px; 
+            border-radius: 20px 0 0 0; 
+        }
+        
+        .scan-frame::after { 
+            bottom: -2px; 
+            right: -2px; 
+            border-width: 0 4px 4px 0; 
+            border-radius: 0 0 20px 0; 
+        }
+
+        /* === الليزر المتحرك === */
+        .scan-laser {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: var(--brand);
+            box-shadow: 0 0 10px var(--brand), 0 0 20px var(--brand);
+            top: 0;
+            animation: scanMove 2.5s infinite ease-in-out;
+            opacity: 0.9;
+        }
+
+        @keyframes scanMove { 
+            0% { top: 0; opacity: 0.4; } 
+            50% { top: 100%; opacity: 1; } 
+            100% { top: 0; opacity: 0.4; } 
+        }
+
+        /* === Scanner Header === */
+        .scanner-header { 
+            position: absolute;
+            top: 0;
+            width: 100%;
+            padding: 20px; 
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 2010;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .scanner-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .scanner-btn {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 8px;
+            transition: transform 0.2s;
+        }
+        
+        .scanner-btn:active {
+            transform: scale(0.9);
+        }
+        
+        #sessionCounter {
+            font-weight: 800;
+            font-size: 1rem;
+            color: var(--brand);
+        }
+        
+        /* === Mode Selector === */
+        .mode-selector { 
+            display: flex; 
+            gap: 8px; 
+        }
+        
+        .mode-btn { 
+            flex: 1; 
+            padding: 12px; 
+            border-radius: 12px; 
+            border: 1px solid rgba(255,255,255,0.1); 
+            background: rgba(30, 41, 59, 0.5); 
+            color: var(--dim); 
+            font-size: 0.7rem; 
+            font-weight: 800; 
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .mode-btn.active.s { 
+            background: var(--success); 
+            color: #000; 
+            border-color: var(--success);
+            box-shadow: 0 0 20px rgba(52, 211, 153, 0.5); 
+            transform: scale(1.02);
+        }
+        
+        .mode-btn.active.p { 
+            background: var(--warning); 
+            color: #000; 
+            border-color: var(--warning);
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.5); 
+            transform: scale(1.02);
+        }
+        
+        .mode-btn.active.c { 
+            background: var(--danger); 
+            color: #000; 
+            border-color: var(--danger);
+            box-shadow: 0 0 20px rgba(251, 113, 133, 0.5); 
+            transform: scale(1.02);
+        }
+
+        /* === Scanned Items Container === */
+        #scanResults { 
+            flex: 1; 
+            background: var(--bg); 
+            padding: 20px; 
+            overflow-y: auto; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+        }
+        
+        .package-card { 
+            background: var(--card); 
+            border-radius: 18px; 
+            padding: 15px; 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            border: 1px solid var(--border); 
+            animation: slideUp 0.3s ease;
+            position: relative;
+        }
+        
+        @keyframes slideUp { 
+            from { 
+                transform: translateY(20px); 
+                opacity: 0; 
+            } 
+            to { 
+                transform: translateY(0); 
+                opacity: 1; 
+            } 
+        }
+        
+        .status-badge { 
+            width: 5px; 
+            height: 40px; 
+            border-radius: 3px; 
+            flex-shrink: 0;
+        }
+        
+        .package-info {
+            flex: 1;
+        }
+        
+        .package-code {
+            font-weight: 800;
+            font-size: 0.95rem;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+        
+        .package-meta {
+            font-size: 0.65rem;
+            color: var(--dim);
+            font-weight: 600;
+        }
+        
+        .remove-btn {
+            background: none;
+            border: none;
+            color: var(--danger);
+            font-weight: 800;
+            font-size: 0.7rem;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        
+        .remove-btn:hover {
+            background: rgba(251, 113, 133, 0.1);
+        }
+
+        /* === Success Feedback === */
+        #successFB { 
+            position: absolute; 
+            inset: 0; 
+            display: none; 
+            align-items: center; 
+            justify-content: center; 
+            z-index: 30; 
+            color: #fff; 
+            font-size: 4rem; 
+            font-weight: 900; 
+            text-shadow: 0 0 30px rgba(0,0,0,0.8);
+            animation: pulse 0.5s ease;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        /* === Help Menu === */
+        #helpMenu { 
+            display: none; 
+            position: fixed; 
+            inset: 0; 
+            background: rgba(0, 0, 0, 0.95); 
+            backdrop-filter: blur(10px);
+            z-index: 9500; 
+            flex-direction: column; 
+        }
+        
+        .menu-header {
+            padding: 25px;
+            border-bottom: 1px solid #222;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .menu-item { 
+            padding: 25px; 
+            border-bottom: 1px solid #111; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            color: #fff; 
+            font-weight: 600; 
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .menu-item:active {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* === Manual Entry === */
+        #manualEntry { 
+            display: none; 
+            position: fixed; 
+            inset: 0; 
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(10px); 
+            z-index: 9600; 
+            flex-direction: column; 
+        }
+        
+        .manual-input {
+            width: 100%;
+            background: none;
+            border: none;
+            border-bottom: 3px solid var(--brand);
+            color: #fff;
+            font-size: 2.2rem;
+            text-align: center;
+            outline: none;
+            padding: 15px;
+            font-weight: 700;
+        }
+
+        /* === Dashboard Elements === */
+        .stat-card { 
+            background: linear-gradient(145deg, #1e293b, #111827); 
+            padding: 20px; 
+            border-radius: 24px; 
+            border: 1px solid var(--border); 
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .stat-card:active {
+            transform: scale(0.98);
+        }
+        
+        .stat-val { 
+            font-size: 1.8rem; 
+            font-weight: 900; 
+            color: #fff; 
+            display: block; 
+            margin: 4px 0; 
+        }
+        
+        .grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 15px; 
+            margin-bottom: 25px; 
+        }
+        
+        .btn-main { 
+            background: var(--brand); 
+            color: #fff; 
+            border: none; 
+            padding: 20px; 
+            border-radius: 22px; 
+            font-weight: 800; 
+            width: 100%; 
+            cursor: pointer; 
+            box-shadow: 0 10px 20px rgba(129, 140, 248, 0.15);
+            transition: all 0.3s;
+        }
+        
+        .btn-main:active {
+            transform: scale(0.98);
+            box-shadow: 0 5px 10px rgba(129, 140, 248, 0.2);
+        }
+
+        /* === Modal === */
+        #logModal { 
+            display: none; 
+            position: fixed; 
+            inset: 0; 
+            z-index: 5000; 
+            align-items: flex-end; 
+        }
+        
+        .modal-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal-content {
+            position: relative;
+            width: 100%;
+            background: var(--card);
+            padding: 30px;
+            border-radius: 35px 35px 0 0;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        
+        .type-section {
+            background: var(--bg);
+            padding: 20px;
+            border-radius: 22px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border);
+        }
+        
+        .type-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .scan-trigger-btn {
+            background: var(--brand);
+            color: #fff;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .scan-trigger-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+        }
+        
+        .qty-input {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            background: #000;
+            border: 1px solid #333;
+            color: #fff;
+            text-align: center;
+            font-weight: 800;
+            font-size: 0.9rem;
+        }
+        
+        .date-input {
+            width: 100%;
+            padding: 18px;
+            border-radius: 15px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: #fff;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
     </style>
 </head>
 <body>
 
-<header>
-    <h1 style="font-size:1.2rem; margin:0; font-weight: 800;">Insight <span style="color:var(--brand)">Pro V86.2</span></h1>
-    <span id="dot" class="status-dot"></span>
+<header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+    <div>
+        <h1 style="font-size:1.2rem; font-weight: 800; margin:0;">Insight <span style="color:var(--brand)">Pro</span></h1>
+        <div id="syncStatus" style="font-size:0.6rem; font-weight:700; color:var(--dim); margin-top:2px;">• OFFLINE MODE</div>
+    </div>
+    <div id="dot" style="width:12px; height:12px; border-radius:50%; background:#334155;"></div>
 </header>
-
-<div class="month-ctrl">
-    <button class="nav-btn" onclick="moveMonth(-1)">‹</button>
-    <span id="monthLab" style="font-weight:800;">---</span>
-    <button class="nav-btn" onclick="moveMonth(1)">›</button>
-</div>
 
 <div class="grid" id="metricsPanel"></div>
 
-<div class="chart-card" style="height: 220px; padding:15px; background:var(--card); border-radius:24px; border:1px solid var(--border); margin: 20px 0;">
+<div style="height: 220px; padding:15px; background:var(--card); border-radius:28px; border:1px solid var(--border); margin-bottom:25px;">
     <canvas id="mainChart"></canvas>
 </div>
 
-<button class="btn-main" style="position:fixed; bottom:20px; left:15px; width:calc(100% - 30px); z-index:100;" onclick="openLogModal()">+ UPDATE SHIPMENTS</button>
+<button class="btn-main" onclick="openLogModal()">+ UPDATE LOGISTICS</button>
 
+<!-- Scanner Overlay -->
 <div id="scannerOverlay">
-    <div style="position:absolute; top:0; width:100%; padding:20px; background:linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); z-index:40;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <button onclick="stopScanner()" style="background:none; border:none; color:#fff; font-size:1.5rem;">✕</button>
-            <span id="pkgCount" style="font-weight:700; color:#fff;">Scanner Active</span>
-            <button onclick="toggleFlash()" id="flashBtn" style="background:none; border:none; font-size:1.5rem;">🔦</button>
+    <div class="scanner-header">
+        <div class="scanner-controls">
+            <button class="scanner-btn" onclick="stopScanner()">✕</button>
+            <span id="sessionCounter">0 SCANNED</span>
+            <button class="scanner-btn" id="flashBtn" onclick="toggleFlash()">💡</button>
+            <button class="scanner-btn" onclick="toggleHelp(true)">❓</button>
         </div>
-        <div style="display:flex; gap:8px;">
-            <button class="mode-btn active s" id="btn_s" onclick="setScanMode('s')">SUCCESS</button>
-            <button class="mode-btn" id="btn_p" onclick="setScanMode('p')">PENDING</button>
-            <button class="mode-btn" id="btn_c" onclick="setScanMode('c')">CANCEL</button>
+        <div class="mode-selector">
+            <button class="mode-btn active s" id="m_s" onclick="setMode('s')">SUCCESS</button>
+            <button class="mode-btn" id="m_p" onclick="setMode('p')">PENDING</button>
+            <button class="mode-btn" id="m_c" onclick="setMode('c')">CANCEL</button>
         </div>
     </div>
 
     <div id="videoContainer">
         <div id="video"></div>
-        <div class="scan-frame"><div class="scan-laser"></div></div>
-        <div id="successOverlay" class="success-overlay">
-            <div style="background:#fff; width:70px; height:70px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--success); font-size:2.5rem; font-weight:bold; box-shadow:0 0 20px rgba(0,0,0,0.2);">✓</div>
+        <div class="scan-frame">
+            <div class="scan-laser" id="laserLine"></div>
         </div>
+        <div id="successFB">✓</div>
     </div>
 
-    <div id="scannedCardsContainer" style="flex:1; padding:20px; overflow-y:auto; background:var(--bg);"></div>
-    <div style="padding:15px; background:var(--card);"><button class="btn-main" onclick="stopScanner()">FINISH & SAVE</button></div>
+    <div id="scanResults"></div>
+    
+    <div style="padding:20px; background:var(--card);">
+        <button class="btn-main" onclick="stopScanner()">FINISH SESSION</button>
+    </div>
 </div>
 
-<div id="logModal" class="modal">
+<!-- Help Menu -->
+<div id="helpMenu">
+    <div class="menu-header">
+        <button class="scanner-btn" onclick="toggleHelp(false)">←</button>
+        <span style="font-weight:800;">System Options</span>
+    </div>
+    <div class="menu-item" onclick="openManual()">
+        <span>Manual ID Entry</span>
+        <span>›</span>
+    </div>
+    <div class="menu-item" onclick="toggleFlash()">
+        <span>Toggle Flashlight</span>
+        <span id="flashVal" style="color:var(--dim)">OFF</span>
+    </div>
+</div>
+
+<!-- Manual Entry -->
+<div id="manualEntry">
+    <div style="padding: 25px; display:flex; justify-content:space-between; align-items:center;">
+        <button class="scanner-btn" onclick="closeManual()">✕</button>
+        <span style="font-weight:800;">Manual Entry</span>
+        <div style="width:30px;"></div>
+    </div>
+    <div style="padding:40px;">
+        <input type="text" class="manual-input" id="manualIn" placeholder="Enter Barcode">
+        <button class="btn-main" style="margin-top:50px;" onclick="confirmManual()">CONFIRM</button>
+    </div>
+</div>
+
+<!-- Log Modal -->
+<div id="logModal">
+    <div class="modal-backdrop" onclick="closeLogModal()"></div>
     <div class="modal-content">
-        <h3 style="margin:0 0 20px 0; display:flex; justify-content:space-between;">Log Shipments <span onclick="document.getElementById('logModal').style.display='none'" style="color:var(--dim)">✕</span></h3>
-        <input type="date" id="logDate">
-        <div id="logInputs"></div>
-        <button class="btn-main" style="margin-top:10px;" onclick="saveData()">CONFIRM & SYNC</button>
+        <h2 style="margin:0 0 20px 0; font-size:1.4rem;">Update Data</h2>
+        <input type="date" class="date-input" id="logDate">
+        <div id="logFields"></div>
+        <button class="btn-main" style="margin-top:20px;" onclick="commitData()">PUSH TO CLOUD</button>
     </div>
 </div>
 
 <script>
-// --- Core Setup ---
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+// === Variables ===
 let config = JSON.parse(localStorage.getItem('gh_config'));
+let storage = JSON.parse(localStorage.getItem("insight_v100")) || {};
 const types = ["Delivery", "PickUp", "SameDay", "Khazenly"];
-const colors = { Delivery: '#818cf8', PickUp: '#34d399', SameDay: '#fbbf24', Khazenly: '#fb7185' };
-let storage = JSON.parse(localStorage.getItem("logistics_v52")) || {};
-types.forEach(t => { if(!storage[t]) storage[t] = []; });
+const colors = { 
+    Delivery: '#818cf8', 
+    PickUp: '#34d399', 
+    SameDay: '#fbbf24', 
+    Khazenly: '#fb7185' 
+};
+const modeColors = { 
+    s: '#34d399', 
+    p: '#fbbf24', 
+    c: '#fb7185' 
+};
 
-let chart, viewDate = new Date(), html5QrCode = null, isScanning = false, currentScanMode = 's', activeScanType = '';
+let html5QrCode = null;
+let activeType = '';
+let currentMode = 's';
+let isFlashOn = false;
+let sessionCodes = [];
+let audioContext = null;
 
-function playBeep(freq = 800) {
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.connect(gain); gain.connect(audioCtx.destination);
-    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-    osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+// Initialize storage
+types.forEach(t => {
+    if (!storage[t]) storage[t] = [];
+});
+
+// === Audio System ===
+function initAudio() {
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
 }
 
-// --- Scanner ---
-async function launchScanner(type) {
-    console.log("Launching scanner for:", type);
-    activeScanType = type;
-    
-    // تفعيل الصوت من أول ضغطة
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-
-    const overlay = document.getElementById('scannerOverlay');
-    overlay.style.display = 'flex';
-    document.getElementById('scannedCardsContainer').innerHTML = '';
-    
-    if(!html5QrCode) html5QrCode = new Html5Qrcode("video");
-
-    const configScanner = { fps: 20, qrbox: { width: 250, height: 160 } };
-
+function playBeep() {
     try {
-        await html5QrCode.start({ facingMode: "environment" }, configScanner, (text) => registerCode(text));
-    } catch (err) {
-        alert("Camera Error: " + err);
-        stopScanner();
+        initAudio();
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        
+        osc.connect(gain);
+        gain.connect(audioContext.destination);
+        
+        osc.frequency.value = 850;
+        gain.gain.value = 0.15;
+        
+        osc.start(audioContext.currentTime);
+        osc.stop(audioContext.currentTime + 0.08);
+    } catch(e) {
+        console.log('Audio not supported');
     }
 }
 
-function registerCode(code) {
-    if(isScanning) return;
+// === Scanner Logic ===
+async function startScanner(type) {
+    activeType = type;
+    sessionCodes = [];
+    document.getElementById('scannerOverlay').style.display = 'flex';
+    document.getElementById('scanResults').innerHTML = '';
+    updateCounter();
     
-    const hiddenInput = document.getElementById(`c_${currentScanMode}_${activeScanType}`);
-    let codes = hiddenInput.value ? hiddenInput.value.split(',') : [];
-
-    if(codes.includes(code)) {
-        if(navigator.vibrate) navigator.vibrate([100, 50, 100]);
-        return;
+    // Initialize audio on first interaction
+    initAudio();
+    
+    if (html5QrCode) { 
+        try { 
+            await html5QrCode.stop(); 
+        } catch(e) {
+            console.log('Error stopping previous scanner:', e);
+        }
     }
-
-    isScanning = true;
-    playBeep(800);
-    if(navigator.vibrate) navigator.vibrate(60);
     
-    // الفلاش الأخضر
-    const overlay = document.getElementById('successOverlay');
-    overlay.style.display = 'flex';
-    setTimeout(() => { overlay.style.display = 'none'; isScanning = false; }, 600);
+    html5QrCode = new Html5Qrcode("video");
 
-    codes.push(code);
-    hiddenInput.value = codes.join(',');
+    const qrConfig = { 
+        fps: 30, 
+        qrbox: { width: 260, height: 140 },
+        aspectRatio: 1.0
+    };
     
-    // إضافة الكارت للواجهة
-    const card = document.createElement('div');
-    card.className = 'package-card';
-    card.innerHTML = `<div style="width:40px;height:40px;background:rgba(255,255,255,0.05);border-radius:10px;display:flex;align-items:center;justify-content:center;">📦</div>
-                      <div style="flex:1"><div style="font-weight:800; font-size:0.9rem;">${code}</div><div style="font-size:0.6rem; color:var(--dim); text-transform:uppercase;">${activeScanType} • ${currentScanMode}</div></div>`;
-    document.getElementById('scannedCardsContainer').prepend(card);
-    document.getElementById('pkgCount').innerText = `${codes.length} Scanned`;
+    try {
+        await html5QrCode.start(
+            { facingMode: "environment" }, 
+            qrConfig, 
+            (decodedText) => onScanSuccess(decodedText),
+            (errorMessage) => {
+                // Silently handle scan errors
+            }
+        );
+    } catch (e) { 
+        alert("Camera Error: Please enable camera permissions"); 
+        stopScanner(); 
+    }
+}
+
+function onScanSuccess(code) {
+    if (sessionCodes.find(x => x.code === code)) return;
+
+    // Audio & Haptic Feedback
+    playBeep();
+    if(navigator.vibrate) navigator.vibrate(50);
+
+    // Visual Feedback
+    const fb = document.getElementById('successFB');
+    fb.textContent = '✓';
+    fb.style.display = 'flex'; 
+    fb.style.color = modeColors[currentMode];
+    setTimeout(() => fb.style.display = 'none', 400);
+
+    // Save to session
+    sessionCodes.push({code, mode: currentMode});
+    renderSessionList();
+    updateCounter();
+    
+    // Update hidden fields
+    const h = document.getElementById(`c_${currentMode}_${activeType}`);
+    const q = document.getElementById(`q_${currentMode}_${activeType}`);
+    
+    if (h && q) {
+        let codes = h.value ? h.value.split(',') : [];
+        codes.push(code); 
+        h.value = codes.join(',');
+        q.value = codes.length;
+    }
+}
+
+function renderSessionList() {
+    const list = document.getElementById('scanResults');
+    list.innerHTML = sessionCodes.map((item, idx) => `
+        <div class="package-card">
+            <div class="status-badge" style="background:${modeColors[item.mode]}"></div>
+            <div class="package-info">
+                <div class="package-code">${item.code}</div>
+                <div class="package-meta">${activeType.toUpperCase()} • ${item.mode.toUpperCase()}</div>
+            </div>
+            <button class="remove-btn" onclick="removeCode(${idx})">REMOVE</button>
+        </div>
+    `).join('');
+}
+
+function removeCode(idx) { 
+    sessionCodes.splice(idx, 1); 
+    renderSessionList(); 
+    updateCounter(); 
+}
+
+function setMode(m) {
+    currentMode = m;
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active', 's', 'p', 'c'));
+    const btn = document.getElementById(`m_${m}`);
+    if (btn) {
+        btn.classList.add('active', m);
+    }
+    const laser = document.getElementById('laserLine');
+    if (laser) {
+        laser.style.background = modeColors[m];
+        laser.style.boxShadow = `0 0 10px ${modeColors[m]}, 0 0 20px ${modeColors[m]}`;
+    }
 }
 
 async function stopScanner() { 
-    if(html5QrCode) { try { await html5QrCode.stop(); } catch(e){} html5QrCode = null; } 
-    document.getElementById('scannerOverlay').style.display = 'none'; 
+    if(html5QrCode) { 
+        try { 
+            await html5QrCode.stop(); 
+        } catch(e) {
+            console.log('Error stopping scanner:', e);
+        }
+        html5QrCode = null; 
+    }
+    document.getElementById('scannerOverlay').style.display = 'none';
 }
 
-function setScanMode(mode) {
-    currentScanMode = mode;
-    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById(`btn_${mode}`).classList.add('active');
+// === Menu & Manual ===
+function toggleHelp(show) { 
+    document.getElementById('helpMenu').style.display = show ? 'flex' : 'none'; 
 }
 
-// --- Data Logic ---
+function openManual() { 
+    toggleHelp(false); 
+    document.getElementById('manualEntry').style.display = 'flex'; 
+    setTimeout(() => {
+        document.getElementById('manualIn').focus();
+    }, 100);
+}
+
+function closeManual() { 
+    document.getElementById('manualEntry').style.display = 'none'; 
+}
+
+function confirmManual() { 
+    const v = document.getElementById('manualIn').value.trim(); 
+    if(v) { 
+        onScanSuccess(v); 
+        document.getElementById('manualIn').value = ''; 
+        closeManual(); 
+    } 
+}
+
+async function toggleFlash() {
+    try {
+        if (!html5QrCode) {
+            alert("Please start scanning first");
+            toggleHelp(false);
+            return;
+        }
+        isFlashOn = !isFlashOn;
+        const track = html5QrCode.getRunningTrack();
+        
+        if (track && track.getCapabilities && track.getCapabilities().torch) {
+            await track.applyConstraints({advanced:[{torch:isFlashOn}]});
+            document.getElementById('flashVal').innerText = isFlashOn ? "ON" : "OFF";
+            document.getElementById('flashBtn').style.color = isFlashOn ? '#fbbf24' : '#fff';
+        } else {
+            alert("Flash not supported on this device");
+        }
+        toggleHelp(false);
+    } catch(e) { 
+        alert("Flash not available"); 
+        console.log('Flash error:', e);
+    }
+}
+
+function updateCounter() { 
+    document.getElementById('sessionCounter').innerText = `${sessionCodes.length} SCANNED`; 
+}
+
+// === Data Management ===
+async function pull() {
+    if(!config) return;
+    try {
+        const r = await fetch(
+            `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`, 
+            { headers: {'Authorization': `token ${config.token}`} }
+        );
+        
+        if(r.ok) { 
+            const data = await r.json();
+            storage = JSON.parse(decodeURIComponent(escape(atob(data.content)))); 
+            localStorage.setItem("insight_v100", JSON.stringify(storage)); 
+        }
+    } catch(e) {
+        console.log('Pull error:', e);
+    }
+    renderUI();
+}
+
+async function push() {
+    if(!config || !navigator.onLine) return;
+    const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
+    
+    try {
+        const r = await fetch(url, { 
+            headers: {'Authorization': `token ${config.token}`} 
+        });
+        
+        const sha = r.ok ? (await r.json()).sha : "";
+        
+        await fetch(url, { 
+            method:'PUT', 
+            headers: {
+                'Authorization': `token ${config.token}`,
+                'Content-Type': 'application/json'
+            }, 
+            body: JSON.stringify({
+                message: "Sync V100", 
+                content: btoa(unescape(encodeURIComponent(JSON.stringify(storage)))), 
+                sha: sha
+            })
+        });
+        
+        document.getElementById('dot').style.background = '#34d399';
+        document.getElementById('syncStatus').innerText = "• SYNCED WITH CLOUD";
+    } catch(e) { 
+        document.getElementById('dot').style.background = '#fb7185'; 
+        console.log('Push error:', e);
+    }
+}
+
+function renderUI() {
+    const now = new Date();
+    document.getElementById('metricsPanel').innerHTML = types.map(t => {
+        if(!storage[t]) storage[t] = [];
+        const mData = storage[t].filter(d => new Date(d.date).getMonth() === now.getMonth());
+        const s = mData.reduce((a, b) => a + (b.s || 0), 0);
+        return `
+            <div class="stat-card">
+                <span style="font-size:0.75rem; color:${colors[t]}; font-weight:800;">${t.toUpperCase()}</span>
+                <span class="stat-val">${s}</span>
+            </div>
+        `;
+    }).join('');
+    updateChart();
+}
+
+function updateChart() {
+    const ctx = document.getElementById('mainChart').getContext('2d');
+    const datasets = types.map(t => ({
+        label: t, 
+        backgroundColor: colors[t], 
+        borderRadius: 6,
+        data: Array.from({length: 7}, (_, i) => {
+            const d = new Date(); 
+            d.setDate(d.getDate() - (6 - i));
+            const dateStr = d.toISOString().split('T')[0];
+            const entry = storage[t]?.find(x => x.date === dateStr);
+            return entry ? (entry.s || 0) : 0;
+        })
+    }));
+    
+    if(window.fusionChart) window.fusionChart.destroy();
+    
+    window.fusionChart = new Chart(ctx, { 
+        type: 'bar', 
+        data: { 
+            labels: ['6d', '5d', '4d', '3d', '2d', '1d', 'NOW'], 
+            datasets: datasets
+        }, 
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            plugins: {
+                legend: {display: false}
+            }, 
+            scales: {
+                x: {
+                    stacked: true, 
+                    grid: {display: false}
+                }, 
+                y: {
+                    stacked: true, 
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
 function openLogModal() {
-    const d = new Date().toISOString().split('T')[0];
-    document.getElementById('logDate').value = d;
-    document.getElementById('logInputs').innerHTML = types.map(t => `
-        <div style="background:rgba(255,255,255,0.03); padding:15px; border-radius:20px; margin-bottom:12px; border:1px solid var(--border)">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
+    document.getElementById('logDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('logFields').innerHTML = types.map(t => `
+        <div class="type-section">
+            <div class="type-header">
                 <span style="color:${colors[t]}; font-weight:800;">${t}</span>
-                <button type="button" onclick="launchScanner('${t}')" style="background:var(--brand); color:#fff; border:none; padding:8px 16px; border-radius:12px; font-weight:800; font-size:0.75rem;">📷 SCAN</button>
+                <button class="scan-trigger-btn" onclick="startScanner('${t}')">📷 SCAN</button>
             </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
-                <input type="number" id="q_s_${t}" placeholder="S"><input type="number" id="q_p_${t}" placeholder="P"><input type="number" id="q_c_${t}" placeholder="C">
-                <input type="hidden" id="c_s_${t}"><input type="hidden" id="c_p_${t}"><input type="hidden" id="c_c_${t}">
+            <div class="input-grid">
+                <input type="number" class="qty-input" id="q_s_${t}" placeholder="S">
+                <input type="number" class="qty-input" id="q_p_${t}" placeholder="P">
+                <input type="number" class="qty-input" id="q_c_${t}" placeholder="C">
             </div>
-        </div>`).join('');
+            <input type="hidden" id="c_s_${t}">
+            <input type="hidden" id="c_p_${t}">
+            <input type="hidden" id="c_c_${t}">
+        </div>
+    `).join('');
+    
     document.getElementById('logModal').style.display = 'flex';
 }
 
-function saveData() {
-    const d = document.getElementById('logDate').value;
-    types.forEach(t => {
-        let entry = storage[t].find(x => x.date === d);
-        const s = parseInt(document.getElementById(`q_s_${t}`).value)||0;
-        const p = parseInt(document.getElementById(`q_p_${t}`).value)||0;
-        const c = parseInt(document.getElementById(`q_c_${t}`).value)||0;
-        const cs = document.getElementById(`c_s_${t}`).value;
-        const cp = document.getElementById(`c_p_${t}`).value;
-        const cc = document.getElementById(`c_c_${t}`).value;
+function closeLogModal() { 
+    document.getElementById('logModal').style.display = 'none'; 
+}
 
-        if(!entry) storage[t].push({date:d, s, p, c, codes_s:cs, codes_p:cp, codes_c:cc});
-        else { 
-            entry.s = s || entry.s; entry.p = p || entry.p; entry.c = c || entry.c; 
-            if(cs) entry.codes_s = entry.codes_s ? entry.codes_s + "," + cs : cs;
+function commitData() {
+    const d = document.getElementById('logDate').value;
+    
+    types.forEach(t => {
+        const s = parseInt(document.getElementById(`q_s_${t}`).value) || 0;
+        const p = parseInt(document.getElementById(`q_p_${t}`).value) || 0;
+        const c = parseInt(document.getElementById(`q_c_${t}`).value) || 0;
+        const codes_s = document.getElementById(`c_s_${t}`).value;
+        const codes_p = document.getElementById(`c_p_${t}`).value;
+        const codes_c = document.getElementById(`c_c_${t}`).value;
+
+        let entry = storage[t].find(x => x.date === d);
+        
+        if(!entry) {
+            storage[t].push({
+                date: d, 
+                s: s, 
+                p: p, 
+                c: c, 
+                codes_s: codes_s, 
+                codes_p: codes_p, 
+                codes_c: codes_c
+            });
+        } else { 
+            entry.s = (entry.s || 0) + s; 
+            entry.p = (entry.p || 0) + p; 
+            entry.c = (entry.c || 0) + c; 
+            
+            if(codes_s) entry.codes_s = (entry.codes_s ? entry.codes_s + ',' : '') + codes_s; 
+            if(codes_p) entry.codes_p = (entry.codes_p ? entry.codes_p + ',' : '') + codes_p; 
+            if(codes_c) entry.codes_c = (entry.codes_c ? entry.codes_c + ',' : '') + codes_c; 
         }
     });
-    localStorage.setItem("logistics_v52", JSON.stringify(storage));
-    location.reload(); 
+    
+    localStorage.setItem("insight_v100", JSON.stringify(storage));
+    closeLogModal(); 
+    renderUI(); 
+    push();
 }
 
-function render() {
-    const m = viewDate.getMonth(), y = viewDate.getFullYear();
-    document.getElementById('monthLab').innerText = viewDate.toLocaleString('en-US',{month:'long', year:'numeric'});
-    document.getElementById('metricsPanel').innerHTML = types.map(t => {
-        const mData = storage[t].filter(d => { const dt = new Date(d.date); return dt.getMonth() === m && dt.getFullYear() === y; });
-        const s = mData.reduce((a,b) => a + (parseInt(b.s)||0), 0);
-        return `<div class="stat-card">
-            <span style="font-size:0.75rem; color:${colors[t]}; font-weight:800;">${t.toUpperCase()}</span>
-            <span class="stat-val">${s}</span>
-        </div>`;
-    }).join('');
-    updateChart(y, m);
-}
-
-function updateChart(y, m) {
-    const ctx = document.getElementById('mainChart').getContext('2d');
-    const days = new Date(y, m + 1, 0).getDate();
-    const labels = Array.from({length: days}, (_, i) => i + 1);
-    const datasets = types.map(t => ({
-        label: t, backgroundColor: colors[t], borderRadius: 4,
-        data: labels.map(d => {
-            const dt = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            const f = storage[t].find(x => x.date === dt); return f ? f.s : 0;
-        })
-    }));
-    if(chart) chart.destroy();
-    chart = new Chart(ctx, { type:'bar', data: { labels, datasets }, options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{stacked:true, grid:{display:false}}, y:{stacked:true, beginAtZero:true, grid:{color:'rgba(255,255,255,0.05)'}}} }});
-}
-
-function moveMonth(dir) { viewDate.setMonth(viewDate.getMonth()+dir); render(); }
-
-// Initialize
-if(!config) {
-    config = {user: prompt("User:"), repo: prompt("Repo:"), token: prompt("Token:")};
-    localStorage.setItem('gh_config', JSON.stringify(config));
-}
-render();
+// === Initialize ===
+window.addEventListener('DOMContentLoaded', function() {
+    if(!config) { 
+        config = {
+            token: prompt("Enter GitHub Token"), 
+            user: prompt("Enter GitHub Username"), 
+            repo: prompt("Enter Repository Name")
+        }; 
+        localStorage.setItem('gh_config', JSON.stringify(config)); 
+    }
+    pull();
+});
 </script>
 </body>
 </html>
