@@ -2,45 +2,999 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Logistics</title>
-    <script>
-        // Enhanced error handling
-        window.onerror = function(message, source, lineno, colno, error) {
-            console.error(`Error: ${message} at ${source}:${lineno}:${colno}`);
-            alert('An error occurred. Please try again.');
-        };
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0f172a">
+    <title>Insight Pro - V100 Smart Scanner</title>
+    
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
 
-        // XSS Protection
-        function sanitizeInput(input) {
-            const div = document.createElement('div');
-            div.appendChild(document.createTextNode(input));
-            return div.innerHTML;
+    <style>
+        :root { 
+            --bg: #0f172a; 
+            --card: #1e293b; 
+            --brand: #818cf8; 
+            --text: #f1f5f9; 
+            --dim: #94a3b8; 
+            --border: rgba(255,255,255,0.08); 
+            --success: #34d399; 
+            --warning: #fbbf24; 
+            --danger: #fb7185; 
+        }
+        
+        * { 
+            box-sizing: border-box; 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            -webkit-tap-highlight-color: transparent; 
+            outline: none;
+        }
+        
+        body { 
+            background: var(--bg); 
+            color: var(--text); 
+            margin: 0; 
+            padding: 15px; 
+            padding-bottom: 120px; 
         }
 
-        function submitForm(data) {
-            const sanitizedData = sanitizeInput(data);
-            // Process the sanitized data
-            console.log(sanitizedData);
-            // Implement submission logic here
+        /* === نظام الفيديو === */
+        #video video { 
+            width: 100% !important; 
+            height: 100% !important; 
+            object-fit: cover !important; 
+            border-radius: 0 !important; 
+        }
+        
+        #qr-shaded-region { display: none !important; }
+        #video > div:not(:first-child), #video > canvas { 
+            display: none !important; 
+            opacity: 0 !important; 
         }
 
-        // Performance optimizations
-        document.addEventListener('DOMContentLoaded', () => {
-            const form = document.getElementById('dataForm');
-            form.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const formData = new FormData(form);
-                submitForm(formData);
-            });
-        });
-    </script>
+        #videoContainer { 
+            height: 40vh; 
+            position: relative; 
+            background: #000; 
+            overflow: hidden; 
+            flex: none; 
+            border-bottom: 1px solid var(--border); 
+        }
+        
+        #video { 
+            width: 100% !important; 
+            height: 100% !important; 
+            border: none !important; 
+        }
+
+        /* === إطار المسح === */
+        .scan-frame { 
+            position: absolute; 
+            width: 280px; 
+            height: 140px; 
+            border: 2px solid rgba(255,255,255,0.5); 
+            border-radius: 20px; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            box-shadow: 0 0 0 4000px rgba(0,0,0,0.6); 
+            z-index: 10; 
+            pointer-events: none; 
+            overflow: hidden; 
+        }
+        
+        .scan-frame::before, .scan-frame::after { 
+            content: ''; 
+            position: absolute; 
+            width: 30px; 
+            height: 30px; 
+            border-color: var(--brand); 
+            border-style: solid; 
+            transition: all 0.3s; 
+        }
+        .scan-frame::before { top: 0; left: 0; border-width: 4px 0 0 4px; border-radius: 16px 0 0 0; }
+        .scan-frame::after { bottom: 0; right: 0; border-width: 0 4px 4px 0; border-radius: 0 0 16px 0; }
+
+        .scan-laser {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: var(--brand);
+            box-shadow: 0 0 10px var(--brand), 0 0 20px var(--brand);
+            top: 0;
+            animation: scanMove 2s infinite linear;
+            opacity: 0.8;
+        }
+
+        @keyframes scanMove { 0% { top: 0; } 50% { top: 100%; } 100% { top: 0; } }
+
+        /* === العناصر الرئيسية === */
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #475569; }
+        .online { background: var(--success); box-shadow: 0 0 10px var(--success); }
+
+        .month-ctrl { 
+            background: var(--card); 
+            border: 1px solid var(--border); 
+            padding: 10px; 
+            border-radius: 20px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 20px; 
+        }
+        
+        .nav-btn { 
+            background: var(--bg); 
+            border: 1px solid var(--border); 
+            width: 45px; 
+            height: 45px; 
+            border-radius: 15px; 
+            color: var(--brand); 
+            font-size: 1.5rem; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        
+        .nav-btn:active { transform: scale(0.95); }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .stat-card { 
+            background: linear-gradient(145deg, #1e293b, #111827); 
+            padding: 18px; 
+            border-radius: 24px; 
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        
+        .stat-card:active { transform: scale(0.98); }
+        .stat-val { font-size: 1.6rem; font-weight: 900; color: #fff; display: block; margin: 5px 0; }
+        
+        .chart-card { 
+            height: 230px; 
+            padding: 10px; 
+            background: var(--card); 
+            border-radius: 24px; 
+            border: 1px solid var(--border); 
+            margin-bottom: 20px; 
+        }
+
+        .table-container { 
+            background: var(--card); 
+            border-radius: 24px; 
+            border: 1px solid var(--border); 
+            overflow: hidden; 
+            margin-bottom: 20px; 
+        }
+        
+        table { width: 100%; border-collapse: collapse; }
+        td, th { padding: 14px; text-align: center; border-bottom: 1px solid #334155; font-size: 0.8rem; }
+
+        /* === ماسح الضوء === */
+        #scannerOverlay { 
+            display: none; 
+            position: fixed; 
+            inset: 0; 
+            background: #000; 
+            z-index: 2000; 
+            flex-direction: column; 
+        }
+        
+        .scanner-header { 
+            position: absolute; 
+            top: 0; 
+            width: 100%; 
+            padding: 15px; 
+            background: rgba(0,0,0,0.7); 
+            z-index: 2010; 
+        }
+        
+        .scanner-top { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 10px; 
+        }
+        
+        .scanner-btn { 
+            background: none; 
+            border: none; 
+            color: #fff; 
+            font-size: 1.3rem; 
+            cursor: pointer; 
+            padding: 8px;
+            transition: 0.2s;
+        }
+        
+        .scanner-btn:active { transform: scale(0.9); }
+
+        .mode-selector { display: flex; gap: 8px; }
+        .mode-btn { 
+            flex: 1; 
+            padding: 10px; 
+            border-radius: 12px; 
+            border: 1px solid rgba(255,255,255,0.1); 
+            background: rgba(255,255,255,0.05); 
+            color: #fff; 
+            font-size: 0.7rem; 
+            font-weight: 800; 
+            transition: 0.2s;
+            cursor: pointer;
+        }
+        
+        .mode-btn.active.s { background: var(--success); color: #000; box-shadow: 0 0 15px rgba(52, 211, 153, 0.4); }
+        .mode-btn.active.p { background: var(--warning); color: #000; box-shadow: 0 0 15px rgba(251, 191, 36, 0.4); }
+        .mode-btn.active.c { background: var(--danger); color: #000; box-shadow: 0 0 15px rgba(251, 113, 133, 0.4); }
+
+        #scannedCardsContainer { 
+            flex: 1; 
+            background: var(--bg); 
+            padding: 15px; 
+            overflow-y: auto; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+            margin-top: 50px;
+        }
+        
+        .package-card { 
+            background: var(--card); 
+            border-radius: 16px; 
+            padding: 12px; 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            border: 1px solid var(--border); 
+            animation: slideUp 0.2s ease;
+        }
+        
+        .status-badge { width: 8px; height: 35px; border-radius: 4px; }
+        
+        .code-item-text { flex: 1; }
+        .code-main { font-size: 0.9rem; font-weight: 800; }
+        .code-meta { font-size: 0.65rem; color: var(--dim); }
+        
+        .delete-btn { 
+            background: rgba(251, 113, 133, 0.1); 
+            border: none; 
+            color: var(--danger); 
+            padding: 6px 10px; 
+            border-radius: 8px; 
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        
+        .delete-btn:active { background: rgba(251, 113, 133, 0.2); }
+
+        /* === المودال === */
+        .modal { 
+            display: none; 
+            position: fixed; 
+            inset: 0; 
+            background: rgba(0,0,0,0.9); 
+            z-index: 1000; 
+            align-items: flex-end; 
+            backdrop-filter: blur(8px); 
+        }
+        
+        .modal-content { 
+            background: var(--card); 
+            width: 100%; 
+            padding: 25px; 
+            border-radius: 32px 32px 0 0; 
+            max-height: 85vh; 
+            overflow-y: auto; 
+        }
+        
+        input { 
+            width: 100%; 
+            padding: 14px; 
+            margin: 8px 0; 
+            border: 1px solid var(--border); 
+            border-radius: 14px; 
+            background: var(--bg); 
+            color: #fff; 
+            font-size: 1rem;
+        }
+        
+        .btn-main { 
+            background: var(--brand); 
+            color: #fff; 
+            border: none; 
+            padding: 18px; 
+            border-radius: 22px; 
+            font-weight: 800; 
+            width: 100%; 
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        
+        .btn-main:active { transform: scale(0.98); }
+        
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 12px;
+            border-radius: 12px;
+            margin-top: 10px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        
+        .btn-secondary:active { background: rgba(255,255,255,0.05); }
+
+        .type-section { 
+            background: var(--bg); 
+            padding: 15px; 
+            border-radius: 18px; 
+            margin-bottom: 12px; 
+            border: 1px solid var(--border); 
+        }
+        
+        .type-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 10px; 
+        }
+        
+        .scan-btn { 
+            background: var(--brand); 
+            color: #fff; 
+            border: none; 
+            padding: 6px 12px; 
+            border-radius: 10px; 
+            font-size: 0.7rem; 
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        
+        .scan-btn:active { transform: scale(0.95); }
+
+        .input-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr 1fr; 
+            gap: 8px; 
+        }
+
+        #scanFeedback {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: 900;
+            font-size: 1.8rem;
+            text-shadow: 0 0 10px rgba(0,0,0,0.8);
+            display: none;
+            z-index: 20;
+        }
+
+        @keyframes slideUp { 
+            from { transform: translateY(15px); opacity: 0; } 
+            to { transform: translateY(0); opacity: 1; } 
+        }
+
+        .error-msg { color: var(--danger); font-size: 0.8rem; margin-top: 5px; }
+        .success-msg { color: var(--success); font-size: 0.8rem; margin-top: 5px; }
+    </style>
 </head>
 <body>
-    <h1>Enhanced Logistics System</h1>
-    <form id="dataForm">
-        <input type="text" name="data" required />
-        <button type="submit">Submit</button>
-    </form>
+
+<header>
+    <h1 style="font-size:1.1rem; margin:0; font-weight: 800;">Insight <span style="color:var(--brand)">Pro V100</span></h1>
+    <span id="dot" class="status-dot"></span>
+</header>
+
+<div class="month-ctrl">
+    <button class="nav-btn" onclick="moveMonth(-1)">‹</button>
+    <span id="monthLab" style="font-weight:800;">---</span>
+    <button class="nav-btn" onclick="moveMonth(1)">›</button>
+</div>
+
+<div class="grid" id="metricsPanel"></div>
+
+<div id="detailsTable" style="display:none;">
+    <div class="table-container">
+        <div style="padding:15px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border);">
+            <span id="activeTitle" style="font-weight:800; color:var(--brand)">Details</span>
+            <button onclick="closeDetailsTable()" style="background:none; border:none; color:var(--dim); cursor:pointer; font-size:1.2rem;">✕</button>
+        </div>
+        <table>
+            <thead><tr><th>Day</th><th>S</th><th>P</th><th>C</th><th>%</th></tr></thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<div class="chart-card">
+    <canvas id="mainChart"></canvas>
+</div>
+
+<button class="btn-main" style="position:fixed; bottom:20px; left:15px; width:calc(100% - 30px); z-index:100;" onclick="openLogModal()">+ UPDATE SHIPMENTS</button>
+
+<!-- === Scanner === -->
+<div id="scannerOverlay">
+    <div class="scanner-header">
+        <div class="scanner-top">
+            <span id="pkgCount" style="color:#fff; font-size:0.8rem; font-weight:600;">Ready</span>
+            <div style="display:flex; gap:10px;">
+                <button class="scanner-btn" id="flashBtn" onclick="toggleFlash()" title="Flash">💡</button>
+                <button class="scanner-btn" onclick="openManualInput()" title="Manual">✎</button>
+                <button class="scanner-btn" onclick="stopScanner()" title="Close">✕</button>
+            </div>
+        </div>
+        <div class="mode-selector">
+            <button class="mode-btn active s" id="btn_s" onclick="setScanMode('s')">SUCCESS</button>
+            <button class="mode-btn p" id="btn_p" onclick="setScanMode('p')">PENDING</button>
+            <button class="mode-btn c" id="btn_c" onclick="setScanMode('c')">CANCEL</button>
+        </div>
+    </div>
+    
+    <div id="videoContainer">
+        <div id="video"></div>
+        <div class="scan-frame">
+            <div class="scan-laser"></div>
+        </div>
+        <div id="scanFeedback">✓</div>
+    </div>
+    
+    <div id="scannedCardsContainer"></div>
+    
+    <div style="padding:15px; background:var(--card);">
+        <button class="btn-main" onclick="finishScanning()">✓ FINISH & SAVE</button>
+    </div>
+</div>
+
+<!-- === Manual Input Modal === -->
+<div id="manualInputModal" class="modal">
+    <div class="modal-content" style="border-radius: 28px;">
+        <h3 style="margin-top:0;">Manual Code Entry</h3>
+        <input type="text" id="manualCode" placeholder="Enter code..." autocomplete="off">
+        <div id="manualError"></div>
+        <button class="btn-main" onclick="confirmManualCode()" style="margin-top:15px;">Confirm ✓</button>
+        <button class="btn-secondary" onclick="closeManualInput()">Cancel</button>
+    </div>
+</div>
+
+<!-- === Log Modal === -->
+<div id="logModal" class="modal">
+    <div class="modal-content">
+        <h3 style="margin-top:0;">Log Data</h3>
+        <input type="date" id="logDate">
+        <div id="logInputs"></div>
+        <button class="btn-main" style="margin-top:15px;" onclick="saveData()">Confirm & Sync ✓</button>
+        <button class="btn-secondary" onclick="closeLogModal()">Cancel</button>
+    </div>
+</div>
+
+<!-- === Codes Modal === -->
+<div id="codesModal" class="modal" style="align-items: center; justify-content: center;">
+    <div class="modal-content" style="width: 90%; border-radius: 28px; max-height: 70vh;">
+        <h3 style="margin-top:0;">Scanned Codes</h3>
+        <div id="codesList"></div>
+        <button class="btn-main" onclick="closeCodesModal()">Close</button>
+    </div>
+</div>
+
+<script>
+// === AudioContext === 
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function playBeep(frequency = 800, duration = 100) {
+    try {
+        if (audioCtx.state === 'suspended') { audioCtx.resume(); }
+        
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration / 1000);
+        
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + duration / 1000);
+    } catch(e) {
+        console.log('Audio not available');
+    }
+}
+
+// === Variables ===
+let config = JSON.parse(localStorage.getItem('gh_config'));
+const types = ["Delivery", "PickUp", "SameDay", "Khazenly"];
+const colors = { 
+    Delivery: '#818cf8', 
+    PickUp: '#34d399', 
+    SameDay: '#fbbf24', 
+    Khazenly: '#fb7185' 
+};
+const modeColors = { 
+    s: '#34d399', 
+    p: '#fbbf24', 
+    c: '#fb7185' 
+};
+
+let storage = JSON.parse(localStorage.getItem("logistics_v100")) || {};
+types.forEach(t => { if(!storage[t]) storage[t] = []; });
+
+let chart, viewDate = new Date(), html5QrCode = null, isFlashOn = false;
+let currentScanMode = 's', activeScanType = '', scannedInSession = {};
+
+// === Online Status ===
+function updateOnlineStatus() {
+    const dot = document.getElementById('dot');
+    if(navigator.onLine) { 
+        dot.classList.add('online'); 
+        pushData(); 
+    } else { 
+        dot.classList.remove('online'); 
+    }
+}
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+
+// === Set Scan Mode ===
+function setScanMode(mode) {
+    currentScanMode = mode;
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`btn_${mode}`).classList.add('active');
+    
+    const colorMap = { s: '#34d399', p: '#fbbf24', c: '#fb7185' };
+    document.documentElement.style.setProperty('--brand', colorMap[mode]);
+}
+
+// === Launch Scanner ===
+async function launchScanner(type) {
+    activeScanType = type;
+    scannedInSession = { s: [], p: [], c: [] };
+    
+    if (audioCtx.state === 'suspended') { audioCtx.resume(); }
+    
+    document.getElementById('scannerOverlay').style.display = 'flex';
+    document.getElementById('scannedCardsContainer').innerHTML = '';
+    setScanMode('s');
+    updateScanCount();
+    
+    if(!html5QrCode) html5QrCode = new Html5Qrcode("video");
+    
+    const config = { 
+        fps: 30, 
+        qrbox: { width: 250, height: 140 }, 
+        aspectRatio: window.innerWidth / window.innerHeight, 
+        disableFlip: false 
+    };
+
+    try {
+        await html5QrCode.start(
+            { facingMode: "environment" }, 
+            config, 
+            (text) => registerCode(text)
+        );
+    } catch (e) { 
+        alert("Camera Error: " + e.message); 
+    }
+}
+
+// === Validate Code ===
+function validateCode(code, mode, type) {
+    if(code.length < 3) {
+        return { valid: false, error: 'Code too short (min 3 chars)' };
+    }
+    
+    if(scannedInSession[mode] && scannedInSession[mode].includes(code)) {
+        return { valid: false, error: 'Code already scanned in this session!' };
+    }
+    
+    const today = new Date().toISOString().split('T')[0];
+    const entry = storage[type].find(x => x.date === today);
+    if(entry) {
+        const allCodes = (entry[`codes_${mode}`] || '').split(',').filter(x => x);
+        if(allCodes.includes(code)) {
+            return { valid: false, error: 'Code already exists in today\'s records!' };
+        }
+    }
+    
+    return { valid: true };
+}
+
+// === Register Code ===
+function registerCode(code) {
+    code = code.trim();
+    
+    const validation = validateCode(code, currentScanMode, activeScanType);
+    if(!validation.valid) {
+        playBeep(400, 200);
+        alert(validation.error);
+        return;
+    }
+    
+    playBeep(800, 100);
+    
+    if(!scannedInSession[currentScanMode]) {
+        scannedInSession[currentScanMode] = [];
+    }
+    scannedInSession[currentScanMode].push(code);
+    
+    const h = document.getElementById(`c_${currentScanMode}_${activeScanType}`);
+    let codes = h.value ? h.value.split(',') : [];
+    codes.push(code);
+    h.value = codes.join(',');
+    
+    const fb = document.getElementById('scanFeedback');
+    fb.style.display = 'block';
+    fb.style.color = modeColors[currentScanMode];
+    fb.innerText = code.slice(-4);
+    setTimeout(() => { fb.style.display = 'none'; }, 600);
+    
+    if(navigator.vibrate) navigator.vibrate(50);
+    
+    addScannedCard(code, currentScanMode, activeScanType);
+    updateScanCount();
+}
+
+// === Add Scanned Card ===
+function addScannedCard(code, mode, type) {
+    const color = modeColors[mode];
+    const card = document.createElement('div');
+    card.className = 'package-card';
+    card.innerHTML = `
+        <div class="status-badge" style="background:${color}"></div>
+        <div class="code-item-text">
+            <div class="code-main">${code}</div>
+            <div class="code-meta">${type.toUpperCase()} • ${mode.toUpperCase()}</div>
+        </div>
+        <button class="delete-btn" onclick="deleteScannedCode('${mode}', '${type}', '${code}')">✕</button>
+    `;
+    document.getElementById('scannedCardsContainer').prepend(card);
+}
+
+// === Delete Scanned Code ===
+function deleteScannedCode(mode, type, code) {
+    if(confirm(`Delete ${code}?`)) {
+        const h = document.getElementById(`c_${mode}_${type}`);
+        let codes = h.value.split(',').filter(x => x);
+        codes = codes.filter(c => c !== code);
+        h.value = codes.join(',');
+        
+        document.querySelectorAll('.package-card').forEach(card => {
+            if(card.innerText.includes(code)) {
+                card.remove();
+            }
+        });
+        
+        if(scannedInSession[mode]) {
+            scannedInSession[mode] = scannedInSession[mode].filter(c => c !== code);
+        }
+        
+        updateScanCount();
+        playBeep(600, 150);
+    }
+}
+
+// === Manual Input ===
+function openManualInput() {
+    document.getElementById('manualInputModal').style.display = 'flex';
+    document.getElementById('manualCode').focus();
+}
+
+function closeManualInput() {
+    document.getElementById('manualInputModal').style.display = 'none';
+    document.getElementById('manualCode').value = '';
+    document.getElementById('manualError').innerHTML = '';
+}
+
+function confirmManualCode() {
+    const code = document.getElementById('manualCode').value.trim();
+    const errorDiv = document.getElementById('manualError');
+    
+    if(!code) {
+        errorDiv.innerHTML = '<div class="error-msg">Enter a code</div>';
+        return;
+    }
+    
+    const validation = validateCode(code, currentScanMode, activeScanType);
+    if(!validation.valid) {
+        errorDiv.innerHTML = `<div class="error-msg">${validation.error}</div>`;
+        return;
+    }
+    
+    registerCode(code);
+    closeManualInput();
+}
+
+// === Update Scan Count ===
+function updateScanCount() {
+    const total = Object.values(scannedInSession).reduce((sum, arr) => sum + arr.length, 0);
+    document.getElementById('pkgCount').innerText = `${total} Scanned`;
+}
+
+// === Finish Scanning ===
+async function finishScanning() {
+    if(html5QrCode) { 
+        await html5QrCode.stop(); 
+        html5QrCode = null; 
+    }
+    document.getElementById('scannerOverlay').style.display = 'none';
+    document.documentElement.style.setProperty('--brand', '#818cf8');
+}
+
+// === Toggle Flash ===
+async function toggleFlash() {
+    try {
+        if(!html5QrCode) return;
+        isFlashOn = !isFlashOn;
+        const track = html5QrCode.getRunningTrack();
+        if (track && track.getCapabilities && track.getCapabilities().torch) {
+            await track.applyConstraints({ advanced: [{ torch: isFlashOn }] });
+            document.getElementById('flashBtn').style.color = isFlashOn ? '#fbbf24' : '#fff';
+        }
+    } catch (e) {}
+}
+
+// === Pull Data ===
+async function pullData() {
+    if(!config) return;
+    try {
+        const r = await fetch(
+            `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`, 
+            { headers: {'Authorization': `token ${config.token}`} }
+        );
+        if(r.ok) {
+            const j = await r.json();
+            storage = JSON.parse(decodeURIComponent(escape(atob(j.content))));
+            localStorage.setItem("logistics_v100", JSON.stringify(storage));
+        }
+    } catch(e) {}
+    render();
+}
+
+// === Push Data ===
+async function pushData() {
+    if(!navigator.onLine || !config) return;
+    try {
+        const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/data.json`;
+        const r = await fetch(url, { headers: {'Authorization': `token ${config.token}`} });
+        const sha = r.ok ? (await r.json()).sha : "";
+        await fetch(url, { 
+            method: 'PUT', 
+            headers: {'Authorization': `token ${config.token}`},
+            body: JSON.stringify({
+                message: "V100 Smart Scanner Update", 
+                content: btoa(unescape(encodeURIComponent(JSON.stringify(storage)))), 
+                sha 
+            })
+        });
+    } catch(e) {}
+}
+
+// === Open Log Modal ===
+function openLogModal() {
+    const d = new Date().toISOString().split('T')[0];
+    document.getElementById('logDate').value = d;
+    document.getElementById('logInputs').innerHTML = types.map(t => {
+        return `
+        <div class="type-section">
+            <div class="type-header">
+                <span style="color:${colors[t]}; font-weight:800;">${t}</span>
+                <button class="scan-btn" onclick="launchScanner('${t}')">📷 SCAN</button>
+            </div>
+            <div class="input-grid">
+                <input type="number" id="q_s_${t}" placeholder="S" value="">
+                <input type="number" id="q_p_${t}" placeholder="P" value="">
+                <input type="number" id="q_c_${t}" placeholder="C" value="">
+            </div>
+            <input type="hidden" id="c_s_${t}" value="">
+            <input type="hidden" id="c_p_${t}" value="">
+            <input type="hidden" id="c_c_${t}" value="">
+        </div>
+        `;
+    }).join('');
+    document.getElementById('logModal').style.display = 'flex';
+}
+
+function closeLogModal() {
+    document.getElementById('logModal').style.display = 'none';
+}
+
+// === Save Data ===
+function saveData() {
+    const d = document.getElementById('logDate').value;
+    
+    types.forEach(t => {
+        let entry = storage[t].find(x => x.date === d);
+        const sIn = parseInt(document.getElementById(`q_s_${t}`).value) || 0;
+        const pIn = parseInt(document.getElementById(`q_p_${t}`).value) || 0;
+        const cIn = parseInt(document.getElementById(`q_c_${t}`).value) || 0;
+        const codesS = document.getElementById(`c_s_${t}`).value;
+        const codesP = document.getElementById(`c_p_${t}`).value;
+        const codesC = document.getElementById(`c_c_${t}`).value;
+
+        if(!entry) {
+            storage[t].push({ 
+                date: d, 
+                s: sIn, 
+                p: pIn, 
+                c: cIn, 
+                codes_s: codesS, 
+                codes_p: codesP, 
+                codes_c: codesC 
+            });
+        } else {
+            if(sIn > 0) entry.s = sIn;
+            if(pIn > 0) entry.p = pIn;
+            if(cIn > 0) entry.c = cIn;
+            if(codesS) entry.codes_s = entry.codes_s ? entry.codes_s + "," + codesS : codesS;
+            if(codesP) entry.codes_p = entry.codes_p ? entry.codes_p + "," + codesP : codesP;
+            if(codesC) entry.codes_c = entry.codes_c ? entry.codes_c + "," + codesC : codesC;
+        }
+    });
+    
+    localStorage.setItem("logistics_v100", JSON.stringify(storage));
+    closeLogModal();
+    render();
+    pushData();
+    playBeep(1200, 150);
+}
+
+// === Show Table ===
+function showTable(type) {
+    const m = viewDate.getMonth(), y = viewDate.getFullYear();
+    document.getElementById("detailsTable").style.display = "block";
+    document.getElementById("activeTitle").innerText = type;
+    
+    const active = storage[type].filter(d => {
+        const dt = new Date(d.date);
+        const hasNum = (parseInt(d.s)||0) + (parseInt(d.p)||0) + (parseInt(d.c)||0) > 0;
+        const hasCodes = (d.codes_s?.length > 2) || (d.codes_p?.length > 2) || (d.codes_c?.length > 2);
+        return dt.getMonth() === m && dt.getFullYear() === y && (hasNum || hasCodes);
+    }).sort((a,b) => new Date(a.date) - new Date(b.date));
+    
+    document.getElementById("tableBody").innerHTML = active.map(r => {
+        const tot = (parseInt(r.s)||0) + (parseInt(r.p)||0) + (parseInt(r.c)||0);
+        return `
+        <tr>
+            <td style="font-weight:800; cursor:pointer;" onclick="showCodesModal('${type}','${r.date}')">${new Date(r.date).getDate()}</td>
+            <td onclick="showCodesModal('${type}','${r.date}','s')" style="cursor:pointer;">${r.s}</td>
+            <td onclick="showCodesModal('${type}','${r.date}','p')" style="cursor:pointer;">${r.p}</td>
+            <td onclick="showCodesModal('${type}','${r.date}','c')" style="cursor:pointer;">${r.c}</td>
+            <td style="color:var(--brand); font-weight:800;">${tot>0?((r.s/tot)*100).toFixed(0):0}%</td>
+        </tr>
+        `;
+    }).join('') || '<tr><td colspan="5">No data</td></tr>';
+}
+
+function closeDetailsTable() {
+    document.getElementById('detailsTable').style.display = 'none';
+}
+
+// === Show Codes Modal ===
+function showCodesModal(type, date, mode = null) {
+    const entry = storage[type].find(x => x.date === date);
+    let codesStr = '';
+    
+    if(mode) {
+        codesStr = entry[`codes_${mode}`] || '';
+    } else {
+        codesStr = (entry.codes_s || '') + ',' + (entry.codes_p || '') + ',' + (entry.codes_c || '');
+    }
+    
+    const codes = codesStr.split(',').filter(x => x);
+    document.getElementById('codesModal').style.display = 'flex';
+    document.getElementById('codesList').innerHTML = codes.length > 0 
+        ? codes.map((c, i) => `
+            <div class="package-card" style="margin-bottom:8px;">
+                <span style="flex:1;">${c}</span>
+                <button class="delete-btn" onclick="deleteCodeFromHistory('${type}','${date}','${c}')">✕</button>
+            </div>
+        `).join('')
+        : '<p style="text-align:center; color:var(--dim);">No codes</p>';
+}
+
+function deleteCodeFromHistory(type, date, code) {
+    if(confirm(`Delete ${code}?`)) {
+        const entry = storage[type].find(x => x.date === date);
+        ['s', 'p', 'c'].forEach(mode => {
+            let codes = (entry[`codes_${mode}`] || '').split(',').filter(x => x && x !== code);
+            entry[`codes_${mode}`] = codes.join(',');
+        });
+        localStorage.setItem("logistics_v100", JSON.stringify(storage));
+        showCodesModal(type, date);
+        render();
+        pushData();
+    }
+}
+
+function closeCodesModal() {
+    document.getElementById('codesModal').style.display = 'none';
+}
+
+// === Update Chart ===
+function updateChart(y, m) {
+    const ctx = document.getElementById('mainChart').getContext('2d');
+    const days = new Date(y, m + 1, 0).getDate();
+    const labels = Array.from({length: days}, (_, i) => i + 1);
+    
+    const ds = types.map(t => ({ 
+        label: t, 
+        backgroundColor: colors[t], 
+        borderRadius: 4, 
+        data: labels.map(d => {
+            const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const f = storage[t].find(x => x.date === dateStr);
+            return f ? f.s : 0;
+        })
+    }));
+    
+    if(chart) chart.destroy();
+    chart = new Chart(ctx, { 
+        type: 'bar', 
+        data: { labels, datasets: ds }, 
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            plugins: {legend: {display: false}}, 
+            scales: { 
+                x: {stacked: true, grid: {display: false}, ticks: {font: {size: 9}}}, 
+                y: {stacked: true, beginAtZero: true, grid: {color: 'rgba(255,255,255,0.05)'}} 
+            } 
+        }
+    });
+}
+
+// === Render ===
+function render() {
+    const m = viewDate.getMonth(), y = viewDate.getFullYear();
+    document.getElementById('monthLab').innerText = viewDate.toLocaleString('en-US', {month: 'long', year: 'numeric'});
+    
+    document.getElementById('metricsPanel').innerHTML = types.map(t => {
+        const mData = storage[t].filter(d => { 
+            const dt = new Date(d.date); 
+            return dt.getMonth() === m && dt.getFullYear() === y; 
+        });
+        const s = mData.reduce((a,b) => a + (parseInt(b.s)||0), 0);
+        const tot = mData.reduce((a,b) => a + ((parseInt(b.s)||0) + (parseInt(b.p)||0) + (parseInt(b.c)||0)), 0);
+        return `
+        <div class="stat-card" onclick="showTable('${t}')">
+            <span style="font-size:0.75rem; color:${colors[t]}; font-weight:800;">${t}</span>
+            <span class="stat-val">${s}</span>
+            <div style="font-size:0.7rem; color:var(--dim); font-weight:600;">${tot > 0 ? ((s/tot)*100).toFixed(0) : 0}% Success</div>
+        </div>
+        `;
+    }).join('');
+    
+    updateChart(y, m);
+}
+
+// === Move Month ===
+function moveMonth(dir) { 
+    viewDate.setMonth(viewDate.getMonth() + dir); 
+    render(); 
+}
+
+// === Start ===
+async function start() {
+    if (!config) { 
+        config = {
+            token: prompt("GitHub Token:"), 
+            user: prompt("GitHub Username:"), 
+            repo: prompt("Repository Name:")
+        }; 
+        localStorage.setItem('gh_config', JSON.stringify(config)); 
+    }
+    updateOnlineStatus(); 
+    await pullData();
+}
+
+start();
+</script>
 </body>
 </html>
