@@ -10,19 +10,19 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
+    <link rel="manifest" href="manifest.json">
     <style>
         :root { 
-            --bg: #0a1929; 
+            --bg: #0c1522; 
             --card: #1e293b; 
-            --brand: #3b82f6; 
-            --accent: #60a5fa; 
-            --text: #f1f5f9; 
-            --dim: #94a3b8; 
+            --brand: #4361ee; 
+            --accent: #4895ef; 
+            --text: #e6e9ef; 
+            --dim: #a0aec0; 
             --border: #334155; 
-            --success: #10b981; 
-            --warning: #f59e0b; 
-            --danger: #ef4444;
+            --success: #38b000; 
+            --warning: #ff9e00; 
+            --danger: #d62828;
             --header-dark: #0f172a;
             --header-gradient: linear-gradient(135deg, #0f172a, #1e293b);
             --scan-frame: rgba(59, 130, 246, 0.5);
@@ -2272,6 +2272,16 @@ async function start() {
     await pullData();
 }
 start();
+</script>
+<script>
+// تسجيل الـ Service Worker
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+            .then(reg => console.log('Service Worker registered'))
+            .catch(err => console.log('Service Worker registration failed:', err));
+    });
+}
 </script>
 </body>
 </html>
