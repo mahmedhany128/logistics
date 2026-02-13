@@ -1,5 +1,5 @@
 // 📄 service-worker.js
-const CACHE_NAME = 'logistics-pro-v1';
+const CACHE_NAME = 'Logistics';
 const urlsToCache = [
     '/',
     'index.html',
